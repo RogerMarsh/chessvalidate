@@ -1,0 +1,19 @@
+Anytown League
+12 Sep 2011 30 March 2013
+
+30 oct 2011 Division 1 Ourstreet Yourstreet
+20 feb 2012 Division 1 Yourstreet Ourstreet
+
+Division 1
+
+Yourstreet Ourstreet
+Alice Bob
+Colin Jones David
+Evan Frank
+George Zoe
+
+Ourstreet Yourstreet
+Bob Jones Alice
+David Evan
+Frank Colin Jones
+Zoe George

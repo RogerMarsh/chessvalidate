@@ -1,0 +1,158 @@
+A number of parameters to control the extraction of chess results are added to those provided by EmailExtract to extract text from emails.  These are held in the configuration file maintained by EmailExtract.
+
+The 'Sources | Result extraction' menu option is used to maintain this configuration file.  See 'Help | Text extraction'for the parameters provided by
+EmailExtract.
+
+
+A file, called 'textentry' by default, is provided in the extracted directory for text not supplied via emails.  The default is overridden using the textentry line.
+
+This file holds two versions of the text: the initial empty file, and one with the current content.
+
+textentry textentry
+
+
+The sched_* parameters describe how to get fixture list data from a csv file or spreadsheet sheet.
+
+The sched_csv_data_name line says get the information from sheet1 of a spreadsheet and create a line of text with the items in the order shown separated by spaces.  When the source is a csv file any name at all can be used for sheet1 in this description: but the name must be given.
+
+The other lines say which column of sheet1 provides the data, by number or name.
+
+sched_csv_data_name sheet1 sched_day sched_date sched_section sched_home_team sched_away_team
+sched_date 1
+sched_day 0
+sched_section 4
+sched_home_team 2
+sched_away_team 3
+
+An alternative way of specifying the fixture list extract is:
+
+sched_csv_data_name sheet1 sched_data_columns
+sched_data_columns 1+0+4+2+3
+
+
+The report_* parameters describe how to get game result data from a csv file or spreadsheet sheet.
+
+report_csv_data_name and report_data_columns are similar to the similarely named sched_* parameters.
+
+The other report_* paramaters are:
+
+report_date
+report_day
+report_section
+report_home_team
+report_away_team
+report_home_player
+report_away_player
+report_result
+report_board
+report_round
+report_home_player_colour
+report_away_team_score
+report_home_team_score
+report_event
+
+Only the ones relevant to a particular case are used.  A collection of results might be reported in a spreadsheet giving just the date, player names, and result.  For example, sheet name Games, and DATE, WHITE, RESULT, and BLACK, as column names:
+
+report_csv_data_name games report_date report_home_player report_result report_away_player
+report_date DATE
+report_home_player WHITE
+report_result RESULT
+report_away_player BLACK
+
+
+Name the competitions in the event.  Some examples:
+
+competition Division 1
+competition Open
+competition Club Championship
+
+
+Sometimes team names on fixture list are slightly different from team names in match reports.  One league emphasises where a team plays in the fixture list, but emphasises the rank of the team within the club in result reports, by using different names.
+
+team_name :chi @ bognor:Chichester C
+
+
+Match results might be reported something like (a variation on the format used before the introduction of a website):
+
+Michael Pope has submitted a scorecard for the Division Three match Chandlers Ford A v Salisbury B.
+
+Chandlers Ford A 1 - 4 Salisbury B, 03/10/2017
+1. David J Holmes 1/2 David Renham; 2. Graham Stuart 1/2 Rob McClatchey; 3. Richard J Meredith 0 - 1 Tomas Rusin; 4. Manoj Chandar 0 - 1 John B Symons; 5. Sam J Murphy 0 - 1 Amanda Jones; 
+
+Go to http://www.sotonchessleague.org.uk/Scorecard/61 to view the scorecard.
+
+Regards,
+SCL Team
+
+rather than scorecard format something like:
+
+Division Three
+Chandlers Ford A 1 - 4 Salisbury B
+03/10/2017
+1. David J Holmes 1/2 David Renham
+2. Graham Stuart 1/2 Rob McClatchey
+3. Richard J Meredith 0 - 1 Tomas Rusin
+4. Manoj Chandar 0 - 1 John B Symons
+5. Sam J Murphy 0 - 1 Amanda Jones
+
+The scorecard format can be extracted without needing to say anything more in the configuration file, but the alternative needs some regular expressions to be defined using some of the parameters listed here:
+
+results_prefix
+section_prefix
+section_body
+match_body
+teams_body
+games_body
+finished
+unfinished
+default
+match_default
+match_date_body
+played_on_body
+teams_played_on_body
+games_played_on_body
+finished_played_on
+unfinished_played_on
+match_date_played_on_body
+schedule_body
+fixture_body
+keep_word_splitters
+source
+drop_forwarded_markers
+
+The regular expressions which deal with the example are given without further comment (except to say avoid using regular expressions if possible):
+
+results_prefix \s+has\s+submitted\s+a\s+scorecard\s+for\s+the\s+
+keep_word_splitters -,.'()/;
+drop_forwarded_markers >
+section_prefix (?:division\s+(?:one|two|three|four|five))|robertson\s+cup\s+|robertson\s+plate\s+
+section_body (?:division\s+(?:one|two|three|four|five))|robertson\s+cup\s+|robertson\s+plate\s+
+section_name :division one:Div 1
+section_name :division two:Div 2
+section_name :division three:Div 3
+section_name :division four:Div 4
+section_name :division five:Div 5
+section_name :robertson cup:Robertson Cup
+section_name :robertson plate:Robertson Plate
+match_body (?<=\.).*?(?=go to http)
+teams_body \A\s*(?P<teamone>.*?)\s+(?P<scoreone>[0-9]+(?:\.[05])?)\s+-\s+(?P<scoretwo>[0-9]+(?:\.[05])?)\s+(?P<teamtwo>[^,]+)
+match_default \A.*?(?:[0123456789]{2}/){2}[0123456789]{4}(?P<matchdefault>\s*)\Z
+games_body (?<=[0-9]\. )[^;]*
+match_date_body ,\s+(?P<result_date>(?:[0123456789]{2}/){2}[0123456789]{4})\s+
+finished (?P<nameone>.*)\s+(?P<scoreone>(?:1\s*-\s*0)|(?:0\s*-\s*1)|(?:1/2))\s+(?P<nametwo>.*)
+unfinished (?P<nameone>.*)\s+(?:adj)\s+(?P<nametwo>.*)
+default \s+(?:def\s+0\s+(?P<nametwo>.*?)\s+1|(?P<nameone>.*?)\s+1\s+def\s+0|home\s+default|away\s+default)
+
+
+The section_name parameter links the competition name used in match reports with the name used in, or derived from, the fixture list.
+
+
+Spreadsheets and csv files may present results in tabular form where each row gives full details of the game.  Thus the board 1 game from the example match scorecard might be presented as:
+
+"Division Three","Chandlers Ford A","1","4","Salisbury B","03/10/2017","1","David J Holmes","1/2","David Renham","","Black","Southampton League"
+
+in a csv file where the "" field is for the day of the match, Tuesday for example, often given as a reminder in fixture lists but usually omitted on scorecards. 'Black' indicates which pieces the the home team player had.
+
+Spreadsheet sheets and csv files with exactly 14 columns are assumed to be in this tabular form if the report_data_columns parameters are not used to describe the structure.  The other report_data_* parameters are used to describe the tabular form.
+
+The sched_data_* parameters should not be used against the results table because one fixture list entry is created per game.  An independent source for the fixture list should be used if validation of match results against the fixture list is required.  The column names must be different in both tables if spreadsheets or csv files provide both fixture list and match results.

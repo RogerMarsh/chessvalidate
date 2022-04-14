@@ -1,0 +1,136 @@
+collected collected
+extracted extracted
+textentry textentry
+text_content_type text/plain
+pdf_content_type application/pdf
+csv_content_type text/comma-separated-values
+csv_content_type text/csv
+docx_content_type application/vnd.openxmlformats-officedocument.wordprocessingml.document
+earliestdate 2021-10-17
+mostrecentdate 2021-10-24
+#competition Div 1
+#competition Div 2
+#competition Div 3
+competition Division One
+competition Division Two
+competition Division Three
+competition Cole Cup
+competition Cole Plate
+team_name :chi @ bognor:Chichester C
+
+# Portsmouth District League Results format (John Wheeler's emails)
+##results_prefix \s+?(?:played-on\s+games)|(?:portsmouth\s+&\s+district\s+chess\s+league)\s+(?=div:)
+#results_prefix \s+?(?:played-on\s+games)|(?:portsmouth\s+&\s+district\s+chess\s+league)\s+
+#keep_word_splitters -,.'/()?:\t\n
+#section_prefix div:\s[^\n\t]*
+## Seems safe to avoid 'split requires non-empty pattern match' FutureWarning by this change removing the \A alternative.
+##section_body (?:\A|(?:\t\t\?\t\t\?))
+#section_body (?:(?:\t\t\?\t\t\?))
+#section_name @div: 1@Div 1
+#section_name @div: 2@Div 2
+#section_name @div: 3@Div 3
+#section_name @div: cole cup@Cole Cup
+#section_name @div: cole plate@Cole Plate
+#match_body \Adiv:\t.*
+#teams_body (?<=\n)(?P<teams>.*?)(?=\(home).*?(?:Total:(?P<scoreone>[^\n]*))(?:Total:(?P<scoretwo>[^\n]*))
+#games_body \n([123456789])\n([^\n]*)\n([^\n]*)\n[^\n]*\n([^\n]*)\n([^\n]*)\n([^\n]*)\n[^\n]*\n([^\n]*)
+#finished (?P<board>[123456789])\s(?P<nameone>.*?)\s+(?P<scoreone>[01\u00bd])\s+(?P<nametwo>.*?)\s+(?P<scoretwo>[01\u00bd])
+#unfinished (?P<board>[123456789])\s(?P<nameone>.*?)\s+-\s+(?P<nametwo>.*?)\s+-
+#default (?P<board>[123456789])\s+(?:default\s+0\s+(?P<nametwo>.*?)\s+1|(?P<nameone>.*?)\s+1\s+default\s+0|default\s+0\s+default\s+0)
+#match_date_body \s*(?P<result_date>(?:[0123456789]{1,2}[/\-\.]){2}[0123456789]{1,4})\s
+#played_on_body \tdiv:\t.*
+#teams_played_on_body (?:(?<=\n\t)(?P<teams>.*?)(?=\n[0123456789]).*?(?:Total:(?P<scoreone>[^\n]*))(?:Total:(?P<scoretwo>[^\n]*)))
+#games_played_on_body \n([123456789])\n([^\n]*)\n([^\n]*)\n[^\n]*\n([^\n]*)\n([^\n]*)\n([^\n]*)\n[^\n]*\n([^\n]*)
+#finished_played_on (?P<board>[123456789])\s(?P<nameone>.*?)\s+(?P<scoreone>[01\u00bd])\s+(?P<nametwo>.*?)\s+(?P<scoretwo>[01\u00bd])
+#unfinished_played_on (?P<board>[123456789])\s(?P<nameone>.*?)\s+-\s+(?P<nametwo>.*?)\s+-
+
+# Portsmouth District League Match Results format (website emails from September 2017)
+#results_prefix \s+has\s+submitted\s+a\s+scorecard\s+for\s+the\s+
+#keep_word_splitters -,.'()/;
+#drop_forwarded_markers >
+#section_prefix (?:division\s+(?:one|two|three))|cole\s+cup\s+|cole\s+plate\s+
+#section_body (?:division\s+(?:one|two|three))|cole\s+cup\s+|cole\s+plate\s+
+#section_name :division one:Div 1
+#section_name :division two:Div 2
+#section_name :division three:Div 3
+#section_name :cole cup:Cole Cup
+#section_name :cole plate:Cole Plate
+#match_body (?<=\.).*?(?=go to http)
+#teams_body \A\s*(?P<teamone>.*?)\s+(?P<scoreone>[0-9]+(?:\.[05])?)\s+-\s+(?P<scoretwo>[0-9]+(?:\.[05])?)\s+(?P<teamtwo>[^,]+)
+#match_default \A.*?(?:[0123456789]{2}/){2}[0123456789]{4}(?P<matchdefault>\s*)\Z
+#games_body (?<=[0-9]\. )[^;]*
+#match_date_body ,\s+(?P<result_date>(?:[0123456789]{2}/){2}[0123456789]{4})\s+
+#finished (?P<nameone>.*)\s+(?P<scoreone>(?:1\s*-\s*0)|(?:0\s*-\s*1)|(?:1/2))\s+(?P<nametwo>.*)
+#unfinished (?P<nameone>.*)\s+(?:adj)\s+(?P<nametwo>.*)
+#default \s+(?:def\s+0\s+(?P<nametwo>.*?)\s+1|(?P<nameone>.*?)\s+1\s+def\s+0|home\s+default|away\s+default)
+
+# Portsmouth District League Match Results format (website csv downloads from September 2017)
+text_from_rows games
+#report_csv_data_name games report_data_columns
+#report_data_columns 0+1+2+3+4+5+6+7+8+9+10+11+12
+
+# Does not prevent tabular interpretation of results if active.
+# Does create multiple fixture list entries, one per game in match.
+#sched_csv_data_name games sched_data_columns
+#sched_data_columns 0+2+4+10
+
+# Does not prevent tabular interpretation of results if active.
+# Does create multiple fixture list entries, one per game in match.
+#sched_csv_data_name games sched_data_columns
+#sched_data_columns Section+Date+HomeTeam+AwayTeam
+
+# Does not prevent tabular interpretation of results if active.
+# Does create multiple fixture list entries, one per game in match.
+#sched_csv_data_name games sched_section sched_date sched_home_team sched_away_team
+#sched_section 0
+#sched_date 2
+#sched_home_team 4
+#sched_away_team 10
+
+# Does not prevent tabular interpretation of results if active.
+# Does create multiple fixture list entries, one per game in match.
+#sched_csv_data_name games sched_section sched_date sched_home_team sched_away_team
+#sched_section Section
+#sched_date Date
+#sched_home_team HomeTeam
+#sched_away_team AwayTeam
+
+# Does not prevent tabular interpretation of results if active.
+# Does not create fixture list entries from the results table defined below.
+# The column names must not be same as any in the report_* lines.
+sched_csv_data_name games sched_section sched_date sched_home_team sched_away_team
+sched_section FixtureSection
+sched_date FixtureDate
+sched_home_team FixtureHomeTeam
+sched_away_team FixtureAwayTeam
+
+# Extracts game results for matches from csv files or spreadsheet sheets in tabular form.
+# Data is taken from the columns identified in the report_* lines below.
+# The table must have exactly 14 columns.
+# The column names must not be same as any in the sched_* lines.
+report_csv_data_name games report_section report_day report_date report_round report_home_team report_home_team_score report_home_player report_result report_away_player report_away_team_score report_away_team report_board report_home_player_colour report_event
+report_section Section
+report_day Day
+report_date Date
+report_round Round
+report_home_team HomeTeam
+report_home_team_score HTScore
+report_home_player HomePlayer
+report_result Result
+report_away_player AwayPlayer
+report_away_team_score ATScore
+report_away_team AwayTeam
+report_board Board
+report_home_player_colour HPColour
+report_event Event
+
+# Portsmouth District League Fixtures format (John Wheeler's emails)
+results_prefix \s+?(?:portsmouth\s+&\s+district\s+chess\s+league\s+fixture\s+list\s+for\s+.+?)\s+
+keep_word_splitters -,.'/\t\n@
+section_prefix division\s+[^\n\t]*
+section_body (?:division\s+[^\n\t]*)
+section_name @division 1@Div 1
+section_name @division 2@Div 2
+section_name @division 3@Div 3
+schedule_body (?<=\n)[^\n]+
+fixture_body \s*(?P<dayname>[^\.]+)\.\s*(?P<day>[0-9]+)\.\s*(?P<month>[0-9]+)\.\s*(?P<year>[0-9]+)\s+(?P<teams>(?:.*))

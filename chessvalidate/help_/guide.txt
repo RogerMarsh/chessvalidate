@@ -1,0 +1,516 @@
+Summary
+
+
+Enter and verify results for an event.
+
+Update a database with an event's results.
+
+Identify players in an event as players in previous events or as new players.
+
+Link new players with their English Chess Federation (ECF) grading codes.
+
+Submit results for events to the ECF for grading.
+
+
+Contents
+
+
+	Summary
+	Contents
+	Introduction
+	Quick start
+	Getting started
+	Selecting emails
+	Selecting text from emails
+	A Trivial League
+	A Real League - Southampton League
+	A Real League - Portsmouth District League
+	A Tabular Reported League - Portsmouth District League
+	Monthly Rating
+	Authentication
+
+
+Introduction
+
+
+This program extracts results from documents in emails sent by sources.
+
+The menu bar has five items: Sources, Documents, Results, Tools, and Help.
+
+Sources, Documents, and Results provide access to the main functions of the program in the order they are used when dealing with an event.
+
+Sources is used to specify selection rules for emails and extract emails from an email client's mailbox or mailboxes.
+
+Documents is used to extract data relevant to chess game results from emails, validate the data, save any changes made to remove errors or resolve incorrect interpretation of data, and update a database to be processed using the Results item.
+
+Results is used to merge players in an event with players from earlier events, and link new players to an ECF grading code (or a request for a new grading code).  Generally players from earlier events will have been linked to an ECF grading code, so the merge step usually implies the link to a grading code.
+
+Results is used to import reference data (Master List) and result submission feedback (new player grading codes) from the ECF and create result submissions to the ECF.
+
+Results has three variants, provided in different programs. The results_lite variant does not do the interactions with the ECF, but provides some results analysis. The results_ogd variant can import the publically available ECF Grading List, but cannot do result submission to the ECF. The results_ecf variant can be used to submit results to the ECF provided the Master List has been imported.  The Master List is only available to graders.  A database created by one variant can be accessed by the other variants.
+
+Tools provides access to an editor for the URLs to access the ECF database.  Also a font selector which is not implemented.
+
+Help provides access to this file and other files describing the program.
+
+The program is designed to extract results from emails, but does allow direct input by 'copy and paste' or even typing.
+
+
+Quick start
+
+
+If you just want to press buttons and see what happens.
+
+Use sample_league_1.txt rather than the files used in Getting started: there are eight players to deal with, not around fifty.  Add the line:
+
+competition=Division 1
+
+to the results extraction configuration file that gets created.
+
+Right-clicking the pointer will show a popup menu if relevant.
+
+The most important actions are:
+
+Email selection in the Sources menu
+Results extraction in the Sources menu
+Open in the Documents menu
+Generate on the Edit tab
+Save on the Edit tab
+Upate on the Edit tab
+Open in the Results menu
+Merge on the NewPlayers tab
+ECF Players on the Events tab
+ECF Master File on the Administration tab
+Link Grading Code on the Grading Codes tab
+Affiliate on the Club Codes tab
+Update Event Detail on the ECF Events tab
+Submit on the ECF Events tab
+
+The Link Grading Code and Affiliate actions will not do anything unless the Master List and Club List from the ECF has been applied to the database using ECF Master File on the Administration tab.  You will have these only if you are a grader.  Some of the actions can be done with the Grading List, which is publically available, as described in Getting Started.
+
+The Players tab and the Player ECF Detail tab allow actions to be undone.
+
+
+Getting started
+
+
+This section describes using the program with realistic, but contrived, results in the 'Help | Samples' menu item.
+
+Create a new event directory using 'Sources | Result extraction'.
+
+The directory name must end with two digits conventionally indicating the year in which the event starts.  'Anytown12' matches the sample used first in this description.
+
+A new window is opened showing the default configuration for the event.
+
+Add the competition names within the event using 'Actions | Option editor', and 'Update' in the Text editor dialogue.
+
+In this case, referring to sample_anytown12.txt, that is two lines:
+
+competition=Open
+competition=Major
+
+Save the configuration by 'File | Save'.
+
+That is all the configuring for this event so close the window by 'File | Quit'.
+
+Open the event documents using 'Documents | Open' on the Anytown12 directory.
+
+Several informative messages will appear saying what has been created: if the thing exists the message does not appear.  After accepting the messages increase the size of the application's window to see the three panes within the window.
+
+Cut and Paste sample_anytown12.txt into the area between the highlighted lines.
+
+The two dates after the event name, 'Anytown Chess Congress', are the start, '12 may 2012', and end, '14 may 2012', dates of the event.  Game dates given later must be on or between these dates.  (When results are extracted from emails you will have to type the event name and start and end dates into this area.)
+
+The dates on the lines starting 'Open' and 'Major' are the dates in round order of the games in the six rounds of the two swiss system tournaments.
+
+The other lines are copy-typed from the pairing cards.
+
+ECF grading codes are notable by their absence, even though they are usually on the pairing cards.  This program does not use grading codes to identify players: you tell the program which grading code to use when reporting results to the ECF for grading. (This is covered describing the 'Results' menu item: and in practice you will mostly have to do nothing.)
+
+Validate the results by 'Generate'.
+
+A register of player identities appears in the top-right pane and a list of game results appears in the bottom-right pane.  There are no errors in either pane so updating is allowed: note this does not imply the results are correct, just that they are valid.  You confirm the correctness of the results by using 'Update'.
+
+The player identities are sorted by name.  For example 'Alf' is a name but the player identity is 'Alf Open 1 in the Anytown Chess Congress from 12 may 2012 to 14 may 2012'.
+
+It is possible to arrange things so that the grading code appears within the brackets reserved for the club or place assocation hint.
+
+Save the event using 'Save' if you have done editing to the results in the pane in the left-hand column: otherwise you will have to do them again next time you open the event documents.
+
+The only way results can be modified, added. or deleted is by editing the data in the pane in the left-hand column.
+
+Use 'Toggle' to see the data extracted from emails and the data after all edits ever done side-by-side.  The former is an empty pane in this example.
+
+Create a new results database using 'Results | New'.
+
+Normally all the event documents are used to update a single database.  For this example create the database in a directory called 'AnytownEvents' (as a sibling of Anytown12 is probably convenient).
+
+Update the database using 'Update'.
+
+Close the event documents using 'Close' or 'Documents | Close'.
+
+A list of all the events on the database in displayed.
+
+Display the new players using 'NewPlayers'.
+
+Select each player in the top pane in and use 'Merge' to identify the player.  In this example we know each new player cannot be the same person as any player in the bottom pane so do not, repeat not, make a selection in the bottom pane when doing the merge.
+
+Use the left or right arrows, or 'click right-button and select in popup menu' with the pointer over the relevant line, to do the selection.
+
+Confirm the merge by 'Ok' in the Confirm Merge New Player.
+
+The selected entry is moved from the top pane to the bottom pane.
+
+Repeat until the top pane is empty.
+
+You may have noticed that one of the names was 'clara' and prefer it to be 'Clara' ('c' is after 'Z' in the sort).
+
+Open the event documents using 'Documents | Open', edit the name and repeat the 'Generate', 'Save', 'Update', and so on, steps.
+
+On getting back to the 'NewPlayers' tab see that 'Clara' has appeared in the top pane and that 'clara' is not in the lower pane.  Move Clara to the lower pane using 'Merge'.
+
+Decisions recorded on the 'NewPlayers' tab can be undone on the 'Players' tab so that a new decision can be recorded.  Ignored for now.
+
+If you submit results to the ECF for rating you will need the ECF codes of the players, and probably the codes of the clubs they play for.  These can be downloaded using 'Administration | Rated Players Download' and 'Administration | Active Clubs Download', or from www.ecfrating.org.uk (at time of writing the links are at www.ecfrating.org.uk/v2/help/help_api.php).  Note neither is a complete list and you may need to use 'Grading Codes | Download ECF Code' or 'Club Codes | Download Club Code' to get the code for each player or club.  There is a case for downloading all codes one-by-one to avoid cluttering your database with thousands of items you do not need.
+
+Start the player download using 'Administration | Rated Players Download' and choose whether to download or extract from a previously saved download (using a browser probably).  ChessResults does not offer the option of saving the download in a file.
+
+Import the data, if satisfied it is genuine, using 'Apply Rated Players'.
+
+Actions are reported in the lower pane, finishing with 'Player list downloaded on yyyy-mm-dd has been processed'.
+
+Repeat for clubs starting with 'Administration | Active Clubs Download'.
+
+The obsolete master list is still supported in case you happen to have one, but using it is no longer described.  The ECF stopped producing them in mid-2020.
+
+Display the NewPlayers tab by using 'Cancel Import', 'Close File List', and 'NewPlayers'.
+
+The upper pane will have all the players listed.  The lower pane will be empty if this is the first set of results added to the database.
+
+Move each player to the lower pane by selecting the player and using 'Merge'.
+
+When all players for this event have been moved, usually this is when the upper pane is empty, display the Events tab using 'Events'.
+
+Select the event and move it's players to the upper pane of the Grading Codes and Club Codes tabs using 'ECF Players'.
+
+Display Grading Codes tab using 'Grading Codes'.
+
+Obviously the Anytown players are not going to be in the grading list, and the names are not going match except by an amazing fluke.
+
+Select 'Alf' from the top pane and some grading code at random from the bottom pane.  Assign the grading code to 'Alf' using 'Link Grading Code'.
+
+Repeat for all the players in the top pane.
+
+That is it for the Anytown12 event.
+
+Now repeat for the Anytown13 event up to the point where the players appear on the 'New Players' tab.  The results are in sample_anytown13.txt.
+
+Assume that all the players with male names in the Anytown13 Open competition played in the Anytown12 event.  So 'Alf' in the 2013 edition of the event is 'Alf' in the 2012 edition, and so forth.  Also assume that none of the players with female names played in both editions of the event.  So 'Anne' is a new player, and so forth.
+
+Select each player in the top pane with a female name and use 'Merge' to identify the player.  Do not make a selection in the bottom pane.
+
+Select a player in the top pane and select the player with the same name in the bottom pane.  Use Merge to identify 'Alf' in the Anytown13 event to be the same person as 'Alf' in the Anytown 2012 event.  Repeat until the top pane is empty.  (George did not play in 2012, just a half-point bye, so treat this player like the player's with female names.)
+
+Display the list of players and grading codes using 'Grading Codes'.  See that only the players with female names and George from the Anytown 2013 event are not linked to grading codes.  Link all these players to grading codes.
+
+Display the NewPlayers tab using 'NewPlayers'.
+
+Bookmark all the Brian and Carol entries in the bottom pane, four in all, and use 'Player Details' to display their details.  See that three windows are displayed, one for Brian and two for Carol.  The merging and linking gave three people with three different grading codes.
+
+That is it for the results_ogd variant of the application.
+
+Quit using 'Sources | Quit'.
+
+Run the results_ecf variant of the program and use 'Results | Open' to show the Anytown events.
+
+Display the Grading Codes tab using 'Grading Codes' and see that no players are listed.
+
+Display the Club Codes tab using 'Club Codes' and see that no players are listed.
+
+Display the Player ECF Detail tab using 'Player ECF Detail' and see that all the players are listed, but without grading codes.
+
+Display the NewPlayers tab using 'NewPlayers'.
+
+Bookmark all the Brian and Carol entries in the bottom pane, four in all, and use 'Player Details' to display their details.  See that three windows are displayed, one for Brian and two for Carol, and see that no grading codes are given.
+
+Display the Events tab using 'Events'.
+
+Select the Anytown 2012 event and use 'ECF Players' to populate the top pane in the Grading Codes and Club Codes tabs.
+
+The players could be linked to grading codes and club codes if a Master List were available in the same way as with the Grading List.
+
+Because this event is a congress, 'no club' is the preferred club link if the player is linked to a grading code.  Typically all such players would be bookmarked, followed by using 'No Club', on the Club Codes tab.
+
+'New Grading Code' on the Grading Codes tab, and 'New ECF Club' on the Club Codes tab, became almost redundant when the Master List update frequency was made monthly.
+
+
+Selecting emails
+
+
+The rules for selecting emails are like:
+
+# pdl.ems email selection rules
+mailboxstyle mbox
+mboxmailstore ~/SelectMbox12/PDLFix2012-2013.mbs
+mboxmailstore ~/SelectMbox12/PDL2013-06-04supplement.mbs
+earliestfromdate 2012-09-01
+mostrecentfromdate 2013-06-30
+emailsfrom no.body@invented.isp.name
+emailsfrom a.n.other@invented.isp.name
+outputdirectory ~/SelectMbox12/mailbox
+exclude 20130423256364+0130no.body@invented.isp.name
+
+It says:
+
+Get all emails sent by no.body@invented.isp.name or a.n.other@invented.isp.name between 2012-09-01 and 2013-06-30 inclusive, excluding any named in exclude lines, from the mbox style mailboxes ~/SelectMbox12/PDL2013-06-04supplement.mbs and ~/SelectMbox12/PDLFix2012-2013.mbs.  Put them in the directory named ~/SelectMbox12/mailbox, one email per file.  The file names are like the one in the exclude line, concatenating the date and time sent and the sender's email address.
+
+The rules above are in sample_emails_mbox.txt
+
+Email clients should be able to export emails in mbox format even if they do not use the format otherwise.
+
+Manage the selection rules as follows:
+
+Open the event's email selection configuration file using 'Sources | Email selection' and 'File | Open'.  The default name is collected.conf.
+
+Display the selected emails using 'Actions | Show selection'.
+
+A summary of the selected emails is displayed in the bottom-left pane and the full email text is displayed in the right-hand pane.
+
+Right-click in the bottom-left pane will scroll the right-hand pane to show that email in full.
+
+Right-click in the right-hand pane will add an exclude line in the top-left pane.
+
+Right-click in the top-left pane will remove an exclude line.
+
+'Actions | Option editor' will display a window for editing the file by typing.
+
+'Actions | Apply selection' will update the output directory with the selected emails.
+
+Note that 'Apply selection' will not change any files already in the output directory, nor will it allow emails dated between the oldest and newest ones already there to be added to the output directory.
+
+Day-to-day management of emails using email client filters may place emails in a way that upsets 'Apply selection'.  The exclude line is useful to take no notice of the addition of emails to a mailbox.
+
+
+Selecting text from emails
+
+
+The results extraction configuration file has two types of rules:
+
+to select emails and attachments from which text will be extracted
+to extract text from the selected emails and attachments
+
+The extract text rules will give competition names, and possibly some team name translations and, or, sets of regular expressions to extract text.  All these are ignored in this section.
+
+The Trivial League section shows a reporting style which does not need regular expressions.  Things are a lot easier when regular expressions are not needed in the configuration file. (Repeat the 'lot' qualification as many times as you like.)
+
+The select email rules are like:
+
+# pdl conf file
+collected mailbox
+extracted extracts
+textentry textentry
+text_content_type text/plain
+earliestdate 2012-09-01
+mostrecentdate 2013-06-30
+
+# competition names removed
+
+# team name translation removed
+
+# match results regular expressions removed
+
+# fixture list regular expressions removed
+
+ignore 20121030256364+0130no.body@invented.isp.name
+
+It says:
+
+Extract text from all files in directory mailbox whose email was sent between 2012-09-01 and 2013-06-30 inclusive, picking the parts of each email with content type text/plain.  Put the extracted text in files with the same name in directory named extracts.  Pasted or typed text that is not associated with any particular email can be put in a file named textentry.  Files names in ignore lines will not be put in the directory named extracts.
+
+The rules above are derived from sample_league_ports.txt
+
+Manage the text selection rules as follows:
+
+Open the event's results extraction configuration file using 'Sources | Results extraction'.  The default name is event.conf.
+
+Display the selected emails using 'Actions | Source emails' or 'Actions | Extracted text'.
+
+A summary of the selected emails is displayed in the bottom-left pane and the full email text, or the extracted text, is displayed in the right-hand pane.
+
+Right-click in the bottom-left pane will scroll the right-hand pane to show that email, or it's extracted text, in full.
+
+Right-click in the right-hand pane will add an ignore line in the top-left pane.
+
+Right-click in the top-left pane will remove an ignore line.
+
+'Actions | Option editor' will display a window for editing the file by typing.
+
+'Actions | Update' will update the extracts directory with the text extracted from the selected emails.
+
+Note that 'Update' will not add any files to, or change files already in, the extracts directory if the requested update implies changing files already in the extracts directory.  The assessment of change ignores any editing done to the extracted text since it was put in the extracts directory.  In other words, the test is one of consistency between the email managed by the email client and the text in the extracts directory.
+
+
+A Trivial League
+
+
+Create the Anytown League for 2011-2012 using 'Documents | Open' and paste the contents of sample_league_1.txt into the textentry area.
+
+Create the results extraction configuration file for this event using 'Sources | Result extraction', and add the line:
+
+competition Division 1
+
+to the configuration file using 'Actions | Option editor'.
+
+Save the configuration file and quit using 'File | Quit'.
+
+Validate the data using 'Generate'.
+
+It should look perfect.
+
+Try some, preferably all, the other sample_league_n.txt files, to see what does and does not go wrong with some variations related to valid reports when some or all of the games have not been completed.
+
+Note in particular the cases where 'Frank Colin Jones unfinished' is got right (sample_league_4.txt) and wrong (sample_league_3.txt).
+
+Change the line in sample_league_3.txt to 'Frank unfinished Colin Jones' and see it is got right now.
+
+The program knows 'Frank Colin Jones unfinished' should contain two names but in sample_league_3.txt there is insufficient context to decide what the names are.  So the program guesses.  It gets two common possibilities right but, in general, it will guess wrong.
+
+Back to sample_league_1.txt.
+
+Add explicit board numbers to boards 2 and 3 in 'Yourstreet 2 Ourstreet 2', and to boards 1, 3, and 4 in 'Ourstreet 3 1 Yourstreet'.  For example:
+
+Zoe 0.5 George
+
+becomes
+
+4 Zoe 0.5 George
+
+and so forth.
+
+Validate the data using 'Generate'.  It should look perfect.
+
+Adding explicit board numbers to any of the other games makes the validation response look a real mess.
+
+The 0.5 in '4 Zoe 0.5 George' always means drawn game so the 4 must be a board number.
+
+The '½' in '4 George Zoe ½' is interpreted as part of a possibly mis-typed match result, rather than a game result on board 4 of a match.
+
+Imagine the game result interpretation with the mis-type in the 'Ourstreet 3 1 Yourstreet' match result.  Then all the games look like part of the 'Yourstreet 2 Ourstreet 2' match.  Remove the explicit board numbers which made the mess: now all validation says is 'match score inconsistent' suggesting the problem is less severe than it actually is.
+
+
+A Real League - Southampton League
+
+
+The match results are now reported match-by-match in emails generated by the league's website but each report is very similar in structure to that used in the weekly articles.  The configurations for both versions of weekly emails remain in the samples_* files but are commented out as needed.
+
+Southampton League match results are reported for grading using the weekly articles published in the Evening Echo.
+
+The reports have a well-defined structure which is handled using the regular expressions included in the result extraction configuration file copied to sample_league_soton.txt.  The dates are for the 2011-2012 season which is one of the seasons used to test them.  (The regular expressions replaced Python code in use for eleven years since 2003.)
+
+The fixture list was sent in an Excel spreadsheet attachment so the line:
+
+ss_content_type application/vnd.ms-excel
+
+was added.
+
+The results and fixtures are tied together by the sets of lines like:
+
+competition Div 1
+section_name :division 1:Div 1
+replace :1:Div 1
+
+for each competition.
+
+At time of writing, September 2014, the articles for the 2013-2014 season are available at:
+
+www.sotonchessleague.org.uk/content/detailed-league-reasults-2013-14
+
+but location and format are liable to change at any time.
+
+The main problem is typing errors which transpose, add, or remove characters vital to the structure such as full-stops and commas.
+
+The regular expressions deal with the web page content as successfully as they deal with the content of the emails used to send each article.  But locating the errors in the extracted text is a lot, lot, easier with the emails because each email gets it's own area delimited by the highlighted lines: right-click on the right-hand panes will scroll the left-hand pane to show the start of the source email if a unique email is associated with the pointer location.  You may care to paste the web page into the left-hand pane and try it a little.
+
+
+A Real League - Portsmouth District League
+
+
+The match results are now reported match-by-match in emails generated by the league's website but each report is very similar in structure to that used in the emails for the Southampton League (above).  The configurations for both versions of weekly emails remain in the samples_* files but are commented out as needed.
+
+Portsmouth District League match results are reported for grading weekly using a *.txt file which was introduced a few years ago to assist populating the Hampshire Chess Association website with the league's results.  I happily took this feed for grading to avoid doing a Microsoft Word to *.txt conversion manually on the half-season reports used previously.
+
+The reports have a well-defined structure which is handled using the regular expressions included in the result extraction configuration file copied to sample_league_ports.txt.  The dates are for the 2012-2013 season which is the season used to test them.  (The regular expressions replaced Python code in use for five years since 2009.)
+
+The results and fixtures are tied together by the sets of lines like:
+
+competition Div 1
+section_name @div: 1@Div 1
+section_name @division 1@Div 1
+
+for each competition.
+
+These source documents are not publically available.  Sample match reports and the fixture list, as they appear in the left-hand pane, are copied to sample_report_ports_match.txt and sample_report_ports_fix.txt with permission but I have changed all people's names anyway.
+
+The match report is basically unreadable by eye once it has been through all the software but the structure has been preserved and the program has no problem with it.  Blame 'universal newlines' for transposing one row per game to twelve rows per game.
+
+Typing errors which affect the structure are very rare indeed so it's horrible look does not matter.
+
+You may care to paste the samples into the left-hand pane and try it.  You will need to have selected two emails, whose content will be replaced by the sample fixture list and sample match report: pasting it all into the textentry area will not work.
+
+At time of writing, September 2014, the Division One results for the 2013-2014 season are available at:
+
+www.bognorandarunchessclub.co.uk/division-1.html
+
+but location and format are liable to change at any time.
+
+You may care to paste the web page into the left-hand pane and try it.  The textentry area is fine for this source.  But you will have to edit the game results from:
+
+4.A.N.Other 0-1  N.O.Body
+
+to:
+
+A.N.Other 0-1  N.O.Body
+
+to get the validation to succeed.  Remove all the board numbers in other words.
+
+At time of writing, September 2014, results for earlier seasons, are available at:
+
+www.hampshirechess.co.uk
+
+but location and format are liable to change at any time.
+
+You may care to paste a web page of results into the left-hand pane and try it.  The textentry area is fine for this source.  The page of 2009-2010 results for Division One looks like it needs less editing than most:
+
+Make sure all the board one game results are on the line following their match result.
+
+Remove all the grades, including the 'u's meaning ungraded.
+
+Remove the '(' and ')' characters surrounding the match dates.
+
+Validition is successful but there is a team called 'Fareham A 22nd Jan' for example.  The date format is not recognised and the program has taken '2010' to be a round number.  Remove the 'nd' and the date gets recognised and is used as the match date.
+
+
+A Tabular Reported League - Portsmouth District League
+
+
+Support for reporting results and fixtures in tabular form was introduced when the Portsmouth District League and Southampton League websites gained the ability to generate csv downloads.
+
+The feature has never been used for these leagues because error correction is more convenient with the match-by-match emails: it is easier to link and locate a detected error with the source emails than in one csv file.
+
+The sample_tabular_* files are an example, visible in 'Help | Samples', based on a Portsmouth District League season.  The configurations for both versions of weekly emails remain in these files but are commented out as needed.
+
+The feature may never be used for these two leagues because both websites are able to include ECF codes.  The switch to monthly rating, from grading every six months, is a strong incentive to have the websites generate the ECF submission files directly.
+
+
+Monthly Rating
+
+
+Assumptions may be invalidated by the introduction of monthly rating and effects are mentioned here as met.
+
+Swiss tournament tables may be submitted when only one round has been played but a line with <name> <date> cannot be taken as the round date of a swiss tournament.  This affects tournaments where a round may take place over several weeks.  If the swiss tournament table provides the game results after one round only, remember to add a currently redundant second round date to force swiss tournament table processing.
+
+
+Authentication
+
+
+Web pages are a convenient source of real data to try out but it is the League Secretaries, usually, who have the final say on what counts as the true statement of the match results.  Thus it is the emails sent by the League Secretaries that are processed for grading, not any data grabbed from a convenient website.

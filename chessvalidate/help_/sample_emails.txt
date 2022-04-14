@@ -1,0 +1,10 @@
+# pdl.ems email selection rules
+mailboxstyle mbox
+mboxmailstore ~/SelectMbox12/PDLFix2012-2013.mbs
+mboxmailstore ~/SelectMbox12/PDL2013-06-04supplement.mbs
+earliestfromdate 2012-09-01
+mostrecentfromdate 2013-06-30
+emailsfrom no.body@invented.isp.name
+emailsfrom a.n.other@invented.isp.name
+outputdirectory mailbox
+exclude 20130423256364+0130no.body@invented.isp.name

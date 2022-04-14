@@ -1,0 +1,945 @@
+A number of sample files are mentioned in the Guide.
+
+Assuming a standard installation of Python and of this program, these files are in the directory:
+
+../site-packages/chessresults/help
+
+siblings of this file.
+
+
+The sample files are:
+
+sample_anytown12.txt
+sample_anytown13.txt
+sample_emails.txt
+sample_league_1.txt
+sample_league_2.txt
+sample_league_3.txt
+sample_league_4.txt
+sample_league_5.txt
+sample_league_ports.txt
+sample_league_ports_fix.txt
+sample_league_ports_match.txt
+sample_league_soton.txt
+sample_tabular_emails.txt
+sample_tabular_league.txt
+sample_tabular_league_fixtures.csv
+sample_tabular_league_results.csv
+
+
+These files are intended for use when seeing what the program does.
+
+The guide mentions the current, at time of writing, locations of real data related to the league samples.
+
+
+The sample file contents are copied here with brief comments.
+
+
+sample_anytown12.txt
+
+Real congress results with dates, section names, and player names changed both for privacy and the needs of the example.
+
+Anytown Chess Congress
+12 may 2012 14 may 2012
+
+Open 12 may 2012 13 may 2012 13 may 2012 13 may 2012 14 may 2012 14 may 2012
+
+1 Alf b10+ w17= b9= bye= * *
+2 Brian w11= b18+ bye= w3= b17+ w9+
+3 Colin w5- b11= w10+ b2= b18= bye+
+4 David b12+ w9= b5- w18= b11+ w13=
+5 Evan b3+ bye= w4+ w17+ b9= w12=
+6 Frank b13+ w15+ b17- w9- b12- *
+7 George bye= * * * * *
+9 Harold w16+ b4= w1= b6+ w5= b2-
+10 Ira w1- bye= b3- w13- w14- b16+
+11 John b2= w3= b12= bye= w4- b14+
+12 Kevin w4- b14+ w11= b15+ w6+ b5=
+13 Luke w6- b16+ w18- b10+ bye+ b4=
+14 Mike b17- w12- bye= w16= b10+ w11-
+15 Nigel bye+ b6- bye= w12- b16+ w18-
+16 Oliver b9- w13- bye+ b14= w15- w10-
+17 Peter w14+ b1= w6+ b5- w2- *
+18 Quentin bye= w2- b13+ b4= w3= b15+
+
+Major 12 may 2012 13 may 2012 13 may 2012 13 may 2012 14 may 2012 14 may 2012
+
+1 Anne b12= w13= b20= bye= w9= b27=
+2 Betty w16+ b25+ w3- bye= b5= w7=
+3 Carol b18+ w14+ b2+ w5= w6= b4=
+4 Dawn w19= b28+ w8= bye= b23+ w3=
+5 Ellen b20= w18+ w15+ b3= w2= b8-
+6 Fiona w21+ bye= b9= w19+ b3= w25+
+7 Gina bye= w24+ b19- b28= w15+ b2=
+8 Hilary b22+ w9= b4= w23= b19+ w5+
+9 Imogen w23+ b8= w6= b17= b1= w16=
+10 Jean w25- b19- w21- bye+ w22+ b26+
+11 Kathleen w27= b15- w24= bye= def+ b20-
+12 Lucy w1= b17= w25- b15= w24+ b23+
+13 Mary bye= b1= w17- b24= * *
+14 Naomi bye= b3- * * * *
+15 Olga bye= w11+ b5- w12= b7- w21+
+16 Petula b2- w22+ b26+ bye= w17+ b9=
+17 Queanbeyan bye= w12= b13+ w9= b16- w29-
+18 Ruth w3- b5- * * * *
+19 Samantha b4= w10+ w7+ b6- w8- b28-
+20 Tracy w5= b29= w1= bye= b27= w11+
+21 Uma b6- w26- b10+ w27- bye= b15-
+22 Vera w8- b16- bye= w26= b10- b24+
+23 Wilma b9- bye+ w29+ b8= w4- w12-
+24 Xylia w29= b7- b11= w13= b12- w22-
+25 Yvonne b10+ w2- b12+ bye= w28+ b6-
+26 Zoe w28- b21+ w16- b22= b29- w10-
+27 Angela b11= bye= w28- b21+ w20= w1=
+28 Belle b26+ w4- b27+ w7= b25- w19+
+29 clara b24= w20= b23- bye= w26+ b17+
+
+
+
+sample_anytown13.txt
+
+Real congress results with dates, section names, and player names changed both for privacy and the needs of the example.
+
+Anytown Chess Congress
+13 may 2013 15 may 2013
+
+Open 13 may 2013 14 may 2013 14 may 2013 14 may 2013 15 may 2013 15 may 2013
+
+1 Alf b14+ w20- b26- bye= w15= *
+2 Brian w15- b17+ w22+ b25- w21+ b27-
+3 Colin b16+ w22+ b27+ w20- w5- b17+
+4 David w17= b19+ bye= w10= b9- w11+
+5 Evan b18+ w26+ b20= w11+ b3+ w9=
+6 Frank w19= * * * * *
+7 George b20- w16- b19+ bye= w23= b21+
+8 Harold w21+ b11- w25+ bye= b26+ w20+
+9 Ira b22- w21+ b12+ w26= w4+ b5=
+10 John w23+ b25- w15= b4= w17- b12-
+11 Kevin b24+ w8+ bye= b5- w27= b4-
+12 Luke w25- b13+ w9- b22+ b16- w10+
+13 Mike b26- w12- b21- w19+ b22= w18+
+14 Nigel w1- b23- * * * *
+15 Oliver b2+ w27- b10= w16= b1= def+
+16 Peter w3- b7+ bye= b15= w12+ b25=
+17 Quentin b4= w2- w18+ bye= b10+ w3-
+18 Anne w5- bye= b17- * * b13-
+19 Betty b6= w4- w7- b13- * *
+20 Carol w7+ b1+ w5= b3+ w25+ b8-
+21 Dawn b8- b9- w13+ w23+ b2- w7-
+22 Ellen w9+ b3- b2- w12- w13= b23+
+23 Fiona b10- w14+ bye= b21- b7= w22-
+24 Gina w11- bye= * * * *
+25 Hilary b12+ w10+ b8- w2+ b20- w16=
+26 Imogen w13+ b5- w1+ b9= w8- *
+27 Jean bye+ b15+ w3- bye= b11= w2+
+
+
+
+sample_emails.txt
+
+A sample configuration file for picking emails from mailboxes.
+
+# pdl.ems email selection rules
+mailboxstyle mbox
+mboxmailstore ~/SelectMbox12/PDLFix2012-2013.mbs
+mboxmailstore ~/SelectMbox12/PDL2013-06-04supplement.mbs
+earliestfromdate 2012-09-01
+mostrecentfromdate 2013-06-30
+emailsfrom no.body@invented.isp.name
+emailsfrom a.n.other@invented.isp.name
+outputdirectory ~/SelectMbox12/mailbox
+exclude 20130423256364+0130no.body@invented.isp.name
+
+
+
+sample_league_1.txt
+
+A sample league including the fixture list and all match results.
+
+Variations in format are allowed.  Some of the accepted ones are demonstrated.
+
+The ½ symbol is accepted only in utf-8 encoded text. 'draw' is an alternative not used here.
+
+The other league samples show things that go wrong as well.
+
+Anytown League
+12 Sep 2011 30 March 2013
+
+30 oct 2011 Division 1 Ourstreet Yourstreet
+20 feb 2012 Division 1 Yourstreet Ourstreet
+
+Division 1
+
+Yourstreet 2 Ourstreet 2
+Alice ½ Bob
+Colin Jones ½ David ½
+Evan ½ ½ Frank
+George Zoe ½
+
+Ourstreet 3 1 Yourstreet
+Bob 0.5-0.5 Alice
+David 1-0 Evan
+Frank 1 0 Colin Jones
+Zoe 0.5 George
+
+
+
+sample_league_2.txt
+
+No game results yet, but the players are known.
+
+Anytown League
+12 Sep 2011 30 March 2013
+
+30 oct 2011 Division 1 Ourstreet Yourstreet
+20 feb 2012 Division 1 Yourstreet Ourstreet
+
+Division 1
+
+Yourstreet 0 Ourstreet 0
+Alice Bob
+Colin Jones David
+Evan Frank
+George Zoe
+
+Ourstreet 0 0 Yourstreet
+Bob Jones Alice
+David Evan
+Frank Colin Jones
+Zoe George
+
+
+
+sample_league_3.txt
+
+'unfinished' is a game result, but this example gets the names wrong.
+
+Anytown League
+12 Sep 2011 30 March 2013
+
+30 oct 2011 Division 1 Ourstreet Yourstreet
+20 feb 2012 Division 1 Yourstreet Ourstreet
+
+Division 1
+
+Yourstreet 0 Ourstreet 0
+Alice Bob
+Colin Jones David
+Evan Frank
+George Zoe
+
+Ourstreet 0 0 Yourstreet
+Bob Jones Alice
+David Evan
+Frank Colin Jones unfinished
+Zoe George
+
+
+
+sample_league_4.txt
+
+'unfinished' is a game result, but this example gets the names correct.
+
+Anytown League
+12 Sep 2011 30 March 2013
+
+30 oct 2011 Division 1 Ourstreet Yourstreet
+20 feb 2012 Division 1 Yourstreet Ourstreet
+
+Division 1
+
+Yourstreet 0 Ourstreet 0
+Alice Bob
+Colin Jones David unfinished
+Evan Frank
+George Zoe
+
+Ourstreet 0 0 Yourstreet
+Bob Jones Alice
+David Evan
+Frank Colin Jones unfinished
+Zoe George
+
+
+
+sample_league_5.txt
+
+Just a fixture list without the '0 0' match scores.
+
+Anytown League
+12 Sep 2011 30 March 2013
+
+30 oct 2011 Division 1 Ourstreet Yourstreet
+20 feb 2012 Division 1 Yourstreet Ourstreet
+
+Division 1
+
+Yourstreet Ourstreet
+Alice Bob
+Colin Jones David
+Evan Frank
+George Zoe
+
+Ourstreet Yourstreet
+Bob Jones Alice
+David Evan
+Frank Colin Jones
+Zoe George
+
+
+
+sample_league_ports.txt
+
+These are the rules for extracting fixture list and results from the emails used to report the Portsmouth District League.
+
+The first section is the rules for extracting text from the selected emails.
+
+The second section is a set of regular expressions to translate match result text into something like the sample_league_1.txt example.
+
+The third section is a set of regular expressions to translate fixture list text into something like the sample_league_1.txt example.
+
+mailbox=mailbox
+extracts=extracts
+textentry=textentry
+text_content_type=text/plain
+earliestdate=2012-09-01
+mostrecentdate=2013-06-30
+competition=Div 1
+competition=Div 2
+competition=Div 3
+competition=Cole Cup
+competition=Cole Plate
+team_name=:chi @ bognor:Chichester C
+
+# Portsmouth District League Results format
+results_prefix=\s+?(?:played-on\s+games)|(?:portsmouth\s+&\s+district\s+chess\s+league)\s+(?=div:)
+keep_word_splitters=-,.'/()?:\t\n
+section_prefix=div:\s[^\n\t]*
+section_body=(?:\A|(?:\t\t\?\t\t\?))
+section_name=@div: 1@Div 1
+section_name=@div: 2@Div 2
+section_name=@div: 3@Div 3
+section_name=@div: cole cup@Cole Cup
+section_name=@div: cole plate@Cole Plate
+match_body=\Adiv:\t.*
+teams_body=(?<=\n)(?P<teams>.*?)(?=\(home).*?(?:Total:(?P<scoreone>[^\n]*))(?:Total:(?P<scoretwo>[^\n]*))
+games_body=\n([123456789])\n([^\n]*)\n([^\n]*)\n[^\n]*\n([^\n]*)\n([^\n]*)\n([^\n]*)\n[^\n]*\n([^\n]*)
+finished=(?P<board>[123456789])\s(?P<nameone>.*?)\s+(?P<scoreone>[01\u00bd])\s+(?P<nametwo>.*?)\s+(?P<scoretwo>[01\u00bd])
+unfinished=(?P<board>[123456789])\s(?P<nameone>.*?)\s+-\s+(?P<nametwo>.*?)\s+-
+default=(?P<board>[123456789])\s+(?:default\s+0\s+(?P<nametwo>.*?)\s+1|(?P<nameone>.*?)\s+1\s+default\s+0|default\s+0\s+default\s+0)
+match_date_body=\s*(?P<result_date>(?:[0123456789]{1,2}[/\-\.]){2}[0123456789]{1,4})\s
+played_on_body=\tdiv:\t.*
+teams_played_on_body=(?:(?<=\n\t)(?P<teams>.*?)(?=\n[0123456789]).*?(?:Total:(?P<scoreone>[^\n]*))(?:Total:(?P<scoretwo>[^\n]*)))
+games_played_on_body=\n([123456789])\n([^\n]*)\n([^\n]*)\n[^\n]*\n([^\n]*)\n([^\n]*)\n([^\n]*)\n[^\n]*\n([^\n]*)
+finished_played_on=(?P<board>[123456789])\s(?P<nameone>.*?)\s+(?P<scoreone>[01\u00bd])\s+(?P<nametwo>.*?)\s+(?P<scoretwo>[01\u00bd])
+unfinished_played_on=(?P<board>[123456789])\s(?P<nameone>.*?)\s+-\s+(?P<nametwo>.*?)\s+-
+
+# Portsmouth District League Fixtures format
+results_prefix=\s+?(?:portsmouth\s+&\s+district\s+chess\s+league\s+fixture\s+list\s+for\s+.+?)\s+
+keep_word_splitters=-,.'/\t\n@
+section_prefix=division\s+[^\n\t]*
+section_body=(?:division\s+[^\n\t]*)
+section_name=@division 1@Div 1
+section_name=@division 2@Div 2
+section_name=@division 3@Div 3
+schedule_body=(?<=\n)[^\n]+
+fixture_body=\s*(?P<dayname>[^\.]+)\.\s*(?P<day>[0-9]+)\.\s*(?P<month>[0-9]+)\.\s*(?P<year>[0-9]+)\s+(?P<teams>(?:.*))
+
+
+
+sample_league_ports_fix.txt
+
+The email attachment used to report the fixture list for the Portsmouth District League in the 2012-2013 season.
+
+Easy to read, but the layout is sufficiently different from sample_league_1.txt to need some editing, or some regular expressions to do a translation.
+
+Axxxxx,
+
+Here is a softcopy of the League fixtures for the new season.
+
+You should receive hardcopy of everything else very soon.
+
+One change that is going to have an effect is that the AGM decided to send Cole Cup and Summer Team Rapidplay games for grading.
+
+Best wishes,
+Bxxxxxx Cxxxxxx
+
+             Portsmouth & District Chess League
+  
+                   Fixture  List for 2012/2013
+  
+                        Division  1
+Round  1.
+   Tues.   9.10.12  Fareham A        v   Portsmouth A   
+   Thurs. 11.10.12  Emsworth A       v   Cosham A       
+   Fri.   12.10.12  Gosport          v   Chichester A   
+  
+Round  2.
+   Mon.   29.10.12  Chichester A     v   Emsworth A     
+   Wed.   31.10.12  Portsmouth A     v   Gosport        
+   Thurs.  1.11.12  Cosham A         v   Fareham A      
+  
+Round  3.
+   Mon.   19.11.12  Chichester A     v   Portsmouth A   
+   Thurs. 22.11.12  Emsworth A       v   Fareham A      
+   Thurs. 22.11.12  Cosham A         v   Gosport        
+  
+Round  4.
+   Tues.  11.12.12  Fareham A        v   Chichester A   
+   Wed.   12.12.12  Portsmouth A     v   Cosham A       
+   Fri.   14.12.12  Gosport          v   Emsworth A     
+  
+Round  5.
+   Mon.   14. 1.13  Chichester A     v   Cosham A       
+   Tues.  15. 1.13  Fareham A        v   Gosport        
+   Thurs. 17. 1.13  Emsworth A       v   Portsmouth A   
+  
+Round  6.
+   Mon.    4. 2.13  Chichester A     v   Gosport        
+   Wed.    6. 2.13  Portsmouth A     v   Fareham A      
+   Thurs.  7. 2.13  Cosham A         v   Emsworth A     
+  
+Round  7.
+   Tues.  26. 2.13  Fareham A        v   Cosham A       
+   Thurs. 28. 2.13  Emsworth A       v   Chichester A   
+   Fri.    1. 3.13  Gosport          v   Portsmouth A   
+  
+Round  8.
+   Wed.   20. 3.13  Portsmouth A     v   Emsworth A     
+   Thurs. 21. 3.13  Cosham A         v   Chichester A   
+   Fri.   22. 3.13  Gosport          v   Fareham A      
+  
+Round  9.
+   Mon.   15. 4.13  Chichester A     v   Fareham A      
+   Thurs. 18. 4.13  Emsworth A       v   Gosport        
+   Thurs. 18. 4.13  Cosham A         v   Portsmouth A   
+  
+Round  10.
+   Tues.   7. 5.13  Fareham A        v   Emsworth A     
+   Wed.    8. 5.13  Portsmouth A     v   Chichester A   
+   Fri.   10. 5.13  Gosport          v   Cosham A       
+             Portsmouth & District Chess League
+  
+                   Fixture  List for 2012/2013
+  
+                        Division  2
+Round  1.
+   Wed.    3.10.12  Portsmouth B     v   Chichester B   
+   Thurs.  4.10.12  Emsworth B       v   Cosham B       
+   Sat.    6.10.12  bye              v   Fareham B      
+  
+Round  2.
+   Mon.   22.10.12  Chichester B     v   Emsworth B     
+   Tues.  23.10.12  Fareham B        v   Portsmouth B   
+   Thurs. 25.10.12  Cosham B         v   bye            
+  
+Round  3.
+   Mon.   12.11.12  Chichester B     v   bye            
+   Tues.  13.11.12  Fareham B        v   Cosham B       
+   Wed.   14.11.12  Portsmouth B     v   Emsworth B     
+  
+Round  4.
+   Thurs.  6.12.12  Emsworth B       v   Fareham B      
+   Thurs.  6.12.12  Cosham B         v   Chichester B   
+   Sat.    8.12.12  bye              v   Portsmouth B   
+  
+Round  5.
+   Tues.   8. 1.13  Fareham B        v   Chichester B   
+   Wed.    9. 1.13  Portsmouth B     v   Cosham B       
+   Thurs. 10. 1.13  Emsworth B       v   bye            
+  
+Round  6.
+   Mon.   28. 1.13  Chichester B     v   Portsmouth B   
+   Tues.  29. 1.13  Fareham B        v   bye            
+   Thurs. 31. 1.13  Cosham B         v   Emsworth B     
+  
+Round  7.
+   Wed.   20. 2.13  Portsmouth B     v   Fareham B      
+   Thurs. 21. 2.13  Emsworth B       v   Chichester B   
+   Sat.   23. 2.13  bye              v   Cosham B       
+  
+Round  8.
+   Mon.   11. 3.13  Chichester B     v   Fareham B      
+   Thurs. 14. 3.13  Cosham B         v   Portsmouth B   
+   Sat.   16. 3.13  bye              v   Emsworth B     
+  
+Round  9.
+   Mon.    8. 4.13  Chichester B     v   Cosham B       
+   Tues.   9. 4.13  Fareham B        v   Emsworth B     
+   Wed.   10. 4.13  Portsmouth B     v   bye            
+  
+Round  10.
+   Thurs.  2. 5.13  Emsworth B       v   Portsmouth B   
+   Thurs.  2. 5.13  Cosham B         v   Fareham B      
+   Sat.    4. 5.13  bye              v   Chichester B   
+             Portsmouth & District Chess League
+  
+                   Fixture  List for 2012/2013
+  
+                        Division  3
+Round  1.
+   Tues.  16.10.12  Fareham C        v   Portsmouth C   
+   Fri.   19.10.12  Chi @ Bognor     v   Emsworth C     
+  
+Round  2.
+   Tues.   6.11.12  Fareham C        v   Chi @ Bognor   
+   Wed.    7.11.12  Portsmouth C     v   Emsworth C     
+  
+Round  3.
+   Thurs. 29.11.12  Emsworth C       v   Fareham C      
+   Fri.   30.11.12  Chi @ Bognor     v   Portsmouth C   
+  
+Round  4.
+   Wed.    2. 1.13  Portsmouth C     v   Fareham C      
+   Thurs.  3. 1.13  Emsworth C       v   Chi @ Bognor   
+  
+Round  5.
+   Thurs. 24. 1.13  Emsworth C       v   Portsmouth C   
+   Fri.   25. 1.13  Chi @ Bognor     v   Fareham C      
+  
+Round  6.
+   Tues.  12. 2.13  Fareham C        v   Emsworth C     
+   Wed.   13. 2.13  Portsmouth C     v   Chi @ Bognor   
+  
+Round  7.
+   Wed.    6. 3.13  Portsmouth C     v   Fareham C      
+   Fri.    8. 3.13  Chi @ Bognor     v   Emsworth C     
+  
+Round  8.
+   Tues.  26. 3.13  Fareham C        v   Chi @ Bognor   
+   Wed.   27. 3.13  Portsmouth C     v   Emsworth C     
+  
+Round  9.
+   Thurs. 25. 4.13  Emsworth C       v   Fareham C      
+   Fri.   26. 4.13  Chi @ Bognor     v   Portsmouth C   
+  
+
+    
+??
+
+??
+
+??
+
+??
+
+
+
+sample_league_ports_match.txt
+
+An email attachment used to report some match results for the Portsmouth District League in the 2012-2013 season.
+
+All player names changed for privacy reasons.
+
+The attachment is a *.txt version of a *.doc (Microsoft Word) document. The universal newline convention used by Python does a good job of converting the carriage return (\r) field separators to line feed (\n).
+
+Not easy to read, nor easy to edit accurately in bulk.  So a set of regular expressions to translate to something like the sample_league_1.txt example is needed.
+
+Axxxx,
+More results,
+Bxxx Cxxxxxx
+
+
+
+Portsmouth & District Chess League
+	Div:	3 	Match Result	Date:  	16/10/12 
+	 FAREHAM C	PORTSMOUTH C	
+	(Home team)	(Away team)
+
+Surname
+Initials
+p/a
+Res
+Surname
+Initials
+p/a
+Res
+1
+Cxxxxxx
+A.
+
+0
+Cxxxxxx
+B.
+
+1
+2
+Cxxxxxx
+C.
+
+½
+Cxxxxxx
+D.
+
+½
+3
+Cxxxxxx
+E.
+
+1
+default
+
+
+0
+4
+Cxxxxxx
+F.
+
+1
+Cxxxxxx
+G.
+
+0
+5
+Cxxxxxx
+H.
+
+1
+default
+
+
+0
+6
+Cxxxxxx
+I.
+
+½
+Cxxxxxx
+J.
+
+½
+	Total:	 4 	Total:	2
+		?		?
+
+
+
+Played-On  Games
+	Div:	1  
+	 EMSWORTH A	COSHAM A 
+1
+Cxxxxxx
+A.
+
+½
+Cxxxxxx
+B.
+
+½
+	Total:	  3½	Total:	1½  
+		?		?
+
+
+
+
+
+
+sample_league_soton.txt
+
+These are the rules for extracting fixture list and results from the emails used to report the Southampton League.
+
+The first section is the rules for extracting text from the selected emails.
+
+The second section is a set of regular expressions to translate match result text into something like the sample_league_1.txt example.
+
+The third section is a set of rules to translate the fixture list spreadsheet into something like the sample_league_1.txt example.
+
+At time of writing real examples of the format used to report Southampton League match results can be seen on the Southampton League website under Detailed Results.
+
+mailbox=mailbox
+extracts=extracts
+textentry=textentry
+earliestdate=2011-08-01
+mostrecentdate=2012-06-30
+text_content_type=text/plain
+pdf_content_type=application/pdf
+csv_content_type=text/comma-separated-values
+ss_content_type=application/vnd.ms-excel
+competition=Div 1
+competition=Div 2
+competition=Div 3
+competition=Div 4
+competition=Div 5
+competition=Div 4/5 Cup
+competition=Robertson Cup
+competition=Robertson Plate
+
+# Southampton League Match Results format
+results_prefix=\s*chess\s.*?echo\s.*?\n\s*results?\s+
+keep_word_splitters=-,.'()/
+drop_forwarded_markers=>
+source=(?:\s*chess\s.*?echo\s.*?([0-9]{1,2}(?:\S+\s+){2}[0-9]{4})(?:\s.+?)?\n\s*results?\s+)
+section_prefix=(?:division\s+4/5\s+cup)|(?:division\s+[12345])|robertson\s+(?:cup|plate)\s+
+section_body=(?:division\s+4/5\s+cup)|(?:division\s+[12345])|robertson\s+(?:cup|plate)\s+
+section_name=:division 1:Div 1
+section_name=:division 2:Div 2
+section_name=:division 3:Div 3
+section_name=:division 4:Div 4
+section_name=:division 5:Div 5
+section_name=:division 4/5 cup:Div 4/5 Cup
+section_name=:robertson cup:Robertson Cup
+section_name=:robertson plate:Robertson Plate
+match_body=.+?\((?:by\sdefault|[^,]+?(?:,[^,]+?)+?)\)
+teams_body=\A\s*(?P<teamone>[^\(]*?)\s+(?P<scoreone>[0-9]+(?:\.[05])?)\s+(?P<teamtwo>.*?)\s+(?P<scoretwo>[0-9]+(?:\.[05])?)
+match_default=.*?(?P<matchdefault>\(by\sdefault\))\Z
+games_body=(?<=\(|,)[^,)]*
+finished=(?P<nameone>.*?)\s+(?P<scoreone>[01](?:\.[05])?)\s+(?P<nametwo>.*?)\s+(?P<scoretwo>[01](?:\.[05])?)(?:\Z|\s+(?:.*?\s+)?(?P<resultonly>grading)\s+(?:.*?\s+)?only\Z)
+unfinished=(?P<names>.*?)(?:\s+game\s+unfinished\s*)
+default=(?P<teamwins>.+?)(?:\s+won\s+by\s+default\s*.*)
+played_on_body=(?:unfinished\s+games?\s*)(.*?\.\s+match\s+result(?:\s+.+?[0-9]+(?:\.[05])?){2}\.)
+teams_played_on_body=\.\s+match\sresult\s+(?P<teamone>.+?)\s+(?P<scoreone>[0-9]+(?:\.[05])?)\s+(?P<teamtwo>.+?)\s+(?P<scoretwo>[0-9]+(?:\.[05])?)\.
+games_played_on_body=(?:(?<=,)|(?<=\A))(.*?)(?=,|\.\s+match\s+result\s+)
+finished_played_on=(?P<nameone>.*?)\s+\((?P<teamone>.+?)\)\s+(?P<scoreone>[01](?:\.[05])?)\s*(?P<nametwo>.*?)\s+\((?P<teamtwo>.+?)\)\s+(?P<scoretwo>[01](?:\.[05])?)
+
+# Southampton League Fixture List spreadsheet layout
+sched_csv_data_name=sheet1 sched_day sched_date sched_section sched_home_team sched_away_team
+sched_date=1
+sched_day=0
+sched_section=4
+replace=:1:Div 1
+replace=:2:Div 2
+replace=:3:Div 3
+replace=:4:Div 4
+replace=:5:Div 5
+replace=:R:Robertson Cup
+replace=:X:Div 4/5 Cup
+replace=:P:Robertson Plate
+sched_home_team=2
+sched_away_team=3
+
+
+
+sample_tabular_emails.txt
+
+Called collected.conf by default.
+
+The configuration file used to pick emails from the mailboxes.
+
+If both emails are in the same *.mbs file just one mboxmailstore line is sufficient.  The dates are the ones relevant when I checked this worked.
+
+# collected.conf email collection rules.
+collected collected
+mailboxstyle mbox
+mboxmailstore ~/ExportedResultsEmails/2019-2020/Test-results.mbs
+mboxmailstore ~/ExportedResultsEmails/2019-2020/Test-fixtures.mbs
+earliestfromdate 2021-10-17
+mostrecentfromdate 2021-10-24
+emailsfrom <email address>
+
+
+
+sample_tabular_league.txt
+
+Called event.conf by default.
+
+These are the rules for extracting fixture list and results from the emails used to report the sampe tabular results from the Portsmouth District League.
+
+The first section defines the columns from which fixtures are extracted from the sample_tabular_league_fixtures.csv attachments to selected emails.
+
+The second section defines the columns from which results are extracted from the sample_tabular_league_results.csv attachments to selected emails.
+
+The sample_tabular_league.txt file retains the non-tabular rules, mostly commented.
+
+The 'text_from_rows games' line identifies the sheet in the spreadsheet from which data is taken.  Replace 'games' by the sheet name.  For csv files 'games' can be any name but the line must be present to stitch everything together using 'games' (or its replacement).  The dates are contrived to fit what I did when checking this worked.
+
+
+collected collected
+extracted extracted
+textentry textentry
+text_content_type text/plain
+pdf_content_type application/pdf
+csv_content_type text/comma-separated-values
+csv_content_type text/csv
+docx_content_type application/vnd.openxmlformats-officedocument.wordprocessingml.document
+earliestdate 2021-10-17
+mostrecentdate 2021-10-24
+#competition Div 1
+#competition Div 2
+#competition Div 3
+competition Division One
+competition Division Two
+competition Division Three
+competition Cole Cup
+competition Cole Plate
+team_name :chi @ bognor:Chichester C
+
+# Portsmouth District League Results format (John Wheeler's emails)
+##results_prefix \s+?(?:played-on\s+games)|(?:portsmouth\s+&\s+district\s+chess\s+league)\s+(?=div:)
+#results_prefix \s+?(?:played-on\s+games)|(?:portsmouth\s+&\s+district\s+chess\s+league)\s+
+#keep_word_splitters -,.'/()?:\t\n
+#section_prefix div:\s[^\n\t]*
+## Seems safe to avoid 'split requires non-empty pattern match' FutureWarning by this change removing the \A alternative.
+##section_body (?:\A|(?:\t\t\?\t\t\?))
+#section_body (?:(?:\t\t\?\t\t\?))
+#section_name @div: 1@Div 1
+#section_name @div: 2@Div 2
+#section_name @div: 3@Div 3
+#section_name @div: cole cup@Cole Cup
+#section_name @div: cole plate@Cole Plate
+#match_body \Adiv:\t.*
+#teams_body (?<=\n)(?P<teams>.*?)(?=\(home).*?(?:Total:(?P<scoreone>[^\n]*))(?:Total:(?P<scoretwo>[^\n]*))
+#games_body \n([123456789])\n([^\n]*)\n([^\n]*)\n[^\n]*\n([^\n]*)\n([^\n]*)\n([^\n]*)\n[^\n]*\n([^\n]*)
+#finished (?P<board>[123456789])\s(?P<nameone>.*?)\s+(?P<scoreone>[01\u00bd])\s+(?P<nametwo>.*?)\s+(?P<scoretwo>[01\u00bd])
+#unfinished (?P<board>[123456789])\s(?P<nameone>.*?)\s+-\s+(?P<nametwo>.*?)\s+-
+#default (?P<board>[123456789])\s+(?:default\s+0\s+(?P<nametwo>.*?)\s+1|(?P<nameone>.*?)\s+1\s+default\s+0|default\s+0\s+default\s+0)
+#match_date_body \s*(?P<result_date>(?:[0123456789]{1,2}[/\-\.]){2}[0123456789]{1,4})\s
+#played_on_body \tdiv:\t.*
+#teams_played_on_body (?:(?<=\n\t)(?P<teams>.*?)(?=\n[0123456789]).*?(?:Total:(?P<scoreone>[^\n]*))(?:Total:(?P<scoretwo>[^\n]*)))
+#games_played_on_body \n([123456789])\n([^\n]*)\n([^\n]*)\n[^\n]*\n([^\n]*)\n([^\n]*)\n([^\n]*)\n[^\n]*\n([^\n]*)
+#finished_played_on (?P<board>[123456789])\s(?P<nameone>.*?)\s+(?P<scoreone>[01\u00bd])\s+(?P<nametwo>.*?)\s+(?P<scoretwo>[01\u00bd])
+#unfinished_played_on (?P<board>[123456789])\s(?P<nameone>.*?)\s+-\s+(?P<nametwo>.*?)\s+-
+
+# Portsmouth District League Match Results format (website emails from September 2017)
+#results_prefix \s+has\s+submitted\s+a\s+scorecard\s+for\s+the\s+
+#keep_word_splitters -,.'()/;
+#drop_forwarded_markers >
+#section_prefix (?:division\s+(?:one|two|three))|cole\s+cup\s+|cole\s+plate\s+
+#section_body (?:division\s+(?:one|two|three))|cole\s+cup\s+|cole\s+plate\s+
+#section_name :division one:Div 1
+#section_name :division two:Div 2
+#section_name :division three:Div 3
+#section_name :cole cup:Cole Cup
+#section_name :cole plate:Cole Plate
+#match_body (?<=\.).*?(?=go to http)
+#teams_body \A\s*(?P<teamone>.*?)\s+(?P<scoreone>[0-9]+(?:\.[05])?)\s+-\s+(?P<scoretwo>[0-9]+(?:\.[05])?)\s+(?P<teamtwo>[^,]+)
+#match_default \A.*?(?:[0123456789]{2}/){2}[0123456789]{4}(?P<matchdefault>\s*)\Z
+#games_body (?<=[0-9]\. )[^;]*
+#match_date_body ,\s+(?P<result_date>(?:[0123456789]{2}/){2}[0123456789]{4})\s+
+#finished (?P<nameone>.*)\s+(?P<scoreone>(?:1\s*-\s*0)|(?:0\s*-\s*1)|(?:1/2))\s+(?P<nametwo>.*)
+#unfinished (?P<nameone>.*)\s+(?:adj)\s+(?P<nametwo>.*)
+#default \s+(?:def\s+0\s+(?P<nametwo>.*?)\s+1|(?P<nameone>.*?)\s+1\s+def\s+0|home\s+default|away\s+default)
+
+# Portsmouth District League Match Results format (website csv downloads from September 2017)
+
+# Replace 'games' by the name of the sheet in a spreadsheet which supplies
+# the data.  Hopefully the fixtures and results sheets will have different
+# names.  For csv files 'games' can be any name but must be present.
+text_from_rows games
+
+#report_csv_data_name games report_data_columns
+#report_data_columns 0+1+2+3+4+5+6+7+8+9+10+11+12
+
+# Does not prevent tabular interpretation of results if active.
+# Does create multiple fixture list entries, one per game in match.
+#sched_csv_data_name games sched_data_columns
+#sched_data_columns 0+2+4+10
+
+# Does not prevent tabular interpretation of results if active.
+# Does create multiple fixture list entries, one per game in match.
+#sched_csv_data_name games sched_data_columns
+#sched_data_columns Section+Date+HomeTeam+AwayTeam
+
+# Does not prevent tabular interpretation of results if active.
+# Does create multiple fixture list entries, one per game in match.
+#sched_csv_data_name games sched_section sched_date sched_home_team sched_away_team
+#sched_section 0
+#sched_date 2
+#sched_home_team 4
+#sched_away_team 10
+
+# Does not prevent tabular interpretation of results if active.
+# Does create multiple fixture list entries, one per game in match.
+#sched_csv_data_name games sched_section sched_date sched_home_team sched_away_team
+#sched_section Section
+#sched_date Date
+#sched_home_team HomeTeam
+#sched_away_team AwayTeam
+
+# Does not prevent tabular interpretation of results if active.
+# Does not create fixture list entries from the results table defined below.
+# The column names must not be same as any in the report_* lines.
+sched_csv_data_name games sched_section sched_date sched_home_team sched_away_team
+sched_section FixtureSection
+sched_date FixtureDate
+sched_home_team FixtureHomeTeam
+sched_away_team FixtureAwayTeam
+
+# Extracts game results for matches from csv files or spreadsheet sheets in tabular form.
+# Data is taken from the columns identified in the report_* lines below.
+# The table must have exactly 14 columns.
+# The column names must not be same as any in the sched_* lines.
+report_csv_data_name games report_section report_day report_date report_round report_home_team report_home_team_score report_home_player report_result report_away_player report_away_team_score report_away_team report_board report_home_player_colour report_event
+report_section Section
+report_day Day
+report_date Date
+report_round Round
+report_home_team HomeTeam
+report_home_team_score HTScore
+report_home_player HomePlayer
+report_result Result
+report_away_player AwayPlayer
+report_away_team_score ATScore
+report_away_team AwayTeam
+report_board Board
+report_home_player_colour HPColour
+report_event Event
+
+# Portsmouth District League Fixtures format (John Wheeler's emails)
+results_prefix \s+?(?:portsmouth\s+&\s+district\s+chess\s+league\s+fixture\s+list\s+for\s+.+?)\s+
+keep_word_splitters -,.'/\t\n@
+section_prefix division\s+[^\n\t]*
+section_body (?:division\s+[^\n\t]*)
+section_name @division 1@Div 1
+section_name @division 2@Div 2
+section_name @division 3@Div 3
+schedule_body (?<=\n)[^\n]+
+fixture_body \s*(?P<dayname>[^\.]+)\.\s*(?P<day>[0-9]+)\.\s*(?P<month>[0-9]+)\.\s*(?P<year>[0-9]+)\s+(?P<teams>(?:.*))
+
+
+
+sample_tabular_league_fixtures.csv
+
+The email attachment used to report a truncated fixture list for the Portsmouth District League in the 2019-2020 season.  This file was created to demonstrate a tabular fixture list and the technique has never been used by this software to do real grading (now rating).
+
+The table is allowed to have 7 significant columns.  Any data in FixtureRound is not used at present.
+
+None of the column names must exist in the results table.
+
+The column names do not have to be the ones given here.
+
+The fixtures are published at portsmouthchessleague.uk/2019/Fixtures so no names are changed here.
+
+FixtureSection,FixtureDay,FixtureDate,FixtureRound,FixtureHomeTeam,FixtureAwayTeam,FixtureEvent
+Division One,,3 Oct 2019,,Cosham A,Fareham A,PDL
+Division Three,,19 Dec 2019,,Cosham C,Chichester C,PDL
+Division One,,28 Jan 2020,,Fareham A,Cosham A,PDL
+Division Three,,14 Oct 2019,,Chichester C,Cosham C,PDL
+
+
+
+sample_tabular_league_results.csv
+
+The email attachment used to report the match results for the truncated fixture list for the Portsmouth District League in the 2019-2020 season.  This file was created to demonstrate a set of tabular match results and the technique has never been used by this software to do real grading (now rating).
+
+The table must have exactly 14 columns.
+
+None of the column names must exist in the fixtures table.
+
+The column names do not have to be the ones given here.
+
+The ECF code and for the home team player must be included in the HomePlayer column as a prefix to the name.  For the away team player it must be a suffix to the name in the AwayPlayer column.  If not and there is only one ECF code, it may be treated as the ECF code of the home team player.
+
+The match results are published in several places, including portsmouthchessleague.uk/2019/Fixtures, so no names are changed here.
+
+Section,Day,Date,Round,HomeTeam,HTScore,HomePlayer,Result,AwayPlayer,ATScore,AwayTeam,Board,HPColour,Event
+Division One,,3 Oct 2019,1,Cosham A,2.5,"117540D Pye, David",draw,"108896J Corkett, Anthony",3.5,Fareham A,1,Black,PDL
+Division One,,3 Oct 2019,1,Cosham A,2.5,"121446K Wheeler, John",0-1,"278291B Chapman, Matt",3.5,Fareham A,2,White,PDL
+Division One,,3 Oct 2019,1,Cosham A,2.5,"108890H Cordner, David",draw,"114948K Marsh, Roger DW",3.5,Fareham A,3,Black,PDL
+Division One,,3 Oct 2019,1,Cosham A,2.5,"117509K Puchades, Richard",1-0,"249713L Black, Ted",3.5,Fareham A,4,White,PDL
+Division One,,3 Oct 2019,1,Cosham A,2.5,"119162H Smith, Andrew",draw,"108536A Coburn, Joseph",3.5,Fareham A,5,Black,PDL
+Division One,,3 Oct 2019,1,Cosham A,2.5,"288894E Feltham, George",0-1,"192020A Syed, Ashraf",3.5,Fareham A,6,White,PDL
+Division Three,,19 Dec 2019,1,Cosham C,4,"288894E Feltham, George",draw,"119544L, Squires, Chris R",1,Chichester C,1,White,PDL
+Division Three,,19 Dec 2019,1,Cosham C,4,"102438D Pearson, Simon",1-0,"302394B Howeson, Tom",1,Chichester C,2,Black,PDL
+Division Three,,19 Dec 2019,1,Cosham C,4,"303053C Hamilton, Melissa",1-0,"278296A Spence, Mike",1,Chichester C,3,White,PDL
+Division Three,,19 Dec 2019,1,Cosham C,4,"109923B Dulley, Richard",draw,"328209A Fremantle, Daniel",1,Chichester C,4,Black,PDL
+Division Three,,19 Dec 2019,1,Cosham C,4,"322913A Field, Dan",1-0,"302423E Howeson, Sarah",1,Chichester C,5,White,PDL
+Division One,,28 Jan 2020,5,Fareham A,3,"108896J Corkett, Anthony",0-1,"117540D Pye, David",3,Cosham A,1,Black,PDL
+Division One,,28 Jan 2020,5,Fareham A,3,"278291B Chapman, Matt",1-0,"121446K Wheeler, John",3,Cosham A,2,White,PDL
+Division One,,28 Jan 2020,5,Fareham A,3,"111680A Gregory, Keith",draw,"108890H Cordner, David",3,Cosham A,3,Black,PDL
+Division One,,28 Jan 2020,5,Fareham A,3,"107183L Brameld, Arthur",draw,"117509K Puchades, Richard",3,Cosham A,4,White,PDL
+Division One,,28 Jan 2020,5,Fareham A,3,"114948K Marsh, Roger DW",draw,"119162H Smith, Andrew",3,Cosham A,5,Black,PDL
+Division One,,28 Jan 2020,5,Fareham A,3,"249713L Black, Ted",draw,"302203B Evans, Thomas",3,Cosham A,6,White,PDL
+Division Three,,14 Oct 2019,1,Chichester C,4,"119544L, Squires, Chris R",1-0,"288894E Feltham, George",1,Cosham C,1,White,PDL
+Division Three,,14 Oct 2019,1,Chichester C,4,"302394B Howeson, Tom",1-0,"303053C Hamilton, Melissa",1,Cosham C,2,Black,PDL
+Division Three,,14 Oct 2019,1,Chichester C,4,"213883K Wallace, D H",0-1,"109923B Dulley, Richard",1,Cosham C,3,White,PDL
+Division Three,,14 Oct 2019,1,Chichester C,4,"278296A Spence, Mike",1-0,"142363A Webb, John",1,Cosham C,4,Black,PDL
+Division Three,,14 Oct 2019,1,Chichester C,4,"307556E Stubbington, Leslie",1-0,"206528K Moss, Edward",1,Cosham C,5,White,PDL

@@ -1,0 +1,34 @@
+The two csv file layouts generated are defined.  These are:
+
+Game list
+Game count for player
+
+Generated csv files have a header row using the column names.
+
+
+The game list file produced by the 'Event Summary' action on the Events tab has the following fifteen (15) named columns, presented here in alphabetic order.
+
+Away Player
+Away Team
+Board
+Date Played
+ECF Name Away Player
+ECF Name Home Player
+End Date
+Event
+Home Player
+Home Player Colour
+Home Team
+Result
+Round
+Section
+Start Date
+
+
+
+The game counts file produced by the 'Event Summary' action on the Events tab has the following four (4) named columns, presented here in alphabetic order.
+
+ECF Name
+Game Count
+Grading Code
+Player

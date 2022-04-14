@@ -1,0 +1,154 @@
+================================
+Results database for chess games
+================================
+
+.. contents::
+
+
+Description
+===========
+
+Store results of chess games from events such as tournaments and leagues.
+
+Results can be typed in; or extracted from emails or their text, csv, pdf, odt, docx, or spreadsheet attachments.
+
+League fixture lists are used to point out missing or surplus match reports.  Duplicate consistent match reports are treated as a single match report. 
+
+Identify players by saying 'player A in event B' is same as 'player C in event D' and so on.
+
+Allow `English Chess Federation`_ (ECF) grading codes to be associated with identified players and prepare results for submission to ECF for grading.
+
+
+Installation Instructions
+=========================
+
+This package is not available on PyPI, or any other package index, but can be installed by typing
+
+   python -m pip install --user --trusted-host solentware.co.uk --find-links http://solentware.co.uk/wheels.html chessresults
+
+at the command prompt.
+
+See `Python`_ and `pip`_ documentation for alternatives and platform-specific points.
+
+Then run 'python -m pip check' to identify other packages which need to be installed.
+
+The following should be installed to support extraction of results from pdf and spreadsheet attachments.
+
+* `Xpdf`_, specifically the `pdftotext`_ utility to handle pdf.
+* `Gnumeric`_, specifically the ssconvert utility in the `download`_ to handle spreadsheets.
+
+Sometimes it is possible to use `pdfminer3k`_ instead of pdftotext; and `xlsx2csv`_ instead of ssconvert.
+
+Open Document Format (ods) and Office Open XML (xlsx) attachments can be handled without Gnumeric or xlsx2csv.
+
+Open Document Format (odt) and Open Office XML (docx) attachments can be handled without an 'office' application such as Microsoft Office.
+
+You will need to install `tnefparse`_ to support extraction of new grading codes from `ECF`_ feedback emails, or results from emails, if the MIME type of the attachment is application/ms-tnef (the filename is usually winmail.dat).
+
+Grading codes and club codes can be downloaded from the `ECF Rating`_ database using the URLs defined in core.constants module.  This replaced the masterlist download in late 2020.
+
+
+Database Interfaces
+===================
+
+The default database interface is the sqlite3 module distributed with Python.
+
+The `apsw`_ interface, if installed, to Sqlite 3 is used instead of the sqlite3 interface.
+
+New databases are accessed using these alternative interfaces if installed.
+
+* `berkeleydb`_ (replaces bsddb3 at Python 3.10)
+* `bsddb3`_
+* `dptdb`_ (Microsoft Windows only)
+
+Results will use dptdb if installed.
+
+berkeleydb is available for Python 3.6 and later.  It is used instead of bsddb3 if both are installed and a version of `Berkeley DB`_ supported by berkeleydb is installed.
+
+If bsddb3 is used, a version of `Berkeley DB`_ supported by bsddb3 must be installed.
+
+
+Run
+===
+
+The instructions refer to results_lite which does not use data published by the `ECF`_.  The other options are described in `Notes`_.
+
+The command to run this package is:
+
+   python -m chessresults.results_lite
+
+You may need to give the path and version of Python depending on your system's configuration:
+
+   <path to python>/python<version> -m chessresults.results_lite
+
+   For example
+
+      C:\\Python34\\python -m chessresults.results_lite
+
+         on Microsoft Windows or
+
+      python3.4 -m chessresults.results_lite
+
+         on Unix-like systems.
+
+Or use the facilities of your desktop (Microsoft Windows, GNOME, KDE, ...) to set up a convenient way of starting results_lite.
+
+At least one database engine supported by the `solentware-base`_ package must be installed.
+
+
+Restrictions
+============
+
+At time of writing, February 2015, `Gnumeric`_ do not provide installers for Microsoft Windows.  According to the website, provision ceased in August 2014.
+
+
+Notes
+=====
+
+The results package aims to support the collection and reporting of chess game results to the ECF for grading and statistical analysis of the collected results.
+
+The core features of this package are available in results_lite which supports the collection of game results by event and the identification of games played by a player.
+
+It is difficult to stray far from the style:
+
+28 January 2015 J Smith 1 0 P Jones
+
+when typing results one per line, or row in csv and spreadsheets, with
+
+J Smith 1 P Jones 0 28 January 2015
+
+and similar not straying too far.  Otherwise you may have to figure some regular expressions to put in the configuration file for the event: avoid having to do this if at all possible.
+
+If the csv or spreadsheet file splits the components of a result into columns you will have to say how to stitch the columns together in the configuration file.
+
+results_ecf adds tools for graders who submit results to the ECF for grading.
+
+results_ogd supports associating these players with their ECF grading codes as published in the Online Grading Database `downloads page`_.
+
+Two tools are provided to assist when importing data.
+
+* identity is the tool used to say which game results belong to the same player when transferring data between databases created by this package.
+
+* prepare_ecf_format and prepare_league_format are tools for transferring data from sources other than databases created by this package.
+
+ECF grading codes are not passed to the importing database even if these are available in the exporting database.
+
+
+.. _English Chess Federation: http://englishchess.co.uk
+.. _ECF: http://englishchess.co.uk
+.. _ECF Rating: https://www.ecfrating.org.uk/
+.. _downloads page: http://ecfgrading.org.uk/new/downloads-php
+.. _Python: https://python.org
+.. _pip: https://packaging.python.org/installing
+.. _solentware-base: http://solentware.co.uk/components.html
+.. _bsddb3: https://pypi.org/project/bsddb3
+.. _berkeleydb: https://pypi.org/project/berkeleydb
+.. _dptdb: http://solentware.co.uk/download.html
+.. _Berkeley DB: http://oracle.com
+.. _Xpdf: http://foolabs.com/xpdf/home.html
+.. _pdftotext: http://foolabs.com/xpdf/download.html
+.. _Gnumeric: http://gnumeric.org
+.. _download: http://gnumeric.org/download.html
+.. _apsw: https://github.com/rogerbinns/apsw
+.. _pdfminer3k: https://pypi.org/project/pdfminer3k
+.. _xlsx2csv: https://pypi.org/project/xlsx2csv

@@ -1,0 +1,25 @@
+Some points on data storage that depend on the database engine in use are described.
+
+The database engines which can be used are Berkeley DB, DPT, and sqlite3.
+
+ChessResults will use sqlite3 (supplied with Python) unless either or both bsddb3 (the Berkeley DB interface) and dptdb (the DPT interface) are installed.
+
+Berkeley DB and sqlite3 will look after themselves.
+
+
+The DPT database engine uses files that have a definite size which does not depend on the number of records that exist on the file.  In other words files are created big enough to hold a specific number of records given a typical size for a record.  The file can be increased in size later if necessary but adding, deleting, or editing records does not change the size of the file.
+
+
+The rest of this document is about DPT file sizes.
+
+Space on a DPT file is dedicated to data or indexes.
+
+ChessResults will check if data or index space is getting low when it opens a file and increase either, or both, the data and index areas if necessary.
+
+ChessResults will estimate the data and index space needed for an import of ECF reference data and increase either, or both, the data and index areas if necessary before doing the import.  The import dialogue will give details of what will be done.
+
+The import dialogue provides the ability to increase the data or index space (by clicking the appropriate button).  Each use doubles the amount of free space, unless the free space exceeds the amount estimated to be needed for the import when the free space is increased by the estimated amount needed.
+
+The DPT database engine has a large, but finite, number of slots for recording increases in data or index size.  If, say, the last slot used describes an increase in data size and an increase in data size is requested that slot is reused and the two increases are merged.  The possibility of reusing a slot is the reason you may be asked to consider doing the other kind of increase first if you intend to do such an increase shortly.
+
+ChessResults creates a database sized to hold 10 million results.

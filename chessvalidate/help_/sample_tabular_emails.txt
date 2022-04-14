@@ -1,0 +1,8 @@
+# collected.conf email collection rules.
+collected collected
+mailboxstyle mbox
+mboxmailstore ~/ExportedResultsEmails/2019-2020/Test-CSV_2021-10-21.mbs
+mboxmailstore ~/ExportedResultsEmails/2019-2020/Test-fixtures-CSV_2021-10-23.mbs
+earliestfromdate 2021-10-17
+mostrecentfromdate 2021-10-24
+emailsfrom r.m@rmswch.plus.com

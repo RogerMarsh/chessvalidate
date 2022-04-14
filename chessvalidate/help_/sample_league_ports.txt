@@ -1,0 +1,46 @@
+collected mailbox
+extracted extracts
+textentry textentry
+text_content_type text/plain
+earliestdate 2012-09-01
+mostrecentdate 2013-06-30
+competition Div 1
+competition Div 2
+competition Div 3
+competition Cole Cup
+competition Cole Plate
+team_name :chi @ bognor:Chichester C
+
+# Portsmouth District League Results format
+results_prefix \s+?(?:played-on\s+games)|(?:portsmouth\s+&\s+district\s+chess\s+league)\s+(?=div:)
+keep_word_splitters -,.'/()?:\t\n
+section_prefix div:\s[^\n\t]*
+section_body (?:\A|(?:\t\t\?\t\t\?))
+section_name @div: 1@Div 1
+section_name @div: 2@Div 2
+section_name @div: 3@Div 3
+section_name @div: cole cup@Cole Cup
+section_name @div: cole plate@Cole Plate
+match_body \Adiv:\t.*
+teams_body (?<=\n)(?P<teams>.*?)(?=\(home).*?(?:Total:(?P<scoreone>[^\n]*))(?:Total:(?P<scoretwo>[^\n]*))
+games_body \n([123456789])\n([^\n]*)\n([^\n]*)\n[^\n]*\n([^\n]*)\n([^\n]*)\n([^\n]*)\n[^\n]*\n([^\n]*)
+finished (?P<board>[123456789])\s(?P<nameone>.*?)\s+(?P<scoreone>[01\u00bd])\s+(?P<nametwo>.*?)\s+(?P<scoretwo>[01\u00bd])
+unfinished (?P<board>[123456789])\s(?P<nameone>.*?)\s+-\s+(?P<nametwo>.*?)\s+-
+default (?P<board>[123456789])\s+(?:default\s+0\s+(?P<nametwo>.*?)\s+1|(?P<nameone>.*?)\s+1\s+default\s+0|default\s+0\s+default\s+0)
+match_date_body \s*(?P<result_date>(?:[0123456789]{1,2}[/\-\.]){2}[0123456789]{1,4})\s
+played_on_body \tdiv:\t.*
+teams_played_on_body (?:(?<=\n\t)(?P<teams>.*?)(?=\n[0123456789]).*?(?:Total:(?P<scoreone>[^\n]*))(?:Total:(?P<scoretwo>[^\n]*)))
+games_played_on_body \n([123456789])\n([^\n]*)\n([^\n]*)\n[^\n]*\n([^\n]*)\n([^\n]*)\n([^\n]*)\n[^\n]*\n([^\n]*)
+finished_played_on=(?P<board>[123456789])\s(?P<nameone>.*?)\s+(?P<scoreone>[01\u00bd])\s+(?P<nametwo>.*?)\s+(?P<scoretwo>[01\u00bd])
+unfinished_played_on (?P<board>[123456789])\s(?P<nameone>.*?)\s+-\s+(?P<nametwo>.*?)\s+-
+
+# Portsmouth District League Fixtures format
+results_prefix \s+?(?:portsmouth\s+&\s+district\s+chess\s+league\s+fixture\s+list\s+for\s+.+?)\s+
+keep_word_splitters -,.'/\t\n@
+section_prefix division\s+[^\n\t]*
+section_body (?:division\s+[^\n\t]*)
+section_name @division 1@Div 1
+section_name @division 2@Div 2
+section_name @division 3@Div 3
+schedule_body (?<=\n)[^\n]+
+fixture_body \s*(?P<dayname>[^\.]+)\.\s*(?P<day>[0-9]+)\.\s*(?P<month>[0-9]+)\.\s*(?P<year>[0-9]+)\s+(?P<teams>(?:.*))

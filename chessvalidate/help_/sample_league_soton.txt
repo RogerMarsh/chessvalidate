@@ -1,0 +1,60 @@
+collected mailbox
+extracted extracts
+textentry textentry
+earliestdate 2011-08-01
+mostrecentdate 2012-06-30
+text_content_type text/plain
+pdf_content_type application/pdf
+csv_content_type text/comma-separated-values
+ss_content_type application/vnd.ms-excel
+competition Div 1
+competition Div 2
+competition Div 3
+competition Div 4
+competition Div 5
+competition Div 4/5 Cup
+competition Robertson Cup
+competition Robertson Plate
+
+# Southampton League Match Results format
+results_prefix \s*chess\s.*?echo\s.*?\n\s*results?\s+
+keep_word_splitters -,.'()/
+drop_forwarded_markers >
+source (?:\s*chess\s.*?echo\s.*?([0-9]{1,2}(?:\S+\s+){2}[0-9]{4})(?:\s.+?)?\n\s*results?\s+)
+section_prefix (?:division\s+4/5\s+cup)|(?:division\s+[12345])|robertson\s+(?:cup|plate)\s+
+section_body (?:division\s+4/5\s+cup)|(?:division\s+[12345])|robertson\s+(?:cup|plate)\s+
+section_name :division 1:Div 1
+section_name :division 2:Div 2
+section_name :division 3:Div 3
+section_name :division 4:Div 4
+section_name :division 5:Div 5
+section_name :division 4/5 cup:Div 4/5 Cup
+section_name :robertson cup:Robertson Cup
+section_name :robertson plate:Robertson Plate
+match_body .+?\((?:by\sdefault|[^,]+?(?:,[^,]+?)+?)\)
+teams_body \A\s*(?P<teamone>[^\(]*?)\s+(?P<scoreone>[0-9]+(?:\.[05])?)\s+(?P<teamtwo>.*?)\s+(?P<scoretwo>[0-9]+(?:\.[05])?)
+match_default .*?(?P<matchdefault>\(by\sdefault\))\Z
+games_body (?<=\(|,)[^,)]*
+finished (?P<nameone>.*?)\s+(?P<scoreone>[01](?:\.[05])?)\s+(?P<nametwo>.*?)\s+(?P<scoretwo>[01](?:\.[05])?)(?:\Z|\s+(?:.*?\s+)?(?P<resultonly>grading)\s+(?:.*?\s+)?only\Z)
+unfinished (?P<names>.*?)(?:\s+game\s+unfinished\s*)
+default (?P<teamwins>.+?)(?:\s+won\s+by\s+default\s*.*)
+played_on_body (?:unfinished\s+games?\s*)(.*?\.\s+match\s+result(?:\s+.+?[0-9]+(?:\.[05])?){2}\.)
+teams_played_on_body \.\s+match\sresult\s+(?P<teamone>.+?)\s+(?P<scoreone>[0-9]+(?:\.[05])?)\s+(?P<teamtwo>.+?)\s+(?P<scoretwo>[0-9]+(?:\.[05])?)\.
+games_played_on_body (?:(?<=,)|(?<=\A))(.*?)(?=,|\.\s+match\s+result\s+)
+finished_played_on (?P<nameone>.*?)\s+\((?P<teamone>.+?)\)\s+(?P<scoreone>[01](?:\.[05])?)\s*(?P<nametwo>.*?)\s+\((?P<teamtwo>.+?)\)\s+(?P<scoretwo>[01](?:\.[05])?)
+
+# Southampton League Fixture List spreadsheet layout
+sched_csv_data_name sheet1 sched_day sched_date sched_section sched_home_team sched_away_team
+sched_date 1
+sched_day 0
+sched_section 4
+replace :1:Div 1
+replace :2:Div 2
+replace :3:Div 3
+replace :4:Div 4
+replace :5:Div 5
+replace :R:Robertson Cup
+replace :X:Div 4/5 Cup
+replace :P:Robertson Plate
+sched_home_team 2
+sched_away_team 3
