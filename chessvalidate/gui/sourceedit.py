@@ -1,31 +1,40 @@
 # sourceedit.py
-# Copyright 2008 Roger Marsh
+# Copyright 2022 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
 """Schedule and results raw data edit class.
 
-This class is based on SLEdit in results/hampshire/gui/sledit.py (no longer
-included in distribution).  This emphasises the history of this application:
-which started as a way of collating the emails used to report Southampton
-League results for input into the ECF's League program and was then extended to
-update a database directly.  Note that SLEdit is a subclass of SourceEdit in
-contrast to the development history.
+This class resurrects the original purpose of this application: to collate
+the emails used to report Southampton League results for copy-typing into
+the ECF's League program.  Class SourceEdit in the ChessResults package
+extended the purpose to update a database from which ECF results submission
+files could be generated with minimum fuss.  The ECF provided an API to the
+Rating Database soon after switching to monthly rating from six-monthly
+grading.  The API makes it reasonable to extend this class to generate the
+ECF results submission files without the local database.
+
+The original application preceded the ECF online presence by a year or two,
+a Southampton League website capable of being a source of results by ten
+years, and the ECF rating database with it's API by fifteen years.
+
+The Update action was removed from SourceEdit in the ChessResults package
+to produce SourceEdit provided by this module.
 
 """
 
 import tkinter
 import tkinter.messagebox
-import difflib
 import os
 import datetime
 import collections
+import csv
 
 from solentware_misc.core.utilities import AppSysPersonName
-from solentware_misc.gui import panel, dialogue, textreadonly, texttab
+from solentware_misc.gui import panel, textreadonly, texttab
 
 from ..core.eventparser import EventParserError, IEIREE
-from ..core import collationdb
-from ..core import filespec
+from ..core import constants
+from ..core import configuration
 from ..core.season import (
     LOCAL_SOURCE,
     HEADER_TAG,
@@ -34,17 +43,9 @@ from ..core.season import (
     SEPARATOR,
 )
 from ..core.gameresults import displayresult
-from ..core.resultsrecord import (
-    get_events_matching_event_name,
-    get_aliases_for_event,
-    get_name,
-    get_alias,
+from ..core.gameobjects import (
+    get_game_rows_for_csv_format,
 )
-from ..core.ecfmaprecord import (
-    get_grading_code_for_person,
-    get_person,
-)
-from ..core.ecfrecord import get_ecf_player_for_grading_code
 from ..core.schedule import ScheduleError
 
 _SENDER_COLOUR = "#e0f113"  # a pale yellow
@@ -61,8 +62,11 @@ _SELECT_ORIG_FROM_EDIT = frozenset(
 _SELECT_FROM_EDIT = "".join((DATA_TAG, SEPARATOR))
 
 
-class SourceEdit(panel.PlainPanel):
+class SourceEditError(Exception):
+    """Exception class for sourceedit module."""
 
+
+class SourceEdit(panel.PlainPanel):
     """The Edit panel for raw results data."""
 
     _btn_generate = "sourceedit_generta"
@@ -70,7 +74,6 @@ class SourceEdit(panel.PlainPanel):
     _btn_save = "sourceedit_save"
     _btn_toggle_compare = "sourceedit_toggle_compare"
     _btn_toggle_generate = "sourceedit_toggle_generate"
-    _btn_update = "sourceedit_update"
     _btn_report = "sourceedit_report"
 
     _months = {
@@ -89,7 +92,7 @@ class SourceEdit(panel.PlainPanel):
     }  # assumes dates held in ISO format
 
     def __init__(self, parent=None, cnf=dict(), **kargs):
-        """Extend and define results data input panel for a results database"""
+        """Extend and define results data input panel for results database."""
         super().__init__(parent=parent, cnf=cnf, **kargs)
         self.generated_schedule = []
         self.generated_results = []
@@ -122,7 +125,6 @@ class SourceEdit(panel.PlainPanel):
         Used, at least, as callback from AppSysFrame container.
 
         """
-        pass
 
     def close_data_folder(self):
         """Show close data input file dialogue and return True if closed."""
@@ -190,13 +192,6 @@ class SourceEdit(panel.PlainPanel):
             command=self.on_report,
         )
         self.define_button(
-            self._btn_update,
-            text="Update",
-            tooltip="Update results database from generated data.",
-            underline=0,
-            command=self.on_update,
-        )
-        self.define_button(
             self._btn_closedata,
             text="Close",
             tooltip="Close the folder containing data.",
@@ -260,27 +255,6 @@ class SourceEdit(panel.PlainPanel):
         self.create_buttons()
         self.show_edits_and_generated()
 
-    def on_update(self, event=None):
-        """Update database from validated source document."""
-        if self.update_event_results():
-            db = self.get_appsys().get_results_database()
-            self.refresh_controls(
-                (
-                    (
-                        db,
-                        filespec.PLAYER_FILE_DEF,
-                        filespec.PLAYERPARTIALNEW_FIELD_DEF,
-                    ),
-                    (
-                        db,
-                        filespec.EVENT_FILE_DEF,
-                        filespec.EVENTNAME_FIELD_DEF,
-                    ),
-                )
-            )
-            self.show_buttons_for_generate()
-            self.create_buttons()
-
     def save_data_folder(self):
         """Show save data input file dialogue and return True if saved."""
         if not self.is_report_modified():
@@ -296,18 +270,21 @@ class SourceEdit(panel.PlainPanel):
             ):
                 return
         results_data = self.get_context().results_data
-        dt = results_data.entry_text
+        entry_text = results_data.entry_text
 
         # Ensure edited_text_on_file is set to initial value of edited_text
         # before updating edited_text from widget.
         # Perhaps this should be done earlier?
-        etof = dt.edited_text_on_file
+        etof = entry_text.edited_text_on_file
         self.copy_data_from_widget()
 
-        modified = dt.edited_text != etof
+        modified = entry_text.edited_text != etof
         if not modified:
-            for e, dt in enumerate(results_data.difference_text):
-                if dt.edited_text != dt.edited_text_on_file:
+            for difference_text in results_data.difference_text:
+                if (
+                    difference_text.edited_text
+                    != difference_text.edited_text_on_file
+                ):
                     modified = True
                     break
         if not modified:
@@ -335,11 +312,11 @@ class SourceEdit(panel.PlainPanel):
             title="Save",
         ):
             results_data.entry_text.save_edited_text_as_new()
-            for dt in results_data.difference_text:
-                dt.save_edited_text_as_new()
+            for difference_text in results_data.difference_text:
+                difference_text.save_edited_text_as_new()
             results_data.entry_text.rename_new_edited_text()
-            for dt in results_data.difference_text:
-                dt.rename_new_edited_text()
+            for difference_text in results_data.difference_text:
+                difference_text.rename_new_edited_text()
             self.editedtext.edit_modified(False)
             tkinter.messagebox.showinfo(
                 parent=self.get_widget(),
@@ -364,7 +341,7 @@ class SourceEdit(panel.PlainPanel):
         if not os.path.isdir(reports):
             try:
                 os.mkdir(reports)
-            except:
+            except Exception:
                 tkinter.messagebox.showinfo(
                     parent=self.get_widget(),
                     message="".join(
@@ -376,24 +353,22 @@ class SourceEdit(panel.PlainPanel):
                     ),
                     title="Save Reports",
                 )
-                return
-        dt = datetime.datetime.today().isoformat()
+                return None
+        today = datetime.datetime.today().isoformat()
         for control, filename in (
             (self.schedulectrl, "rep_schedule"),
             (self.resultsctrl, "rep_results"),
             (self.editedtext, "src_results"),
         ):
-            report_file = os.path.join(reports, "_".join((dt, filename)))
-            f = open(report_file, "w", encoding="utf8")
-            try:
-                f.write(control.get("1.0", tkinter.END))
-            finally:
-                f.close()
+            report_file = os.path.join(reports, "_".join((today, filename)))
+            with open(report_file, "w", encoding="utf8") as file:
+                file.write(control.get("1.0", tkinter.END))
         tkinter.messagebox.showinfo(
             parent=self.get_widget(),
             message="".join(("Reports saved in folder\n\n", reports)),
             title="Save Reports",
         )
+        return None
 
     def show_buttons_for_compare(self):
         """Show buttons for actions allowed comparing input data versions."""
@@ -425,7 +400,6 @@ class SourceEdit(panel.PlainPanel):
                 self._btn_closedata,
                 self._btn_save,
                 self._btn_report,
-                self._btn_update,
             )
         )
 
@@ -444,20 +418,20 @@ class SourceEdit(panel.PlainPanel):
                 opaqueresize=tkinter.FALSE,
                 orient=tkinter.VERTICAL,
             )
-        if self.editedtext == None:
+        if self.editedtext is None:
             self.editedtext = self._make_textedit_tab()
             self.editedtext.bind(
                 "<ButtonPress-3>", self.try_event(self.editedtext_popup)
             )
             self._populate_editedtext()
-        if self.schedulectrl == None:
+        if self.schedulectrl is None:
             self.schedulectrl = textreadonly.make_text_readonly(
                 master=self.generatedpane
             )
             self.schedulectrl.bind(
                 "<ButtonPress-3>", self.try_event(self.schedule_popup)
             )
-        if self.resultsctrl == None:
+        if self.resultsctrl is None:
             self.resultsctrl = textreadonly.make_text_readonly(
                 master=self.generatedpane
             )
@@ -499,10 +473,10 @@ class SourceEdit(panel.PlainPanel):
                 opaqueresize=tkinter.FALSE,
                 orient=tkinter.VERTICAL,
             )
-        if self.editedtext == None:
+        if self.editedtext is None:
             self.editedtext = self._make_textedit_tab()
             self._populate_editedtext()
-        if self.originaltext == None:
+        if self.originaltext is None:
             self.originaltext = textreadonly.make_text_readonly(
                 master=self.originalpane
             )
@@ -517,20 +491,20 @@ class SourceEdit(panel.PlainPanel):
     @staticmethod
     def _date_text(date):
         """Return dd mmm yyyy given ISO format yyyy-mm-dd."""
-        y, m, d = date.split("-")
-        return " ".join((d, SourceEdit._months[m], y))
+        year, month, day = date.split("-")
+        return " ".join((day, SourceEdit._months[month], year))
 
     def _hide_panes(self):
         """Forget the configuration of PanedWindows on data input page."""
-        for p in (
+        for pane in (
             self.originalpane,
             self.editpane,
             self.generatedpane,
             self.toppane,
         ):
-            if p is not None:
-                for w in p.panes():
-                    p.forget(w)
+            if pane is not None:
+                for widget in pane.panes():
+                    pane.forget(widget)
 
     def is_report_modified(self):
         """Return Text.edit_modified(). Work around see Python issue 961805."""
@@ -558,83 +532,92 @@ class SourceEdit(panel.PlainPanel):
         Descriptive items are never copied to the clipboard.
 
         """
-        w = texttab.make_text_tab(master=self.editpane)
+        widget = texttab.make_text_tab(master=self.editpane)
 
         def key(event=None):
             if event.keysym == _DELETE:
-                if _NOT_EDITABLE in w.tag_names(
-                    w.index(tkinter.INSERT + " +1 char")
+                if _NOT_EDITABLE in widget.tag_names(
+                    widget.index(tkinter.INSERT + " +1 char")
                 ):
                     return "break"
-                if _NOT_EDITABLE in w.tag_names(w.index(tkinter.INSERT)):
+                if _NOT_EDITABLE in widget.tag_names(
+                    widget.index(tkinter.INSERT)
+                ):
                     return "break"
             elif event.keysym == _BACKSPACE:
-                if _NOT_EDITABLE in w.tag_names(
-                    w.index(tkinter.INSERT + " -1 char")
+                if _NOT_EDITABLE in widget.tag_names(
+                    widget.index(tkinter.INSERT + " -1 char")
                 ):
                     return "break"
-                if _NOT_EDITABLE in w.tag_names(w.index(tkinter.INSERT)):
+                if _NOT_EDITABLE in widget.tag_names(
+                    widget.index(tkinter.INSERT)
+                ):
                     return "break"
             elif event.keysym not in _NAVIGATION:
-                tn = w.tag_names(w.index(tkinter.INSERT))
-                if _NOT_EDITABLE in tn or _EDITABLE not in tn:
+                tag_names = widget.tag_names(widget.index(tkinter.INSERT))
+                if _NOT_EDITABLE in tag_names or _EDITABLE not in tag_names:
                     return "break"
-                elif w.tag_ranges(tkinter.SEL):
-                    if w.tag_nextrange(
+                if widget.tag_ranges(tkinter.SEL):
+                    if widget.tag_nextrange(
                         _EDITABLE,
                         tkinter.SEL_FIRST,
                         tkinter.SEL_LAST + " +1 char",
                     ):
                         return "break"
+            return None
 
         def clear(event=None):
-            if not w.tag_ranges(tkinter.SEL):
+            if not widget.tag_ranges(tkinter.SEL):
                 return key(event)
-            e = w.tag_nextrange(_EDITABLE, tkinter.SEL_LAST)
-            if e:
-                e = w.tag_prevrange(_EDITABLE, w.index(e[0]))
+            range_ = widget.tag_nextrange(_EDITABLE, tkinter.SEL_LAST)
+            if range_:
+                range_ = widget.tag_prevrange(
+                    _EDITABLE, widget.index(range_[0])
+                )
             else:
-                e = w.tag_prevrange(_EDITABLE, tkinter.END)
-            while e:
+                range_ = widget.tag_prevrange(_EDITABLE, tkinter.END)
+            while range_:
 
                 # Minimize future adjustment by 1 char
-                se = w.index(e[0])
-                ee = w.index(e[1] + "-1 char")
+                start = widget.index(range_[0])
+                end = widget.index(range_[1] + "-1 char")
 
-                if w.compare(ee, "<", tkinter.SEL_FIRST):
-                    w.tag_remove(
+                if widget.compare(end, "<", tkinter.SEL_FIRST):
+                    widget.tag_remove(
                         tkinter.SEL, tkinter.SEL_FIRST, tkinter.SEL_LAST
                     )
                     break
-                e = w.tag_prevrange(_EDITABLE, w.index(se))
-                sc = w.compare(tkinter.SEL_FIRST, "<=", se + "+1 char")
-                ec = w.compare(tkinter.SEL_LAST, ">=", ee)
+                range_ = widget.tag_prevrange(_EDITABLE, widget.index(start))
+                cstart = widget.compare(
+                    tkinter.SEL_FIRST, "<=", start + "+1 char"
+                )
+                cend = widget.compare(tkinter.SEL_LAST, ">=", end)
 
-                # Adjust ee by 1 char if necessary to compensate for the extra
+                # Adjust end by 1 char if necessary to compensate for the extra
                 # newline which may have been added by _insert_entry() method.
-                pee = w.index(ee + "-1 char")
-                if w.compare(pee, "==", pee + "lineend"):
-                    ee = pee
+                pee = widget.index(end + "-1 char")
+                if widget.compare(pee, "==", pee + "lineend"):
+                    end = pee
 
-                if sc and ec:
-                    w.delete(se + "+1 char", ee)
-                elif sc:
-                    w.delete(se + "+1 char", tkinter.SEL_LAST)
-                    if not w.tag_ranges(tkinter.SEL):
+                if cstart and cend:
+                    widget.delete(start + "+1 char", end)
+                elif cstart:
+                    widget.delete(start + "+1 char", tkinter.SEL_LAST)
+                    if not widget.tag_ranges(tkinter.SEL):
                         break
-                elif ec:
-                    if w.compare(
+                elif cend:
+                    if widget.compare(
                         tkinter.SEL_FIRST,
                         "!=",
                         tkinter.SEL_FIRST + "linestart",
                     ):
-                        w.delete(tkinter.SEL_FIRST, ee)
-                    elif w.compare(tkinter.SEL_FIRST, ">", se):
-                        w.delete(tkinter.SEL_FIRST + "-1 char", ee)
+                        widget.delete(tkinter.SEL_FIRST, end)
+                    elif widget.compare(tkinter.SEL_FIRST, ">", start):
+                        widget.delete(tkinter.SEL_FIRST + "-1 char", end)
                     else:
-                        w.delete(tkinter.SEL_FIRST, ee)
+                        widget.delete(tkinter.SEL_FIRST, end)
                 else:
-                    w.delete(tkinter.SEL_FIRST, tkinter.SEL_LAST)
+                    widget.delete(tkinter.SEL_FIRST, tkinter.SEL_LAST)
                     break
             return "break"
 
@@ -643,27 +626,29 @@ class SourceEdit(panel.PlainPanel):
         # into regions are present to preserve source identification of text,
         # and are not copied.  These are in the highlighted areas,
         def clip(event=None):
-            tr = list(w.tag_ranges(_EDITABLE))
-            w.clipboard_clear()
-            while tr:
-                s, e = tr.pop(0), tr.pop(0)
-                if w.compare(e, "<", tkinter.SEL_FIRST):
+            ranges = list(widget.tag_ranges(_EDITABLE))
+            widget.clipboard_clear()
+            while ranges:
+                start, end = ranges.pop(0), ranges.pop(0)
+                if widget.compare(end, "<", tkinter.SEL_FIRST):
                     continue
-                if w.compare(s, ">", tkinter.SEL_LAST):
+                if widget.compare(start, ">", tkinter.SEL_LAST):
                     break
-                if w.compare(s, "<", tkinter.SEL_FIRST):
-                    s = tkinter.SEL_FIRST
-                if w.compare(e, ">", tkinter.SEL_LAST):
-                    e = tkinter.SEL_LAST
-                w.clipboard_append(w.get(s, e), type="UTF8_STRING")
+                if widget.compare(start, "<", tkinter.SEL_FIRST):
+                    start = tkinter.SEL_FIRST
+                if widget.compare(end, ">", tkinter.SEL_LAST):
+                    end = tkinter.SEL_LAST
+                widget.clipboard_append(
+                    widget.get(start, end), type="UTF8_STRING"
+                )
             return "break"
 
-        w.event_add("<<Clear>>", "<BackSpace>")
-        w.event_add("<<Clear>>", "<Delete>")
-        w.bind("<<Clear>>", clear)
-        w.bind("<KeyPress>", key)
-        w.bind("<Control-x>", lambda e: "break")
-        w.bind("<Control-c>", clip)
+        widget.event_add("<<Clear>>", "<BackSpace>")
+        widget.event_add("<<Clear>>", "<Delete>")
+        widget.bind("<<Clear>>", clear)
+        widget.bind("<KeyPress>", key)
+        widget.bind("<Control-x>", lambda e: "break")
+        widget.bind("<Control-c>", clip)
 
         # An explicit binding is needed on Microsoft Windows XP, and other
         # versions I assume, for the paste part of copy-and-paste to do the
@@ -673,15 +658,17 @@ class SourceEdit(panel.PlainPanel):
         # Neither paste binding nor paste function is needed on FreeBSD.
         # The situation with other BSDs, and any Linux, is not known.
         def paste(event=None):
-            w.insert(tkinter.INSERT, w.clipboard_get(type="UTF8_STRING"))
+            widget.insert(
+                tkinter.INSERT, widget.clipboard_get(type="UTF8_STRING")
+            )
             return "break"
 
-        w.bind("<Control-v>", paste)
+        widget.bind("<Control-v>", paste)
 
-        return w
+        return widget
 
     def _insert_entry(self, widget, tagsuffix, entry, text):  # title, text):
-        """ """
+        """Insert entry header and tagged text into widget."""
         # Just the whole text tag is put back in the _DifferenceText instance.
         # To be extended later when it is clear how it works exactly.
         # The tagging is the same for edited and original text but different
@@ -729,84 +716,92 @@ class SourceEdit(panel.PlainPanel):
         widget.tag_add(_NOT_EDITABLE, start, widget.index(tkinter.INSERT))
 
     def _populate_editedtext(self):
-        """ """
-        w = self.editedtext
-        w.delete("1.0", tkinter.END)
-        et = self.get_context().results_data.entry_text
-        self._insert_entry(w, LOCAL_SOURCE, et, et.edited_text)
-        for e, dt in enumerate(
+        """Put edited document in it's Text widget for display."""
+        wedit = self.editedtext
+        wedit.delete("1.0", tkinter.END)
+        entry_text = self.get_context().results_data.entry_text
+        self._insert_entry(
+            wedit, LOCAL_SOURCE, entry_text, entry_text.edited_text
+        )
+        for i, difference_text in enumerate(
             self.get_context().results_data.difference_text
         ):
-            self._insert_entry(w, str(e), dt, dt.edited_text)
+            self._insert_entry(
+                wedit, str(i), difference_text, difference_text.edited_text
+            )
 
     def _populate_originaltext(self):
-        """ """
-        w = self.originaltext
-        w.delete("1.0", tkinter.END)
-        et = self.get_context().results_data.entry_text
-        self._insert_entry(w, LOCAL_SOURCE, et, et.original_text)
-        for e, dt in enumerate(
+        """Put original document in it's Text widget for display."""
+        worig = self.originaltext
+        worig.delete("1.0", tkinter.END)
+        entry_text = self.get_context().results_data.entry_text
+        self._insert_entry(
+            worig, LOCAL_SOURCE, entry_text, entry_text.original_text
+        )
+        for i, difference_text in enumerate(
             self.get_context().results_data.difference_text
         ):
-            self._insert_entry(w, str(e), dt, dt.original_text)
+            self._insert_entry(
+                worig, str(i), difference_text, difference_text.original_text
+            )
 
     def copy_data_from_widget(self):
         """Copy current widget data to season's event data attributes."""
-        tw = self.editedtext
+        wedit = self.editedtext
         results_data = self.get_context().results_data
 
         # Strip off the place-holder newline characters returned by get.
         # These were added by insert when the data was displayed.
-        for dt in results_data.difference_text:
-            st, et = tw.tag_ranges(dt.data_tag)
-            dt.edited_text = tw.get(
-                tw.index(st) + " +1 char", tw.index(et) + " -1 char"
+        for difference_text in results_data.difference_text:
+            start, end = wedit.tag_ranges(difference_text.data_tag)
+            difference_text.edited_text = wedit.get(
+                wedit.index(start) + " +1 char", wedit.index(end) + " -1 char"
             )
-        dt = results_data.entry_text
-        st, et = tw.tag_ranges(dt.data_tag)
-        dt.edited_text = tw.get(
-            tw.index(st) + " +1 char", tw.index(et) + " -1 char"
+        entry_text = results_data.entry_text
+        start, end = wedit.tag_ranges(entry_text.data_tag)
+        entry_text.edited_text = wedit.get(
+            wedit.index(start) + " +1 char", wedit.index(end) + " -1 char"
         )
 
     def results_popup(self, event=None):
-        """ """
+        """Scroll edited document to selected text in result report."""
         wedit = self.editedtext
         wresults = self.resultsctrl
         tags = wresults.tag_names(
             wresults.index("".join(("@", str(event.x), ",", str(event.y))))
         )
-        for t in tags:
-            if t.startswith(_SELECT_FROM_GENERATED):
-                tredit = wedit.tag_ranges(t)
+        for tag in tags:
+            if tag.startswith(_SELECT_FROM_GENERATED):
+                tredit = wedit.tag_ranges(tag)
                 if tredit:
                     wedit.see(tredit[0])
                     return
 
     def schedule_popup(self, event=None):
-        """ """
+        """Scroll edited document to selected text in schedule report."""
         wedit = self.editedtext
         wschedule = self.schedulectrl
         tags = wschedule.tag_names(
             wschedule.index("".join(("@", str(event.x), ",", str(event.y))))
         )
-        for t in tags:
-            if t.startswith(_SELECT_FROM_GENERATED):
-                tredit = wedit.tag_ranges(t)
+        for tag in tags:
+            if tag.startswith(_SELECT_FROM_GENERATED):
+                tredit = wedit.tag_ranges(tag)
                 if tredit:
                     wedit.see(tredit[0])
                     return
 
     def editedtext_popup(self, event=None):
-        """ """
+        """Scroll source document to selected text in edited document."""
         worig = self.originaltext
         wedit = self.editedtext
         tags = wedit.tag_names(
             wedit.index("".join(("@", str(event.x), ",", str(event.y))))
         )
-        for t in tags:
-            if t[:2] in _SELECT_ORIG_FROM_EDIT:
+        for tag in tags:
+            if tag[:2] in _SELECT_ORIG_FROM_EDIT:
                 if worig:
-                    trorig = worig.tag_ranges(t)
+                    trorig = worig.tag_ranges(tag)
                     if worig:
                         worig.see(trorig[0])
                         return
@@ -926,8 +921,9 @@ class SourceEdit(panel.PlainPanel):
             )
             return False
 
-        if not len(data.collation.reports.error) and not len(
-            data._fixtures.error
+        if (
+            len(data.collation.reports.error) == 0
+            and len(data._fixtures.error) == 0
         ):
 
             schedule = data.collation.schedule
@@ -970,14 +966,14 @@ class SourceEdit(panel.PlainPanel):
 
         widget = self.schedulectrl
         while self.generated_schedule:
-            t, m = self.generated_schedule.pop(0)
-            if m is None:
-                widget.insert(tkinter.END, t)
+            report_text, report_error = self.generated_schedule.pop(0)
+            if report_error is None:
+                widget.insert(tkinter.END, report_text)
                 if self.generated_schedule:
                     widget.insert(tkinter.END, "\n")
             else:
                 datastart = widget.index(tkinter.INSERT)
-                tag, text = m.get_schedule_tag_and_text(t)
+                tag, text = report_error.get_schedule_tag_and_text(report_text)
                 widget.insert(tkinter.END, text)
                 if self.generated_schedule:
                     widget.insert(tkinter.END, "\n")
@@ -987,20 +983,20 @@ class SourceEdit(panel.PlainPanel):
 
         widget = self.resultsctrl
         while self.generated_results:
-            t, m = self.generated_results.pop(0)
-            if m is None:
-                widget.insert(tkinter.END, t)
+            report_text, report_error = self.generated_results.pop(0)
+            if report_error is None:
+                widget.insert(tkinter.END, report_text)
                 if self.generated_results:
                     widget.insert(tkinter.END, "\n")
             else:
                 datastart = widget.index(tkinter.INSERT)
-                tag, text = m.get_report_tag_and_text(t)
+                tag, text = report_error.get_report_tag_and_text(report_text)
                 widget.insert(tkinter.END, text)
                 if self.generated_results:
                     widget.insert(tkinter.END, "\n")
                 widget.tag_add(tag, datastart, widget.index(tkinter.INSERT))
 
-        return not len(data.collation.reports.error)
+        return len(data.collation.reports.error) == 0
 
     def report_fixtures(self, data):
         """Append fixtures to event schedule report."""
@@ -1010,20 +1006,20 @@ class SourceEdit(panel.PlainPanel):
         genfix = self.generated_schedule
         genfix.append(("", None))
         divisions = sorted(list(fixdata.es_summary.keys()))
-        for d in divisions:
-            genfix.append((d, None))
-            teams = sorted(list(fixdata.es_summary[d]["teams"].keys()))
-            for t in teams:
-                td = fixdata.es_summary[d]["teams"][t]
+        for division in divisions:
+            genfix.append((division, None))
+            teams = sorted(list(fixdata.es_summary[division]["teams"].keys()))
+            for team in teams:
+                team_data = fixdata.es_summary[division]["teams"][team]
                 genfix.append(
                     (
                         "".join(
                             (
-                                t,
+                                team,
                                 "   ",
-                                str(td["homematches"]),
+                                str(team_data["homematches"]),
                                 " home, ",
-                                str(td["awaymatches"]),
+                                str(team_data["awaymatches"]),
                                 " away matches",
                             )
                         ),
@@ -1033,25 +1029,25 @@ class SourceEdit(panel.PlainPanel):
             genfix.append(("", None))
         fixtures = []
         if len(fixdata.es_fixtures):
-            for f in fixdata.es_fixtures:
+            for fixture in fixdata.es_fixtures:
                 fixtures.append(
                     (
                         (
-                            f.competition,
+                            fixture.competition,
                             "  ",
-                            f.hometeam,
+                            fixture.hometeam,
                             " - ",
-                            f.awayteam,
+                            fixture.awayteam,
                         ),
                         len(
                             fixtures
-                        ),  # to hide unorderable f.tagger from sort
-                        f.tagger,
+                        ),  # to hide unorderable fixture.tagger from sort
+                        fixture.tagger,
                     )
                 )
             fixtures.sort()
-            for f, n, tagger in fixtures:
-                tagger.append_generated_schedule(genfix, "".join(f))
+            for fixture, count, tagger in fixtures:
+                tagger.append_generated_schedule(genfix, "".join(fixture))
             genfix.append(("", None))
 
     def report_fixtures_played_status(self, data):
@@ -1062,21 +1058,31 @@ class SourceEdit(panel.PlainPanel):
         fnp = data.collation.get_fixtures_not_played()
         if len(fnp) == 0:
             return
-        dt = datetime.date.today().isoformat()
+        today = datetime.date.today().isoformat()
         genres.append(
             (
-                "".join(("Fixtures not played or not reported at ", dt, "\n")),
+                "".join(
+                    ("Fixtures not played or not reported at ", today, "\n")
+                ),
                 None,
             )
         )
-        for m in fnp:
-            if m.date > dt:
+        for match in fnp:
+            if match.date > today:
                 dfnp = "          "
             else:
-                dfnp = m.date
-            m.tagger.append_generated_report(
+                dfnp = match.date
+            match.tagger.append_generated_report(
                 genres,
-                " ".join((dfnp, m.competition, m.hometeam, "-", m.awayteam)),
+                " ".join(
+                    (
+                        dfnp,
+                        match.competition,
+                        match.hometeam,
+                        "-",
+                        match.awayteam,
+                    )
+                ),
             )
         genres.append(("", None))
 
@@ -1111,24 +1117,33 @@ class SourceEdit(panel.PlainPanel):
             if match.default:
                 genres.append(("    Match defaulted", None))
             for game in match.games:
-                r, uftag, gradetag = game.get_print_result()
+                result, uftag, gradetag = game.get_print_result()
                 if game in resdata.gamesxref:
                     uftag = displayresult.get(
                         resdata.gamesxref[game].result, uftag
                     )
                 if len(uftag) or len(gradetag):
                     uftag = "    ".join(("", uftag, gradetag))
-                if not r:
-                    r = "     "
-                hp = game.homeplayer.name
-                if not hp:
-                    hp = ""
-                ap = game.awayplayer.name
-                if not ap:
-                    ap = ""
+                if not result:
+                    result = "     "
+                homeplayer = game.homeplayer.name
+                if not homeplayer:
+                    homeplayer = ""
+                awayplayer = game.awayplayer.name
+                if not awayplayer:
+                    awayplayer = ""
                 game.tagger.append_generated_report(
                     genres,
-                    " ".join(("   ", hp, r, ap, "       ", uftag)),
+                    " ".join(
+                        (
+                            "   ",
+                            homeplayer,
+                            result,
+                            awayplayer,
+                            "       ",
+                            uftag,
+                        )
+                    ),
                 )
             genres.append(("", None))
 
@@ -1162,80 +1177,82 @@ class SourceEdit(panel.PlainPanel):
         matches, playedongames = data.collation.get_reports_by_source()
         if matches:
             currtag = matches[0][0].tagger.datatag
-        for m, ufg, consistent in matches:
-            if currtag != m.tagger.datatag:
-                currtag = m.tagger.datatag
+        for match, ufg, consistent in matches:
+            if currtag != match.tagger.datatag:
+                currtag = match.tagger.datatag
                 genres.append(("", None))
-            m.tagger.append_generated_report(
+            match.tagger.append_generated_report(
                 genres,
-                " ".join((m.hometeam, "-", m.awayteam)),
+                " ".join((match.hometeam, "-", match.awayteam)),
             )
 
             # Part of SLEdit hack to spot matches played before fixture date.
             # Need to test 'date report sent' for correct answer always.
             try:
-                if len(today) == len(m.date):
-                    if m.date > today:
-                        m.tagger.append_generated_report(
+                if len(today) == len(match.date):
+                    if match.date > today:
+                        match.tagger.append_generated_report(
                             genres,
                             "".join(("   match reported early at ", today)),
                         )
-            except:
+            except Exception:
                 pass
 
             if not consistent:
                 genres.append(
                     ("   match score not consistent with game reports", None)
                 )
-            for g in m.games:
-                if g.result is None:
-                    hp = g.homeplayer
-                    if hp:
-                        hp = hp.name
+            for game in match.games:
+                if game.result is None:
+                    homeplayer = game.homeplayer
+                    if homeplayer:
+                        homeplayer = homeplayer.name
                     else:
-                        hp = ""
-                    ap = g.awayplayer
-                    if ap:
-                        ap = ap.name
+                        homeplayer = ""
+                    awayplayer = game.awayplayer
+                    if awayplayer:
+                        awayplayer = awayplayer.name
                     else:
-                        ap = ""
-                    g.tagger.append_generated_report(
+                        awayplayer = ""
+                    game.tagger.append_generated_report(
                         genres,
-                        " ".join(("   unfinished  ", hp, "-", ap)),
+                        " ".join(
+                            ("   unfinished  ", homeplayer, "-", awayplayer)
+                        ),
                     )
         if len(playedongames):
             genres.append(("\nPlayed-on Games in entry order\n", None))
             currtag = playedongames[0].tagger.datatag
-            for g in playedongames:
-                if g.result is None:
+            for game in playedongames:
+                if game.result is None:
                     continue
-                if currtag != g.tagger.datatag:
-                    currtag = g.tagger.datatag
+                if currtag != game.tagger.datatag:
+                    currtag = game.tagger.datatag
                     genres.append(("", None))
-                g.tagger.append_generated_report(
+                game.tagger.append_generated_report(
                     genres,
-                    " ".join(("   ", g.hometeam, "-", g.awayteam)),
+                    " ".join(("   ", game.hometeam, "-", game.awayteam)),
                 )
-                hp = g.homeplayer
-                if hp:
-                    hp = hp.name
+                homeplayer = game.homeplayer
+                if homeplayer:
+                    homeplayer = homeplayer.name
                 else:
-                    hp = ""
-                ap = g.awayplayer
-                if ap:
-                    ap = ap.name
+                    homeplayer = ""
+                awayplayer = game.awayplayer
+                if awayplayer:
+                    awayplayer = awayplayer.name
                 else:
-                    ap = ""
-                g.tagger.append_generated_report(
+                    awayplayer = ""
+                game.tagger.append_generated_report(
                     genres,
                     "".join(
                         (
                             "        ",
                             " ".join(
                                 (
-                                    hp,
-                                    displayresult.get(g.result, "unknown"),
-                                    ap,
+                                    homeplayer,
+                                    displayresult.get(game.result, "unknown"),
+                                    awayplayer,
                                 )
                             ),
                         )
@@ -1288,7 +1305,7 @@ class SourceEdit(panel.PlainPanel):
             )
             genfix.append(("", None))
         drp = data.collation.players
-        for n, p in [
+        for name, player in [
             p[-1]
             for p in sorted(
                 [
@@ -1300,24 +1317,24 @@ class SourceEdit(panel.PlainPanel):
                 ]
             )
         ]:
-            section = drp[p].section
+            section = drp[player].section
             if section in schedule.es_players:
-                if n in schedule.es_players[section]:
+                if name in schedule.es_players[section]:
                     genfix.append(
                         (
                             "\t".join(
                                 (
-                                    drp[p].get_short_identity(),
+                                    drp[player].get_short_identity(),
                                     "".join(
                                         (
                                             "(",
                                             schedule.es_players[section][
-                                                n
+                                                name
                                             ].affiliation,
                                             ")",
                                         )
                                     ),
-                                    drp[p].get_reported_codes(),
+                                    drp[player].get_reported_codes(),
                                 )
                             ).strip(),
                             None,
@@ -1328,8 +1345,8 @@ class SourceEdit(panel.PlainPanel):
                 (
                     "\t".join(
                         (
-                            self.get_player_brief(drp[p]),
-                            drp[p].get_reported_codes(),
+                            self.get_player_brief(drp[player]),
+                            drp[player].get_reported_codes(),
                         )
                     ).strip(),
                     None,
@@ -1382,165 +1399,20 @@ class SourceEdit(panel.PlainPanel):
         """Append list of players sorted by club to results report."""
         if len(data.collation.reports.error):
             return
-        gca = self.get_appsys().show_master_list_grading_codes
-        db = self.get_appsys().get_results_database()
         clubs = data.collation.get_players_by_club(separator)
         eventname = set()
-        for cp in clubs.values():
-            for pn in cp:
-                eventname.add(pn[1:-1])
-        event, events = get_events_matching_event_name(
-            db, eventname, data.collation.matches
-        )
+        for club_players in clubs.values():
+            for player_name in club_players:
+                eventname.add(player_name[1:-1])
         genres = self.generated_results
 
-        # No database open or not using ecf module.
-        if not event or not gca:
-            genres.append(("Players by club\n", None))
-            genres.append(
-                (
-                    "".join(
-                        (
-                            "This report was generated without a database open ",
-                            "to look up grading codes.",
-                        )
-                    ),
-                    None,
-                )
-            )
-            genres.append(
-                (
-                    "".join(
-                        (
-                            "Any reported codes, usually grading codes, follow ",
-                            "the player name.\n",
-                        )
-                    ),
-                    None,
-                )
-            )
-            for cp in sorted(clubs.keys()):
-                clubplayers = data.collation.clubplayers[cp]
-                genres.append((cp + "\n", None))
-                for pn in clubs[cp]:
-                    genres.append(
-                        (
-                            "\t\t\t\t".join(
-                                (pn[0], " ".join(clubplayers[pn]))
-                            ),
-                            None,
-                        )
-                    )
-                genres.append(("", None))
-            return
-
-        # Database open.
-        aliases = {}  # (name, section):(start, end, eventkey, aliaskey, merge)
-        known = {}
-        nogcode = {}
-
-        def populate_aliases(e, a):
-            evkey = e[1].key.recno
-            sd = e[1].value.startdate
-            ed = e[1].value.enddate
-            for k, v in get_aliases_for_event(db, e[1]).items():
-                ns = v.value.name, get_name(db, v.value.section).value.name
-                nsd = sd, ed, evkey, v.key.recno, v.value.merge
-                a.setdefault(ns, []).append(nsd)
-                if v.value.merge is not None:
-                    known.setdefault(ns[1], set()).add(ns[0])
-
-        populate_aliases(event, aliases)
-        for e in events:
-            populate_aliases(e, aliases)
-        startdate = event[1].value.startdate
-        enddate = event[1].value.enddate
         genres.append(("Players by club\n", None))
         genres.append(
             (
                 "".join(
                     (
-                        "Names prefixed with same number or grading code ",
-                        "are assumed to be same person.",
-                    )
-                ),
-                None,
-            )
-        )
-        genres.append(
-            (
-                "".join(
-                    (
-                        "If it is a number please give the player's grading ",
-                        "code or confirm the player\ndoes not have one.",
-                    )
-                ),
-                None,
-            )
-        )
-        genres.append(
-            (
-                "".join(
-                    (
-                        "If neither is given please give the player's grading ",
-                        "code or confirm the player\ndoes not have one.",
-                    )
-                ),
-                None,
-            )
-        )
-        genres.append(
-            (
-                "".join(
-                    (
-                        "The '!', '!!', '?', and '*', prefixes are asking for ",
-                        "confirmation or correction\nof the grading code. ",
-                        "Their absence means only corrections are needed.",
-                    )
-                ),
-                None,
-            )
-        )
-        genres.append(
-            (
-                "".join(
-                    (
-                        "'!' means name used in previous season and '!!' ",
-                        "means at least a season gap\nsince previous use.",
-                    )
-                ),
-                None,
-            )
-        )
-        genres.append(
-            (
-                "".join(
-                    (
-                        "'?' means name referred to different person in at ",
-                        "least one earlier season.",
-                    )
-                ),
-                None,
-            )
-        )
-        genres.append(
-            (
-                "".join(
-                    (
-                        "'*' means it was not possible to decide which of '!', ",
-                        "'!!' is appropriate\n(because of a date error).\n",
-                    )
-                ),
-                None,
-            )
-        )
-        genres.append(
-            (
-                "".join(
-                    (
-                        "A grading code in brackets immediately following the ",
-                        "name is the code shown\non the ECF Grading Database ",
-                        "rather than the one before the name.\n",
+                        "This report was generated without a database open ",
+                        "to look up grading codes.",
                     )
                 ),
                 None,
@@ -1551,118 +1423,40 @@ class SourceEdit(panel.PlainPanel):
                 "".join(
                     (
                         "Any reported codes, usually grading codes, follow ",
-                        "the player name after a\nnoticable gap.\n",
+                        "the player name.\n",
                     )
                 ),
                 None,
             )
         )
-        for cp in sorted(clubs.keys()):
-            clubplayers = data.collation.clubplayers[cp]
-            genres.append((cp + "\n", None))
-            for pn in clubs[cp]:
-                grading_code = ""
-                merged_grading_code = ""
-                ns = pn[0], pn[4]
-                nsdate = pn[2], pn[3]
-                tag = ""
-                peopletag = ""
-                recenttag = ""
-                if ns in aliases:
-                    refs = aliases[ns]
-                    if nsdate == refs[0][:2]:
-                        merge = refs[0][4]
-                        if merge is False:
-                            person = refs[0][3]
-                        elif merge is None:
-                            person = refs[0][3]
-                        else:
-                            person = refs[0][4]
-                    else:
-                        merge = None
-                        person = None
-                    if len(refs) != 1:
-                        try:
-                            y1 = int(pn[2].split("-")[0])
-                            y2 = int(refs[1][0].split("-")[0])
-                            if abs(y1 - y2) == 1:
-                                recenttag = "!" if merge is None else ""
-                            else:
-                                recenttag = "!!" if merge is None else ""
-                        except:
-                            recenttag = "*"
-                    players = []
-                    for r in refs:
-                        if r[4] is False:
-                            players.append(r[3])
-                        elif r[4] is not None:
-                            players.append(r[4])
-                    if len(set(players)) > 1:
-                        peopletag = "?"
-                    if len(players):
-                        grading_code = get_grading_code_for_person(
-                            db, get_alias(db, players[0])
-                        )
-                        playerecf = get_ecf_player_for_grading_code(
-                            db, grading_code
-                        )
-                        if playerecf:
-                            if playerecf.value.ECFmerge:
-                                merged_grading_code = grading_code
-                                grading_code = playerecf.value.ECFmerge
-                    else:
-                        grading_code = ""
-                    if grading_code == "":
-                        if person not in nogcode:
-                            nogcode[person] = len(nogcode) + 1
-                        if merge is not None:
-                            grading_code = nogcode[person]
-                tag = "{:>3}".format(peopletag + recenttag)
-                grading_code = "{:>7}".format(grading_code)
-                if merged_grading_code:
-                    pnrc = "\t\t\t\t\t".join(
-                        (
-                            " ".join(
-                                (
-                                    pn[0],
-                                    merged_grading_code.join(("(", ")")),
-                                )
-                            ),
-                            " ".join(clubplayers[pn]),
-                        )
+        for club_name in sorted(clubs.keys()):
+            clubplayers = data.collation.clubplayers[club_name]
+            genres.append((club_name + "\n", None))
+            for player_name in clubs[club_name]:
+                genres.append(
+                    (
+                        "\t\t\t\t".join(
+                            (
+                                player_name[0],
+                                " ".join(clubplayers[player_name]),
+                            )
+                        ),
+                        None,
                     )
-                    genres.append(
-                        (
-                            " ".join(
-                                (
-                                    tag,
-                                    grading_code,
-                                    " ",
-                                    pnrc,
-                                )
-                            ),
-                            None,
-                        )
-                    )
-                else:
-                    pnrc = "\t\t\t\t\t".join(
-                        (pn[0], " ".join(clubplayers[pn]))
-                    )
-                    genres.append(
-                        (" ".join((tag, grading_code, " ", pnrc)), None)
-                    )
+                )
             genres.append(("", None))
+        return
 
     def report_unfinished_games(self, data):
         """Append list of unfinished reported games to results report."""
         if len(data.collation.reports.error):
             return
         genres = self.generated_results
-        ug = data.collation.get_unfinished_games()
-        if len(ug) == 0:
+        unfinished_games = data.collation.get_unfinished_games()
+        if len(unfinished_games) == 0:
             return
         genres.append(("Unfinished games\n", None))
-        for match, game in ug:
+        for match, game in unfinished_games:
             match.tagger.append_generated_report(
                 genres,
                 " ".join(
@@ -1683,73 +1477,24 @@ class SourceEdit(panel.PlainPanel):
             )
         genres.append(("", None))
 
-    def update_event_results(self):
-        """Show dialogue to update database and return true if updated."""
-        if self.is_report_modified():
-            tkinter.messagebox.showinfo(
-                parent=self.get_widget(),
-                message="".join(
-                    (
-                        "Event data has been modified.\n\n",
-                        "Save the data first.",
-                    )
-                ),
-                title="Update",
-            )
-            return False
-        db = self.get_appsys().get_results_database()
-        if not db:
-            dlg = tkinter.messagebox.showinfo(
-                parent=self.get_widget(),
-                message="".join(
-                    (
-                        "Cannot update. No results database open.\n\n",
-                        "To proceed open a results database",
-                    )
-                ),
-                title="Update",
-            )
-            return False
-        if not tkinter.messagebox.askyesno(
-            parent=self.get_widget(),
-            message="".join(("Do you want to update results?")),
-            title="Update",
-        ):
-            return False
+    # Method used in three subclasses but not this class.
+    # Code originally in update_event_results() method of ChessResults
+    # version of SourceEdit class (when it was only version).
+    # In the real chess world unfinished games are rapidly becoming
+    # something that does not happen, and may become against the rules
+    # in future.
+    def collate_unfinished_games(self):
+        """Add completed unfinished games into game results."""
+        cug = self.get_context().results_data.get_collated_unfinished_games()
+        cfg = self.get_context().results_data.get_collated_games()
+        for report in cfg:
+            for game in cfg[report].games:
+                if game in cug:
+                    if cug[game].result is not None:
+                        game.result = cug[game].result
 
-        # Unfinished games, now completed, added into game results.
-        # Used to be done by update_event_results() in subclasses PDLEdit and
-        # SLEdit which then delegated rest of work to this class.
-        xr = self.get_context().results_data.get_collated_unfinished_games()
-        mr = self.get_context().results_data.get_collated_games()
-        for r in mr:
-            for g in mr[r].games:
-                if g in xr:
-                    if xr[g].result is not None:
-                        g.result = xr[g].result
-
-        collatedb = collationdb.CollationDB(
-            self.get_context().results_data.get_collated_games(), db
-        )
-        db.start_transaction()
-        u = collatedb.update_results()
-        if isinstance(u, tuple):
-            db.backout()
-            dialogue.Report(
-                parent=self,
-                title="Player records blocking update",
-                action_titles={"Save": "Save Blocking Update Details"},
-                wrap=tkinter.WORD,
-                tabstyle="tabular",
-            ).append("\n\n".join(u))
-        else:
-            db.commit()
-            dlg = tkinter.messagebox.showinfo(
-                parent=self.get_widget(),
-                message="".join(("Results database updated")),
-                title="Update",
-            )
-        return True
+    # Preserve original method name for a while.
+    _collate_unfinished_games = collate_unfinished_games
 
     def _report_allplayall(self, section, data):
         """Generate results report for all play all event."""
@@ -1761,7 +1506,6 @@ class SourceEdit(panel.PlainPanel):
             genres.append(("No games reported for this competition", None))
             genres.append(("", None))
             return
-        report = data.collation.games[section]
         if section in data.collation.reports.er_section:
             games = data.collation.games[section].games
             genres.append(("", None))
@@ -1778,48 +1522,48 @@ class SourceEdit(panel.PlainPanel):
                 )
                 round_date = None
 
-            r = None
-            for g in games:
-                if r != g.round:
-                    r = g.round
+            round_ = None
+            for game in games:
+                if round_ != game.round:
+                    round_ = game.round
                     genres.append(("", None))
-                    if r in schedule.es_round_dates[section]:
-                        round_date = schedule.es_round_dates[section][r]
+                    if round_ in schedule.es_round_dates[section]:
+                        round_date = schedule.es_round_dates[section][round_]
                     else:
                         round_date = schedule.es_startdate
-                    g.tagger.append_generated_report(
+                    game.tagger.append_generated_report(
                         genres,
                         " ".join(
                             (
                                 section,
                                 "Round",
-                                str(r),
+                                str(round_),
                                 "played on",
                                 self._date_text(round_date),
                             )
                         ),
                     )
                     genres.append(("", None))
-                if round_date == g.date:
-                    g.tagger.append_generated_report(
+                if round_date == game.date:
+                    game.tagger.append_generated_report(
                         genres,
                         " ".join(
                             (
-                                g.homeplayer.name,
-                                g.get_print_result()[0],
-                                g.awayplayer.name,
+                                game.homeplayer.name,
+                                game.get_print_result()[0],
+                                game.awayplayer.name,
                             )
                         ),
                     )
                 else:
-                    g.tagger.append_generated_report(
+                    game.tagger.append_generated_report(
                         genres,
                         " ".join(
                             (
-                                self._date_text(g.date),
-                                g.homeplayer.name,
-                                g.get_print_result()[0],
-                                g.awayplayer.name,
+                                self._date_text(game.date),
+                                game.homeplayer.name,
+                                game.get_print_result()[0],
+                                game.awayplayer.name,
                             )
                         ),
                     )
@@ -1841,27 +1585,27 @@ class SourceEdit(panel.PlainPanel):
             genres.append((section, None))
             genres.append(("Games in entry order", None))
             event_date = schedule.es_startdate
-            for g in games:
-                if event_date == g.date:
-                    g.tagger.append_generated_report(
+            for game in games:
+                if event_date == game.date:
+                    game.tagger.append_generated_report(
                         genres,
                         " ".join(
                             (
-                                g.homeplayer.name,
-                                g.get_print_result()[0],
-                                g.awayplayer.name,
+                                game.homeplayer.name,
+                                game.get_print_result()[0],
+                                game.awayplayer.name,
                             )
                         ),
                     )
                 else:
-                    g.tagger.append_generated_report(
+                    game.tagger.append_generated_report(
                         genres,
                         " ".join(
                             (
-                                self._date_text(g.date),
-                                g.homeplayer.name,
-                                g.get_print_result()[0],
-                                g.awayplayer.name,
+                                self._date_text(game.date),
+                                game.homeplayer.name,
+                                game.get_print_result()[0],
+                                game.awayplayer.name,
                             )
                         ),
                     )
@@ -1910,14 +1654,16 @@ class SourceEdit(panel.PlainPanel):
                 )
             genfix.append(("Round dates", None))
             if len(rounds):
-                for r in rounds:
+                for round_ in rounds:
                     genfix.append(
                         (
                             "\t".join(
                                 (
-                                    str(r),
+                                    str(round_),
                                     self._date_text(
-                                        schedule.es_round_dates[section][r]
+                                        schedule.es_round_dates[section][
+                                            round_
+                                        ]
                                     ),
                                 )
                             ),
@@ -1937,9 +1683,11 @@ class SourceEdit(panel.PlainPanel):
                             None,
                         )
                     )
-                    for r in range(1, round_count + 1):
-                        if r not in rounds:
-                            genfix.append((" ".join(("Round", str(r))), None))
+                    for round_ in range(1, round_count + 1):
+                        if round_ not in rounds:
+                            genfix.append(
+                                (" ".join(("Round", str(round_))), None)
+                            )
             else:
                 genfix.append(
                     (
@@ -1957,49 +1705,49 @@ class SourceEdit(panel.PlainPanel):
             genres.append(("", None))
             genres.append((section, None))
             genres.append(("Games in round order", None))
-            r = None
-            for g in games:
-                if r != g.round:
-                    r = g.round
+            round_ = None
+            for game in games:
+                if round_ != game.round:
+                    round_ = game.round
                     genres.append(("", None))
-                    intr = int(r) if r.isdigit() else r
+                    intr = int(round_) if round_.isdigit() else round_
                     if intr in schedule.es_round_dates[section]:
                         round_date = schedule.es_round_dates[section][intr]
                     else:
                         round_date = schedule.es_startdate
-                    g.tagger.append_generated_report(
+                    game.tagger.append_generated_report(
                         genres,
                         " ".join(
                             (
                                 section,
                                 "Round",
-                                str(r),
+                                str(round_),
                                 "played on",
                                 self._date_text(round_date),
                             )
                         ),
                     )
                     genres.append(("", None))
-                if round_date == g.date:
-                    g.tagger.append_generated_report(
+                if round_date == game.date:
+                    game.tagger.append_generated_report(
                         genres,
                         " ".join(
                             (
-                                g.homeplayer.name,
-                                g.get_print_result()[0],
-                                g.awayplayer.name,
+                                game.homeplayer.name,
+                                game.get_print_result()[0],
+                                game.awayplayer.name,
                             )
                         ),
                     )
                 else:
-                    g.tagger.append_generated_report(
+                    game.tagger.append_generated_report(
                         genres,
                         " ".join(
                             (
-                                self._date_text(g.date),
-                                g.homeplayer.name,
-                                g.get_print_result()[0],
-                                g.awayplayer.name,
+                                self._date_text(game.date),
+                                game.homeplayer.name,
+                                game.get_print_result()[0],
+                                game.awayplayer.name,
                             )
                         ),
                     )

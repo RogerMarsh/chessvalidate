@@ -16,15 +16,15 @@ from datetime import date
 from solentware_misc.core import utilities
 
 from . import names
+from . import constants
 
 _EVENT_IDENTITY_NONE = (None, None, None)
 
 # These should go in .gameresults or .constants
 ONENIL = "1-0"
 NILONE = "0-1"
-DRAW = "draw"
 
-GAME_RESULT = {ONENIL: (1, 0), NILONE: (0, 1), DRAW: (0.5, 0.5)}
+GAME_RESULT = {ONENIL: (1, 0), NILONE: (0, 1), constants.DRAW: (0.5, 0.5)}
 NOMATCHSCORE = frozenset((("", ""),))
 
 
@@ -36,7 +36,7 @@ class Found:
     SWISS_PAIRING_CARD = -3
     APA_PLAYER_CARD = -4
     COMPETITION_GAME_DATE = -5
-    COMPETITION = -6
+    COMPETITION_NAME = -6
     COMPETITION_ROUND = -7
     ROUND_HEADER = -8
     COMPETITION_ROUND_GAME_DATE = -9
@@ -146,7 +146,7 @@ class Score:
     )
 
 
-class EventData(object):
+class EventData:
     """Detail of a data item extracted from a collection of emails."""
 
     _attributes = (
@@ -190,25 +190,25 @@ class EventData(object):
         headers=None,
         **kargs
     ):
-        """ """
+        """Initialiase EventData instance."""
         self.datatag = datatag
         self.found = found
         self.raw = raw
         self.headers = headers
-        for a in self.__class__._attributes:
-            if a in kargs:
-                self.__dict__[a] = kargs[a]
+        for attribute in self.__class__._attributes:
+            if attribute in kargs:
+                self.__dict__[attribute] = kargs[attribute]
         if isinstance(context, EventContext):
-            for i, h in zip(
+            for i, j in zip(
                 self.__class__._inheritable,
                 (context.event_identity, context.competition),
             ):
-                for a, v in zip(i, h):
-                    if v is not None:
-                        if a not in self.__dict__:
-                            self.__dict__[a] = v
-                        elif not self.__dict__[a]:
-                            self.__dict__[a] = v
+                for i_attr, j_attr in zip(i, j):
+                    if j_attr is not None:
+                        if i_attr not in self.__dict__:
+                            self.__dict__[i_attr] = j_attr
+                        elif not self.__dict__[i_attr]:
+                            self.__dict__[i_attr] = j_attr
 
             # AttributeError is assumed to be absence of eventname, usually
             # because event name and date not given at top of input data.
@@ -231,7 +231,12 @@ class EventData(object):
         # print() #tracer
 
     def is_game_result(self):
-        """ """
+        """Return True if self represents a game result.
+
+        The score text is tested againt conventional representations of
+        game results in Score class to assist the decision.
+
+        """
         if not self.is_result():
             return False
         if self.score in Score.conventional_match_game_results:
@@ -239,30 +244,40 @@ class EventData(object):
         return not self.is_match_result()
 
     def is_match_result(self):
-        """ """
+        r"""Return True if self repesents a match result.
+
+        If the score text is exactly '\xbd' self is assumed a game result.
+
+        If the score text ends with '\xbd' self is assumed a match result.
+
+        If the total score is 1 self is assumed a game result.
+
+        Otherwise a match result.
+
+        """
         if not self.is_result():
             return False
         # if self.score in Score.conventional_match_game_results:
         #    return True
         score = []
-        for s in self.score.split():
-            if s == "\xbd":
+        for text in self.score.split():
+            if text == "\xbd":
                 score.append(0.5)
-            elif s.endswith("\xbd"):
+            elif text.endswith("\xbd"):
                 return True
             else:
                 try:
-                    score.append(float(s))
+                    score.append(float(text))
                 except ValueError:
                     return False
-        return sum([float(s) for s in score]) != 1
+        return sum([float(text) for text in score]) != 1
 
     def is_match_and_game_result(self):
-        """ """
+        """Return True if self represents a tabular result."""
         return self.found == Found.CSV_TABULAR
 
     def is_result(self):
-        """ """
+        """Return True if self represents a ratable result."""
         return self.found in Found.real_result
 
     def append_generated_schedule(self, schedule, text):
@@ -292,38 +307,38 @@ class EventData(object):
         return (self.datatag, self._generated_schedule[key])
 
     def _print(self):
-        """ """
+        """Print trace when fixing problems."""
         try:
             print(self.__dict__)
-        except:
+        except Exception:
             print("\n>>>>>>>>")
-            for k, v in self.__dict__.items():
+            for k, value in self.__dict__.items():
                 try:
-                    print(repr(k), repr(v))
-                except:
+                    print(repr(k), repr(value))
+                except Exception:
                     print(repr(k), "not printable")
             print("<<<<<<<<\n")
 
     def is_match_defaulted(self):
-        """ """
+        """Return True if match defaulted."""
         if self.found == Found.RESULT:
             return self.score == Score.match_defaulted
         return False
 
     def is_defaulting_side_known(self):
-        """ """
+        """Return True if defaulting side can be decided."""
         if self.found == Found.RESULT:
             return self.score in Score.included_in_team_score
         return False
 
     def is_default_counted(self):
-        """ """
+        """Return True if default counts to match result."""
         if self.found == Found.RESULT:
             return self.score == Score.default
         return False
 
     def is_default_not_counted(self):
-        """ """
+        """Return True if default doed not count to match result."""
         if self.found == Found.RESULT:
             return self.score in Score.excluded_from_match_score
         return False
@@ -340,17 +355,17 @@ class TableEventData(EventData):
     gdate = utilities.AppSysDate()
 
     def __init__(self, context=None, **kargs):
-        """ """
+        """Initialiase TableEventData instance."""
         super().__init__(context=context, **kargs)
         self.context = context
-        d = self.result_date
-        if TableEventData.gdate.parse_date(d) == len(d):
+        result_date = self.result_date
+        if TableEventData.gdate.parse_date(result_date) == len(result_date):
             self._date_played = TableEventData.gdate.iso_format_date()
         else:
             self._date_played = ""
 
     def __eq__(self, other):
-        """ """
+        """Return True if self equals other."""
         if self.competition != other.competition:
             return False
         if self._date_played != other._date_played:
@@ -366,7 +381,7 @@ class TableEventData(EventData):
         return True
 
     def __lt__(self, other):
-        """ """
+        """Return True if self less than other."""
         if self.competition < other.competition:
             return True
         if self._date_played < other._date_played:
@@ -392,12 +407,11 @@ class TableEventData(EventData):
         return False
 
 
-class EventContext(object):
+class EventContext:
     """Context for creation of an EventData instance."""
 
     def __init__(self):
-        """ """
-
+        """Initialise event context."""
         # Event identity
         self._event_identity = _EVENT_IDENTITY_NONE
         self._eventname = None
@@ -429,7 +443,7 @@ class EventContext(object):
             Found.SWISS_PAIRING_CARD: self._swiss_pairing_card,
             Found.APA_PLAYER_CARD: self._apa_player_card,
             Found.COMPETITION_GAME_DATE: self._competition_game_date,
-            Found.COMPETITION: self._competition,
+            Found.COMPETITION_NAME: self._competition,
             Found.COMPETITION_ROUND: self._competition_round,
             Found.ROUND_HEADER: self._round_header,
             Found.COMPETITION_ROUND_GAME_DATE: self._competition_round_game_date,
@@ -444,7 +458,7 @@ class EventContext(object):
         }
 
     def process(self, eventdata):
-        """ """
+        """Retun state after processing eventdata."""
         self._items.append(eventdata)
         return self._process.get(eventdata.found, self._exception)(eventdata)
 
@@ -454,12 +468,12 @@ class EventContext(object):
 
     @property
     def event_identity(self):
-        """ """
+        """Return event identity."""
         return self._event_identity
 
     @event_identity.setter
     def event_identity(self, value):
-        """ """
+        """Set event name and identity (name plus start and end dates)."""
         if self._event_identity is not _EVENT_IDENTITY_NONE:
             return
         self._eventname, self._event_startdate, self._event_enddate = value
@@ -471,7 +485,7 @@ class EventContext(object):
         self._eventdate = (self._event_startdate, self._event_enddate)
 
     def set_eventname(self, value):
-        """ """
+        """Set event name and identity (name plus start and end dates)."""
         if self._event_identity is not _EVENT_IDENTITY_NONE:
             return
         self._eventname = value
@@ -485,7 +499,7 @@ class EventContext(object):
     eventname = property(fset=set_eventname)
 
     def set_eventdate(self, value):
-        """ """
+        """Set event start date and event end date."""
         if self._event_identity is not _EVENT_IDENTITY_NONE:
             return
         self._event_startdate, self._event_enddate = value
@@ -509,19 +523,19 @@ class EventContext(object):
 
     @property
     def competition(self):
-        """ """
+        """Return competition_name, gamedate, and gameround."""
         return (self._competition_name, self._gamedate, self._gameround)
 
     @competition.setter
     def competition(self, value):
-        """ """
+        """Set competition_name, gamedate, and gameround."""
         if self._event_identity is _EVENT_IDENTITY_NONE:
             return
         self._competition_name, self._gamedate, self._gameround = value
         self._add_key()
 
     def set_gameround(self, value):
-        """ """
+        """Set gameround."""
         if self._competition_name is None:
             return
         self._gameround = value
@@ -529,7 +543,7 @@ class EventContext(object):
     gameround = property(fset=set_gameround)
 
     def set_gamedate(self, value):
-        """ """
+        """Set gamedate."""
         if self._competition_name is None:
             return
         self._gamedate = value
@@ -537,7 +551,7 @@ class EventContext(object):
     gamedate = property(fset=set_gamedate)
 
     def set_competition_name(self, value):
-        """ """
+        """Set competition name."""
         if self._event_identity is _EVENT_IDENTITY_NONE:
             return
         self._competition_name = value
@@ -548,7 +562,7 @@ class EventContext(object):
     competition_name = property(fset=set_competition_name)
 
     def set_competition_name_gamedate(self, value):
-        """ """
+        """Set competition_name, gamedate, and gameround."""
         if self._event_identity is _EVENT_IDENTITY_NONE:
             return
         self._competition_name, self._gamedate = value
@@ -558,7 +572,7 @@ class EventContext(object):
     competition_name_gamedate = property(fset=set_competition_name_gamedate)
 
     def set_competition_name_gameround(self, value):
-        """ """
+        """Set competition_name and gameround."""
         if self._event_identity is _EVENT_IDENTITY_NONE:
             return
         self._competition_name, self._gameround = value
@@ -568,26 +582,26 @@ class EventContext(object):
     competition_name_gameround = property(fset=set_competition_name_gameround)
 
     def _event_and_dates(self, eventdata):
-        """ """
+        """Process Found.EVENT_AND_DATES eventdata instances."""
         self.set_eventdate((eventdata.startdate, eventdata.enddate))
         if "eventname" in eventdata.__dict__:
             self.set_eventname(eventdata.eventname)
 
     def _possible_event_name(self, eventdata):
-        """ """
+        """Process Found.POSSIBLE_EVENT_NAME eventdata instances."""
         # This is the default attempt at processing data which is not known to
         # be wrong.  Ignore unless an event name is still allowed.
         self.set_eventname(eventdata.eventname)
 
     def _swiss_pairing_card(self, eventdata):
-        """ """
+        """Process Found.SWISS_PAIRING_CARD eventdata instances."""
         if eventdata.competition in self._round_dates:
             self._swiss.append(self._round_dates[eventdata.competition])
             del self._round_dates[eventdata.competition]
         self._swiss.append(eventdata)
 
     def _apa_player_card(self, eventdata):
-        """ """
+        """Process Found.APA_PLAYER_CARD eventdata instances."""
         if eventdata.competition in self._round_dates:
             self._allplayall.append(self._round_dates[eventdata.competition])
             del self._round_dates[eventdata.competition]
@@ -595,28 +609,28 @@ class EventContext(object):
 
     # *_game_* rather than *_result_* to imply game, not match, lines follow.
     def _competition_game_date(self, eventdata):
-        """ """
+        """Process Found.COMPETITION_GAME_DATE eventdata instances."""
         self.set_competition_name_gamedate(
             (eventdata.competition, eventdata.result_date)
         )
 
     def _competition(self, eventdata):
-        """ """
+        """Process Found.COMPETITION_NAME eventdata instances."""
         self.set_competition_name(eventdata.competition)
 
     def _competition_round(self, eventdata):
-        """ """
+        """Process Found.COMPETITION_ROUND eventdata instances."""
         self.set_competition_name_gameround(
             (eventdata.competition, eventdata.competition_round)
         )
 
     def _round_header(self, eventdata):
-        """ """
+        """Process Found.ROUND_HEADER eventdata instances."""
         self.set_gamedate(eventdata.competition_round)
 
     # *_game_* rather than *_result_* to imply game, not match, lines follow.
     def _competition_round_game_date(self, eventdata):
-        """ """
+        """Process Found.COMPETITION_ROUND_GAME_DATE eventdata instances."""
         self.competition = (
             eventdata.competition,
             eventdata.result_date,
@@ -624,7 +638,9 @@ class EventContext(object):
         )
 
     def _fixture_teams(self, eventdata):
-        """A fixture is always accepted when event_identity is not None.
+        """Process Found.FIXTURE_TEAMS eventdata instances.
+
+        A fixture is always accepted when event_identity is not None.
 
         The two teams are known.
 
@@ -635,7 +651,9 @@ class EventContext(object):
         self._fixtures.append(eventdata)
 
     def _fixture(self, eventdata):
-        """A fixture is always accepted when event_identity is not None.
+        """Process Found.FIXTURE eventdata instances.
+
+        A fixture is always accepted when event_identity is not None.
 
         The two teams have to be deduced from a single string containing both
         team names.  It is assumed this can be done provided teams appear first
@@ -649,61 +667,65 @@ class EventContext(object):
         self._fixtures.append(eventdata)
 
     def _competition_date(self, eventdata):
-        """ """
+        """Process Found.COMPETITION_DATE eventdata instances."""
         self.set_gamedate(eventdata.result_date)
 
     # Method named to imply games and matches cannot always be distinguished.
     def _result_names(self, eventdata):
-        """ """
+        """Process Found.RESULT_NAMES eventdata instances."""
         if "competition" in eventdata.__dict__:
             self._results.add_key(eventdata.competition)
             self._results.append(eventdata)
 
     # Method named to imply games and matches cannot always be distinguished.
     def _result(self, eventdata):
-        """ """
+        """Process Found.RESULT eventdata instances."""
         if "competition" in eventdata.__dict__:
             self._results.add_key(eventdata.competition)
             self._results.append(eventdata)
 
     def _swiss_fixture_apa_round_dates(self, eventdata):
-        """ """
+        """Process Found.COMPETITION_AND_DATES eventdata instances."""
         if eventdata.competition in self._round_dates:
             # Competition has round dates awaiting result data to choose type.
             return
         self.set_competition_name(eventdata.competition)
-        for e in (self._swiss, self._fixtures, self._allplayall):
-            for ed in e[eventdata.competition]:
-                if ed.found is Found.COMPETITION_AND_DATES:
+        for event in (self._swiss, self._fixtures, self._allplayall):
+            for item in event[eventdata.competition]:
+                if item.found is Found.COMPETITION_AND_DATES:
                     break
             else:
-                e.append(eventdata)
+                event.append(eventdata)
                 break
         else:
             self._round_dates[eventdata.competition] = eventdata
 
     def _csv_tabular(self, eventdata):
-        """ """
+        """Process Found.CSV_TABULAR eventdata instances."""
         if eventdata.competition not in self._tabular:
             self._tabular.add_key(eventdata.competition)
         self._tabular.append(eventdata)
 
     def _ignore(self, eventdata):
-        """ """
+        """Process Found.IGNORE eventdata instances."""
 
     def _exception(self, eventdata):
-        """ """
+        """Wrap print trace functions on exceptions when fixing problems."""
         # self._players
         # self._print(eventdata)
 
     def _print(self, eventdata):
-        """ """
+        """Wrap print eventdata method used when fixing problems.
+
+        Otherwise not used.
+
+        """
         eventdata._print()
 
     def _add_key(self):
-        """ """
+        """Add self._competition_name for processing by all report styles."""
         if self._competition_name:
-            for e in (
+            for report_style in (
                 self._allplayall,
                 self._swiss,
                 self._fixtures,
@@ -711,24 +733,31 @@ class EventContext(object):
                 self._players,
                 self._tabular,
             ):
-                e.add_key(self._competition_name)
+                report_style.add_key(self._competition_name)
 
     def fixture_list_names(self, team_name_lookup, truncate=None):
-        """ """
-        for k, v in self._fixtures.items():
-            names, truncate = get_names_from_joined_names(
-                v, ("teams", "teamone", "teamtwo"), truncate
+        """Return True if abbreviated team name search was done.
+
+        The normal return is None.
+
+        If get_names_from_joined_names() function suggested truncating the
+        search, the return is True or False depending on user choice.
+
+        """
+        for k, value in self._fixtures.items():
+            team_names, truncate = get_names_from_joined_names(
+                value, ("teams", "teamone", "teamtwo"), truncate
             )
-            sr = self._fixtures[k]
-            for nk, nv in names.items():
-                if "teams" in sr[nk].__dict__:
-                    sr[nk].__dict__.update(nv)
-                    del sr[nk].teams
+            fixtures = self._fixtures[k]
+            for nkey, nvalue in team_names.items():
+                if "teams" in fixtures[nkey].__dict__:
+                    fixtures[nkey].__dict__.update(nvalue)
+                    del fixtures[nkey].teams
             if team_name_lookup:
                 team_name_lookup = {
                     k.lower(): v for k, v in team_name_lookup.items()
                 }
-                for fixture in sr:
+                for fixture in fixtures:
                     fixture.teamone = team_name_lookup.get(
                         fixture.teamone.lower(), fixture.teamone
                     )
@@ -738,16 +767,23 @@ class EventContext(object):
         return truncate
 
     def results_names(self, truncate=None):
-        """ """
-        for k, v in self._results.items():
-            names, truncate = get_names_from_joined_names(
-                v, ("names", "nameone", "nametwo"), truncate
+        """Return True if abbreviated player name search was done.
+
+        The normal return is None.
+
+        If get_names_from_joined_names() function suggested truncating the
+        search, the return is True or False depending on user choice.
+
+        """
+        for k, value in self._results.items():
+            player_names, truncate = get_names_from_joined_names(
+                value, ("names", "nameone", "nametwo"), truncate
             )
-            sr = self._results[k]
-            for nk, nv in names.items():
-                if "names" in sr[nk].__dict__:
-                    sr[nk].__dict__.update(nv)
-                    del sr[nk].names
+            results = self._results[k]
+            for nkey, nvalue in player_names.items():
+                if "names" in results[nkey].__dict__:
+                    results[nkey].__dict__.update(nvalue)
+                    del results[nkey].names
         return truncate
 
 
@@ -765,11 +801,11 @@ def get_names_from_joined_names(joined_names, attrnames, truncate):
     as far as names 'Team A -' and 'Team B'.
 
     """
-    name, nameone, nametwo = attrnames
+    nameone, nametwo = attrnames[1:]
     homename = set()
     awayname = set()
     nameset = {}
-    for ed, eventdata in enumerate(joined_names):
+    for item, eventdata in enumerate(joined_names):
         edict = eventdata.__dict__
         concat = [edict[n].split() for n in attrnames if n in edict]
         if sum([len(c) for c in concat]) > 50:
@@ -791,32 +827,36 @@ def get_names_from_joined_names(joined_names, attrnames, truncate):
                 )
             if truncate:
                 concat = [c[:10] for c in concat]
-        nameset[ed] = n = names.Names(
+        nameset[item] = nset = names.Names(
             string=" ".join([" ".join(c) for c in concat])
         )
-        for h, a in n.namepairs:
-            homename.add(h)
-            awayname.add(a)
+        for hname, aname in nset.namepairs:
+            homename.add(hname)
+            awayname.add(aname)
     splitnames = {}
     consistent = set()
     guesses = {}
     allnames = homename.intersection(awayname)
-    for k, v in nameset.items():
-        v.namepairs = tuple(
-            [(h, a) for h, a in v.namepairs if h in allnames and a in allnames]
+    for k, gvalue in nameset.items():
+        gvalue.namepairs = tuple(
+            [
+                (h, a)
+                for h, a in gvalue.namepairs
+                if h in allnames and a in allnames
+            ]
         )
         try:
-            sn = {}
-            sn[nameone] = v.namepairs[-1][0]
-            sn[nametwo] = v.namepairs[-1][-1]
-            consistent.add(sn[nameone])
-            consistent.add(sn[nametwo])
-            splitnames[k] = sn
+            nset = {}
+            nset[nameone] = gvalue.namepairs[-1][0]
+            nset[nametwo] = gvalue.namepairs[-1][-1]
+            consistent.add(nset[nameone])
+            consistent.add(nset[nametwo])
+            splitnames[k] = nset
         except:
-            v.guess_names_from_known_names(allnames)
+            gvalue.guess_names_from_known_names(allnames)
             guesses[k] = {
-                nameone: v.namepairs[-1][0],
-                nametwo: v.namepairs[-1][-1],
+                nameone: gvalue.namepairs[-1][0],
+                nametwo: gvalue.namepairs[-1][-1],
             }
     del allnames, homename, awayname
     prevlenguesses = 0
@@ -824,8 +864,8 @@ def get_names_from_joined_names(joined_names, attrnames, truncate):
         prevlenguesses = len(guesses)
         stillguesses = {}
         while guesses:
-            k, v = guesses.popitem()
-            awaywords = " ".join((v[nameone], v[nametwo])).split()
+            k, gvalue = guesses.popitem()
+            awaywords = " ".join((gvalue[nameone], gvalue[nametwo])).split()
             if not awaywords:
                 continue  # No names for defaulted games
             homewords = [awaywords.pop(0)]
@@ -837,7 +877,7 @@ def get_names_from_joined_names(joined_names, attrnames, truncate):
                     break
                 homewords.append(awaywords.pop(0))
             else:
-                stillguesses[k] = v
+                stillguesses[k] = gvalue
         guesses = stillguesses
     splitnames.update(guesses)
     return (splitnames, truncate)
@@ -880,8 +920,8 @@ class AdaptEventContext(EventContext):
     @staticmethod
     def mangle(text):
         """Mangle lines starting with colour_rule or sectiontype keywords."""
-        t = [t for t in text.split(sep=" ") if len(t)]
-        if t[0].lower() in {
+        words = [t for t in text.split(sep=" ") if len(t)]
+        if words[0].lower() in {
             "allplayall",
             "knockout",
             "league",
@@ -898,8 +938,8 @@ class AdaptEventContext(EventContext):
             "blackonall",
             "notspecified",
         }:
-            t[0] = "".join((t[0][0], t[0]))
-            return " ".join(t)
+            words[0] = "".join((words[0][0], words[0]))
+            return " ".join(words)
         return text
 
     @staticmethod
@@ -909,41 +949,40 @@ class AdaptEventContext(EventContext):
         if score:
             return score
         score = []
-        for s in result.score.split():
-            if s == "\xbd":
+        for text in result.score.split():
+            if text == "\xbd":
                 score.append("0.5")
-            elif s.endswith("\xbd"):
-                score.append("".join((s[:-1], ".5")))
+            elif text.endswith("\xbd"):
+                score.append("".join((text[:-1], ".5")))
             else:
                 try:
-                    float(s)
+                    float(text)
                 except ValueError:
                     return result.score
-                score.append(s)
-        if sum([float(s) for s in score]) == 1:
+                score.append(text)
+        if sum([float(text) for text in score]) == 1:
             score = "-".join(score)
             if score == "0.5-0.5":
                 return "draw"
             return score
-        else:
-            return "-".join(score)
+        return "-".join(score)
 
     gdate = utilities.AppSysDate()
 
     @staticmethod
-    def mangle_date(board, date):
+    def mangle_date(board, datestr):
         """Mangle date if board not given so board is not taken from date.
 
         Convert date to ISO format or replace spaces in date by '-'.
 
         """
         if board:
-            return date
-        if len(date.split()) == 1:
-            return date
-        if AdaptEventContext.gdate.parse_date(date) == len(date):
+            return datestr
+        if len(datestr.split()) == 1:
+            return datestr
+        if AdaptEventContext.gdate.parse_date(datestr) == len(datestr):
             return AdaptEventContext.gdate.iso_format_date()
-        return "-".join(date.split())
+        return "-".join(datestr.split())
 
     @staticmethod
     def game_text(game_result):
@@ -956,11 +995,11 @@ class AdaptEventContext(EventContext):
 
         """
         board = game_result.__dict__.get("numbers", ("",))[0]
-        for n in (
+        for name in (
             game_result.nameone,
             game_result.nametwo,
         ):
-            if n.lower() == "default":
+            if name.lower() == "default":
                 break
         else:
 
@@ -1002,7 +1041,7 @@ class AdaptEventContext(EventContext):
                 ),
                 game_result,
             )
-        elif game_result.nameone.lower() == "default":
+        if game_result.nameone.lower() == "default":
             return (
                 AdaptEventContext.mangle(
                     " ".join(
@@ -1021,28 +1060,27 @@ class AdaptEventContext(EventContext):
                 ),
                 game_result,
             )
-        else:
-            return (
-                AdaptEventContext.mangle(
-                    " ".join(
-                        (
+        return (
+            AdaptEventContext.mangle(
+                " ".join(
+                    (
+                        board,
+                        AdaptEventContext.mangle_date(
                             board,
-                            AdaptEventContext.mangle_date(
-                                board,
-                                game_result.__dict__.get("result_date", ""),
-                            ),
-                            game_result.nameone,
-                            AdaptEventContext.adapted_scores[
-                                Score.home_win_default
-                            ],
-                        )
+                            game_result.__dict__.get("result_date", ""),
+                        ),
+                        game_result.nameone,
+                        AdaptEventContext.adapted_scores[
+                            Score.home_win_default
+                        ],
                     )
-                ),
-                game_result,
-            )
+                )
+            ),
+            game_result,
+        )
 
     def get_schedule_text(self):
-        """ """
+        """Return list of text lines giving fixture and player details."""
         if not self._eventname:
             return []
         text = [(self._eventname, None)]
@@ -1057,37 +1095,37 @@ class AdaptEventContext(EventContext):
         # Although any kind of result is allowed in an _EventItems instance,
         # the Schedule (and Report) classes will object if it happens.
         for competition, results in self._allplayall.items():
-            if not len(results):
+            if len(results) == 0:
                 continue
             text.append((" ".join(("allplayall", competition)), None))
-            for r in results:
-                if r.found is Found.COMPETITION_AND_DATES:
-                    for e, d in enumerate(r.rounddates):
-                        text.append((" ".join((str(e + 1), d)), r))
+            for row in results:
+                if row.found is Found.COMPETITION_AND_DATES:
+                    for item, datestr in enumerate(row.rounddates):
+                        text.append((" ".join((str(item + 1), datestr)), row))
                     break
-            for r in results:
-                if r.found is Found.APA_PLAYER_CARD:
+            for row in results:
+                if row.found is Found.APA_PLAYER_CARD:
                     # No mechanism for an affiliation ('\t' separated).
                     # May add a 'grading code or ECF membership number' hint.
-                    text.append((" ".join((r.pin, r.person)), r))
+                    text.append((" ".join((row.pin, row.person)), row))
 
         for competition, results in self._swiss.items():
-            if not len(results):
+            if len(results) == 0:
                 continue
             text.append((" ".join(("swiss", competition)), None))
-            for r in results:
-                if r.found is Found.COMPETITION_AND_DATES:
-                    for e, d in enumerate(r.rounddates):
-                        text.append((" ".join((str(e + 1), d)), r))
+            for row in results:
+                if row.found is Found.COMPETITION_AND_DATES:
+                    for item, datestr in enumerate(row.rounddates):
+                        text.append((" ".join((str(item + 1), datestr)), row))
                     break
-            for r in results:
-                if r.found is Found.SWISS_PAIRING_CARD:
+            for row in results:
+                if row.found is Found.SWISS_PAIRING_CARD:
                     # No mechanism for an affiliation ('\t' separated).
                     # May add a 'grading code or ECF membership number' hint.
-                    text.append((" ".join((r.pin, r.person)), r))
+                    text.append((" ".join((row.pin, row.person)), row))
 
         for competition, results in self._results.items():
-            if not len(results):
+            if len(results) == 0:
                 continue
             if self._is_results_individual(results):
                 # The Report class requires the Schedule class to hold the
@@ -1100,20 +1138,20 @@ class AdaptEventContext(EventContext):
         gdate = AdaptEventContext.gdate
         fixture_list_found = False
         for competition, fixtures in self._fixtures.items():
-            if not len(fixtures):
+            if len(fixtures) == 0:
                 continue
-            for f in fixtures:
-                if f.found in (Found.FIXTURE_TEAMS, Found.FIXTURE):
+            for fixture in fixtures:
+                if fixture.found in (Found.FIXTURE_TEAMS, Found.FIXTURE):
                     if not fixture_list_found:
-                        text.append(("fixturelist", f))
+                        text.append(("fixturelist", fixture))
                         fixture_list_found = True
 
-                    day = f.fixture_day
+                    day = fixture.fixture_day
                     if not day:
 
                         # Report class expects day to be provided, even if the
                         # source did not quote one.
-                        if gdate.parse_date(f.fixture_date) != -1:
+                        if gdate.parse_date(fixture.fixture_date) != -1:
                             day = date(
                                 *[
                                     int(d)
@@ -1128,20 +1166,20 @@ class AdaptEventContext(EventContext):
                             "\t".join(
                                 (
                                     day,
-                                    f.fixture_date,
+                                    fixture.fixture_date,
                                     competition,
-                                    f.teamone.title(),
-                                    f.teamtwo.title(),
+                                    fixture.teamone.title(),
+                                    fixture.teamtwo.title(),
                                 )
                             ),
-                            f,
+                            fixture,
                         )
                     )
 
         return text
 
     def get_results_text(self):
-        """ """
+        """Return list of text lines giving game result details."""
         if not self._eventname:
             return []
         text = [(self._eventname, None)]
@@ -1156,12 +1194,12 @@ class AdaptEventContext(EventContext):
         # Although any kind of result is allowed in an _EventItems instance,
         # the Report (and Schedule) classes will object if it happens.
         for competition, results in self._allplayall.items():
-            if not len(results):
+            if len(results) == 0:
                 continue
             text.append((" ".join(("allplayall", competition)), None))
-            for r in results:
-                if r.found is Found.APA_PLAYER_CARD:
-                    source = self._set_source(r, source, text)
+            for row in results:
+                if row.found is Found.APA_PLAYER_CARD:
+                    source = self._set_source(row, source, text)
 
                     # Report class does accept (pin, person, allplayall) as
                     # well, but not the affiliation accepted by Schedule.
@@ -1169,26 +1207,26 @@ class AdaptEventContext(EventContext):
                         (
                             " ".join(
                                 (
-                                    r.pin,
+                                    row.pin,
                                     " ".join(
                                         [
                                             "x" if t == "*" else t
-                                            for t in r.allplayall
+                                            for t in row.allplayall
                                         ]
                                     ),
                                 )
                             ),
-                            r,
+                            row,
                         )
                     )
 
         for competition, results in self._swiss.items():
-            if not len(results):
+            if len(results) == 0:
                 continue
             text.append((" ".join(("swiss", competition)), None))
-            for r in results:
-                if r.found is Found.SWISS_PAIRING_CARD:
-                    source = self._set_source(r, source, text)
+            for row in results:
+                if row.found is Found.SWISS_PAIRING_CARD:
+                    source = self._set_source(row, source, text)
 
                     # Report class does accept (pin, person, swiss) as well,
                     # but not the affiliation accepted by Schedule.
@@ -1196,39 +1234,39 @@ class AdaptEventContext(EventContext):
                         (
                             " ".join(
                                 (
-                                    r.pin,
+                                    row.pin,
                                     " ".join(
                                         [
                                             "x" if t == "*" else t
-                                            for t in r.swiss
+                                            for t in row.swiss
                                         ]
                                     ),
                                 )
                             ),
-                            r,
+                            row,
                         )
                     )
 
         for competition, results in self._results.items():
-            if not len(results):
+            if len(results) == 0:
                 continue
             if self._is_results_individual(results):
                 text.append((" ".join(("individual", competition)), None))
-                for r in results:
-                    source = self._set_source(r, source, text)
+                for row in results:
+                    source = self._set_source(row, source, text)
                     text.append(
                         (
                             AdaptEventContext.mangle(
                                 " ".join(
                                     (
-                                        r.__dict__.get("result_date", ""),
-                                        r.__dict__.get("nameone", ""),
-                                        AdaptEventContext.translate_score(r),
-                                        r.__dict__.get("nametwo", ""),
+                                        row.__dict__.get("result_date", ""),
+                                        row.__dict__.get("nameone", ""),
+                                        AdaptEventContext.translate_score(row),
+                                        row.__dict__.get("nametwo", ""),
                                     )
                                 )
                             ),
-                            r,
+                            row,
                         )
                     )
             else:
@@ -1237,39 +1275,39 @@ class AdaptEventContext(EventContext):
                 # Hack colour rule for boards in matches
                 text.append(("blackonodd", None))
 
-                for r in results:
-                    if r.is_game_result():
-                        source = self._set_source(r, source, text)
-                        text.append(AdaptEventContext.game_text(r))
-                    elif r.is_match_result():
-                        source = self._set_source(r, source, text)
+                for row in results:
+                    if row.is_game_result():
+                        source = self._set_source(row, source, text)
+                        text.append(AdaptEventContext.game_text(row))
+                    elif row.is_match_result():
+                        source = self._set_source(row, source, text)
                         # Should this be looking at numbers like for board?
-                        round_ = r.__dict__.get("competition_round", "")
+                        round_ = row.__dict__.get("competition_round", "")
                         if round_:
-                            text.append((" ".join(("round", round_)), r))
-                        date = r.__dict__.get("result_date", "")
-                        if date:
-                            text.append((" ".join(("date", date)), r))
-                        played_on = r.__dict__.get("played_on", "")
+                            text.append((" ".join(("round", round_)), row))
+                        datestr = row.__dict__.get("result_date", "")
+                        if datestr:
+                            text.append((" ".join(("date", datestr)), row))
+                        played_on = row.__dict__.get("played_on", "")
                         if played_on:
-                            text.append((played_on, r))
+                            text.append((played_on, row))
                         text.append(
                             (
                                 AdaptEventContext.mangle(
                                     " ".join(
                                         (
-                                            r.nameone.title(),
+                                            row.nameone.title(),
                                             AdaptEventContext.translate_score(
-                                                r
+                                                row
                                             ),
-                                            r.nametwo.title(),
+                                            row.nametwo.title(),
                                         )
                                     )
                                 ),
-                                r,
+                                row,
                             )
                         )
-                    elif r.is_match_and_game_result():
+                    elif row.is_match_and_game_result():
                         tkinter.messagebox.showinfo(
                             message="".join(
                                 (
@@ -1279,7 +1317,7 @@ class AdaptEventContext(EventContext):
                             ),
                             title="Match and Game Result",
                         )
-                    elif r.is_match_defaulted():
+                    elif row.is_match_defaulted():
                         text.append(
                             (
                                 AdaptEventContext.mangle(
@@ -1288,20 +1326,20 @@ class AdaptEventContext(EventContext):
                                             "matchdefaulted",
                                             AdaptEventContext.mangle_date(
                                                 "",
-                                                r.__dict__.get(
+                                                row.__dict__.get(
                                                     "result_date", ""
                                                 ),
                                             ),
                                         )
                                     )
                                 ),
-                                r,
+                                row,
                             )
                         )
-                    elif r.is_defaulting_side_known():
-                        source = self._set_source(r, source, text)
-                        board = r.__dict__.get("numbers", ("",))[0]
-                        score = AdaptEventContext.translate_score(r)
+                    elif row.is_defaulting_side_known():
+                        source = self._set_source(row, source, text)
+                        board = row.__dict__.get("numbers", ("",))[0]
+                        score = AdaptEventContext.translate_score(row)
                         text.append(
                             (
                                 AdaptEventContext.mangle(
@@ -1310,7 +1348,7 @@ class AdaptEventContext(EventContext):
                                             board,
                                             AdaptEventContext.mangle_date(
                                                 board,
-                                                r.__dict__.get(
+                                                row.__dict__.get(
                                                     "result_date", ""
                                                 ),
                                             ),
@@ -1318,12 +1356,12 @@ class AdaptEventContext(EventContext):
                                         )
                                     )
                                 ),
-                                r,
+                                row,
                             )
                         )
-                    elif r.is_default_counted():
-                        source = self._set_source(r, source, text)
-                        board = r.__dict__.get("numbers", ("",))[0]
+                    elif row.is_default_counted():
+                        source = self._set_source(row, source, text)
+                        board = row.__dict__.get("numbers", ("",))[0]
                         text.append(
                             (
                                 AdaptEventContext.mangle(
@@ -1332,7 +1370,7 @@ class AdaptEventContext(EventContext):
                                             board,
                                             AdaptEventContext.mangle_date(
                                                 board,
-                                                r.__dict__.get(
+                                                row.__dict__.get(
                                                     "result_date", ""
                                                 ),
                                             ),
@@ -1340,12 +1378,12 @@ class AdaptEventContext(EventContext):
                                         )
                                     )
                                 ),
-                                r,
+                                row,
                             )
                         )
-                    elif r.is_default_not_counted():
-                        source = self._set_source(r, source, text)
-                        board = r.__dict__.get("numbers", ("",))[0]
+                    elif row.is_default_not_counted():
+                        source = self._set_source(row, source, text)
+                        board = row.__dict__.get("numbers", ("",))[0]
                         text.append(
                             (
                                 AdaptEventContext.mangle(
@@ -1354,7 +1392,7 @@ class AdaptEventContext(EventContext):
                                             board,
                                             AdaptEventContext.mangle_date(
                                                 board,
-                                                r.__dict__.get(
+                                                row.__dict__.get(
                                                     "result_date", ""
                                                 ),
                                             ),
@@ -1362,7 +1400,7 @@ class AdaptEventContext(EventContext):
                                         )
                                     )
                                 ),
-                                r,
+                                row,
                             )
                         )
                     else:
@@ -1376,63 +1414,70 @@ class AdaptEventContext(EventContext):
 
     def convert_tabular_data_to_sequence(self):
         """Convert table of data to sequence of data for an event."""
-
         matchgames = {}
         errors = []
-        for k, v in self._tabular.items():
-            for r in v:
-                if r.teamone and r.teamtwo and (r.nameone or r.nametwo):
-                    umkey = (r.teamone, r.teamtwo, r.result_date)
-                    if r.numbers:
-                        board = r.numbers[0]
+        for value in self._tabular.values():
+            for row in value:
+                if (
+                    row.teamone
+                    and row.teamtwo
+                    and (row.nameone or row.nametwo)
+                ):
+                    umkey = (row.teamone, row.teamtwo, row.result_date)
+                    report = (
+                        matchgames.setdefault(row.source, {})
+                        .setdefault(row.competition, {})
+                        .setdefault(umkey, {})
+                    )
+                    if row.numbers:
+                        board = row.numbers[0]
                     else:
                         board = str(len(report) + 1)
-                    game = (
-                        matchgames.setdefault(r.source, {})
-                        .setdefault(r.competition, {})
-                        .setdefault(umkey, {})
-                        .setdefault(board, (set(), set(), set(), [], set()))
+                    game = report.setdefault(
+                        board, (set(), set(), set(), [], set())
                     )
 
                     # Used in validation then discarded.
-                    game[0].add((r.nameone, r.score, r.nametwo, r.colour))
-                    game[1].add(r.competition_round)
-                    game[2].add(r._date_played)
+                    game[0].add(
+                        (row.nameone, row.score, row.nametwo, row.colour)
+                    )
+                    game[1].add(row.competition_round)
+                    game[2].add(row._date_played)
 
                     # Keep the original data.
-                    game[3].append(r)
+                    game[3].append(row)
 
                     # Moved to match if all games say the same.
-                    game[-1].add((r.teamonescore, r.teamtwoscore))
+                    game[-1].add((row.teamonescore, row.teamtwoscore))
 
         for emailgames in matchgames.values():
-            for kc, vc in emailgames.items():
-                mkeys = tuple(vc.keys())
-                for km in mkeys:
-                    vm = vc[km]
+            for ckey, cvalue in emailgames.items():
+                mkeys = tuple(cvalue.keys())
+                for mkey in mkeys:
+                    mvalue = cvalue[mkey]
                     rowmatchscore = set()
 
                     # Allow for the table not including the match score.
                     totalscore = [0, 0]
 
-                    for kb, g in vm.items():
-                        for s in g:
-                            if len(s) != 1:
-                                errors.append(((kc, km, kb), s))
-                        for e in g[-1]:
-                            rowmatchscore.add(e)
-                        for r in g[0]:
-                            for e, s in enumerate(
-                                GAME_RESULT.get(r[1], (0, 0))
+                    for bkey, game in mvalue.items():
+                        for i in game:
+                            if len(i) != 1:
+                                errors.append(((ckey, mkey, bkey), i))
+                        for i in game[-1]:
+                            rowmatchscore.add(i)
+                        for i in game[0]:
+                            for j, k in enumerate(
+                                GAME_RESULT.get(i[1], (0, 0))
                             ):
-                                totalscore[e] += s
+                                totalscore[j] += k
                     if not rowmatchscore:
                         rowmatchscore = NOMATCHSCORE
                     if len(rowmatchscore) > 1:
                         totalscore = [
                             t * len(rowmatchscore) for t in totalscore
                         ]
-                        errors.append(((kc, km, kb), rowmatchscore))
+                        errors.append(((ckey, mkey, bkey), rowmatchscore))
                     if rowmatchscore == NOMATCHSCORE or len(rowmatchscore) > 1:
 
                         # move match score from game details to match details.
@@ -1444,10 +1489,10 @@ class AdaptEventContext(EventContext):
                         rowmatchscore = set(((totalscore[0], totalscore[1]),))
 
                     # Delete the validation structure.
-                    vc[km + tuple(rowmatchscore)] = vm
-                    del vc[km]
-                    for kb, g in vm.items():
-                        vm[kb] = g[-2][0]
+                    cvalue[mkey + tuple(rowmatchscore)] = mvalue
+                    del cvalue[mkey]
+                    for bkey, game in mvalue.items():
+                        mvalue[bkey] = game[-2][0]
 
         if errors:
 
@@ -1470,77 +1515,77 @@ class AdaptEventContext(EventContext):
                 title="Tabular Results Error",
             )
 
-        for v in self._tabular.values():
+        for value in self._tabular.values():
             if len(matchgames):
-                ev = v[0]
+                evalue = value[0]
                 EventData(
-                    datatag=ev.datatag,
+                    datatag=evalue.datatag,
                     found=Found.EVENT_AND_DATES,
-                    context=ev.context,
-                    startdate=ev.startdate,
-                    enddate=ev.enddate,
-                    source=ev.source,
-                    headers=ev.headers,
-                    eventname=ev.eventname,
+                    context=evalue.context,
+                    startdate=evalue.startdate,
+                    enddate=evalue.enddate,
+                    source=evalue.source,
+                    headers=evalue.headers,
+                    eventname=evalue.eventname,
                 )
             break
 
         for emailsource in sorted(matchgames):
-            for kc, vc in matchgames[emailsource].items():
+            for ckey, cvalue in matchgames[emailsource].items():
                 EventData(
-                    datatag=ev.datatag,
-                    found=Found.COMPETITION,
-                    context=ev.context,
-                    competition=kc if kc else ev.competition,
+                    datatag=evalue.datatag,
+                    found=Found.COMPETITION_NAME,
+                    context=evalue.context,
+                    competition=ckey if ckey else evalue.competition,
                     source=emailsource,
-                    headers=ev.headers,
+                    headers=evalue.headers,
                 )
-                for km, vm in vc.items():
-                    for g in vm.values():
+                for mkey, mvalue in cvalue.items():
+                    for game in mvalue.values():
                         EventData(
-                            datatag=g.datatag,
+                            datatag=game.datatag,
                             found=Found.RESULT_NAMES,
-                            context=g.context,
-                            result_date=km[2],
+                            context=game.context,
+                            result_date=mkey[2],
                             source=emailsource,
-                            headers=g.headers,
-                            nameone=km[0],
-                            nametwo=km[1],
-                            competition=kc if kc else g.competition,
-                            score=" ".join(km[-1]),
+                            headers=game.headers,
+                            nameone=mkey[0],
+                            nametwo=mkey[1],
+                            competition=ckey if ckey else game.competition,
+                            score=" ".join(mkey[-1]),
                         )
                         break
-                    for kb, g in sorted(vm.items()):
+                    for bkey, game in sorted(mvalue.items()):
                         EventData(
-                            datatag=g.datatag,
+                            datatag=game.datatag,
                             found=Found.RESULT_NAMES,
-                            context=g.context,
-                            result_date=g._date_played,
+                            context=game.context,
+                            result_date=game._date_played,
                             source=emailsource,
-                            headers=g.headers,
-                            nameone=g.nameone,
-                            nametwo=g.nametwo,
-                            competition=kc if kc else g.competition,
-                            score=g.score,
-                            numbers=[kb],
+                            headers=game.headers,
+                            nameone=game.nameone,
+                            nametwo=game.nametwo,
+                            competition=ckey if ckey else game.competition,
+                            score=game.score,
+                            numbers=[bkey],
                         )
 
     def _is_results_individual(self, results):
         """Return True if no EventData instances describe a match result."""
-        for r in results:
-            if r.is_match_result():
+        for data in results:
+            if data.is_match_result():
                 return False
         return True
 
     def _print_text(self, text):
-        """ """
+        """Print lines in text.  Intended for tracing bugs."""
         print("\n")
-        for t in text:
+        for line in text:
             try:
-                print(t)
-            except:
+                print(line)
+            except Exception:
                 print("\n>>>>>>>>")
-                print("".join([c if ord(c) < 128 else "@@" for c in t]))
+                print("".join([c if ord(c) < 128 else "@@" for c in line]))
                 print("<<<<<<<<\n")
 
     def _set_source(self, eventdata, source, text):
@@ -1554,10 +1599,10 @@ class _EventItems(dict):
     """Container for EventData instances of some specific category."""
 
     def append(self, eventdata):
-        """ """
+        """Append eventdata to existing list at self[eventdata.competition]."""
         self[eventdata.competition].append(eventdata)
 
     def add_key(self, competition_name):
-        """ """
+        """Add list() to self.__dict uder key competition_name."""
         if competition_name not in self:
             self[competition_name] = []

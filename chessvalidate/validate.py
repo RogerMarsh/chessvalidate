@@ -1,18 +1,13 @@
-# results_lite.py
-# Copyright 2008 Roger Marsh
+# validate.py
+# Copyright 2022 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Chess results database application"""
+"""Chess results source document validation application."""
 
 if __name__ == "__main__":
 
     from . import APPLICATION_NAME
 
-    # '', not 'Lite', because the 'ECF' and 'OGD' versions add some functions
-    # and remove a few too.
-    # results_lite.py is a slight misnomer because nothing is taken out of
-    # the imaginary results.py module.
-    application_name = "".join((APPLICATION_NAME, ""))
     try:
         from solentware_misc.gui.startstop import (
             start_application_exception,
@@ -32,26 +27,26 @@ if __name__ == "__main__":
                     )
                 ),
             )
-        except:
+        except BaseException:
             pass
         raise SystemExit("Unable to import start application utilities")
     try:
         from .gui.resultsroot import Results
-        from .gui.leagues_lite import Leagues
+        from .gui.leagues_validate import Leagues
     except Exception as error:
         start_application_exception(
-            error, appname=application_name, action="import"
+            error, appname=APPLICATION_NAME, action="import"
         )
-        raise SystemExit(" import ".join(("Unable to", application_name)))
+        raise SystemExit(" import ".join(("Unable to", APPLICATION_NAME)))
     try:
         app = Results(
-            title=application_name, gui_module=Leagues, width=400, height=200
+            title=APPLICATION_NAME, gui_module=Leagues, width=400, height=200
         )
     except Exception as error:
         start_application_exception(
-            error, appname=application_name, action="initialise"
+            error, appname=APPLICATION_NAME, action="initialise"
         )
-        raise SystemExit(" initialise ".join(("Unable to", application_name)))
+        raise SystemExit(" initialise ".join(("Unable to", APPLICATION_NAME)))
     try:
         app.root.mainloop()
     except SystemExit:
@@ -62,6 +57,6 @@ if __name__ == "__main__":
             error,
             app,
             app.root,
-            title=application_name,
-            appname=application_name,
+            title=APPLICATION_NAME,
+            appname=APPLICATION_NAME,
         )

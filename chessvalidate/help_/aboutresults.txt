@@ -1,7 +1,7 @@
-ChessResults validates source documents containing results of chess games and updates a database of results.
+ChessResultsReport validates source documents containing results of chess games.
 
 
-Run 'python -m pip show chessresults' at a command line to display version and dependency (requires and required-by) information.
+Run 'python -m pip show chessreports' at a command line to display version and dependency (requires and required-by) information.
 
 Version numbers for the packages listed under 'requires' are given in the setup.py file.
 
@@ -9,10 +9,8 @@ Run 'python -m pip check' at a command line to display discrepancies between req
 
 'python' may need to be replaced by <path to>python<version> depending on the system configuration: 'python3.8' for example.
 
-ChessResults uses features introduced at Python3.4.
+ChessResultsReport uses features introduced at Python3.4.
 
-Python3.4, or later versions when available, must be installed to run ChessResults.
+Python3.4, or later versions when available, must be installed to run ChessResultsReport.
 
-tkinter, part of Python, must be installed to run ChessResults.  Sometimes this is installed separately.
-
-One of sqlite3, apsw, bsddb3, or berkeleydb, must be installed to run ChessResults.  sqlite3 is part of Python, but sometimes is installed separately.  apsw, bsddb3, berkeleydb, are packages for Python, so must be installed separately.
+tkinter, part of Python, must be installed to run ChessResultsReport.  Sometimes this is installed separately.

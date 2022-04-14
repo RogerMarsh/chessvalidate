@@ -2,8 +2,7 @@
 # Copyright 2008 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Class to reconcile event schedule (eg. fixture list) with reported results.
-"""
+"""Class to reconcile event schedule (fixture list) with reported results."""
 
 import collections
 from time import gmtime, mktime
@@ -14,39 +13,27 @@ from .gameobjects import (
     GameCollation,
     Section,
     SwissGame,
-    Player,
     MatchFixture,
     MatchGame,
 )
-from .gameresults import (
-    displayresult,
-    displayresulttag,
-    resultmap,
-    match_score_difference,
-    match_score_total,
-    hwin,
-    awin,
-    draw,
-    tobereported,
-    notaresult,
-    tbrstring,
-    GAME_COUNT,
-    MATCH_SCORE,
-    ONLY_REPORT,
-    AUTHORIZATION,
-)
+from . import constants
 
 invert_score = {"-": "+", "=": "=", "+": "-", "1": "0", "0": "1"}
-map_score = {"+": hwin, "=": draw, "-": awin, "1": hwin, "0": awin}
+map_score = {
+    "+": constants.HWIN,
+    "=": constants.DRAW,
+    "-": constants.AWIN,
+    "1": constants.HWIN,
+    "0": constants.AWIN,
+}
 homeplayercolour = {"w": True, "b": False}
 
 
 class Collation(GameCollation):
-
     """Results extracted from a generic event report."""
 
     def __init__(self, reports, fixtures):
-
+        """Initialise collation data."""
         super().__init__()
 
         self.reports = reports
@@ -171,7 +158,7 @@ class Collation(GameCollation):
                     )
                     error = True
                     continue
-                elif player != self.schedule.es_pins[section][ppin]:
+                if player != self.schedule.es_pins[section][ppin]:
                     self.reports.error.append(
                         (
                             "".join(
@@ -216,11 +203,11 @@ class Collation(GameCollation):
             return
 
         round_dates = dict()
-        for r in range(1, len(self.reports.er_swiss_table[section]) + 1):
-            if r in self.schedule.es_round_dates[section]:
-                round_dates[r] = self.schedule.es_round_dates[section][r]
+        for i in range(1, len(self.reports.er_swiss_table[section]) + 1):
+            if i in self.schedule.es_round_dates[section]:
+                round_dates[i] = self.schedule.es_round_dates[section][i]
             else:
-                round_dates[r] = self.schedule.es_startdate
+                round_dates[i] = self.schedule.es_startdate
         games = []
         for pin in self.reports.er_swiss_table[section]:
             card = self.reports.er_swiss_table[section][pin]
@@ -262,25 +249,25 @@ class Collation(GameCollation):
         sectiongames = Section(competition=section, games=[])
         es_pins = self.schedule.es_pins[section]
         es_players = self.schedule.es_players[section]
-        for g in games:
-            hp = es_players[(es_pins[g[3]], g[3])]
-            ap = es_players[(es_pins[g[4]], g[4])]
+        for game in games:
+            homeplayer = es_players[(es_pins[game[3]], game[3])]
+            awayplayer = es_players[(es_pins[game[4]], game[4])]
             sectiongames.games.append(
                 SwissGame(
-                    tagger=g[7],
-                    # Hack round for wallcharts and swiss tournaments presented in
-                    # an all-play-all format, because the deduced round is wrong or
-                    # irrelevant.
-                    # round=str(g[0]),
-                    result=g[5],
-                    date=round_dates[g[0]],
-                    homeplayerwhite=homeplayercolour.get(g[6]),
-                    homeplayer=hp,  # should be the Player instance now
-                    awayplayer=ap,
+                    tagger=game[7],
+                    # Hack round for wallcharts and swiss tournaments
+                    # presented in an all-play-all format, because the
+                    # deduced round is wrong or irrelevant.
+                    # round=str(game[0]),
+                    result=game[5],
+                    date=round_dates[game[0]],
+                    homeplayerwhite=homeplayercolour.get(game[6]),
+                    homeplayer=homeplayer,  # should be the Player instance now.
+                    awayplayer=awayplayer,
                 )
-            )  # should be the Player instance now
-            self.set_player(hp)  # use existing
-            self.set_player(ap)  # Player instances
+            )  # should be the Player instance now.
+            self.set_player(homeplayer)  # use existing
+            self.set_player(awayplayer)  # Player instances.
         self.set_games(section, sectiongames)
 
     def _collate_individual(self, section):
@@ -299,32 +286,36 @@ class Collation(GameCollation):
         if error:
             return
         sectiongames = self.reports.er_results[section]
-        for g in sectiongames.games:
-            for p in (
-                g.homeplayer,
-                g.awayplayer,
+        for game in sectiongames.games:
+            for player in (
+                game.homeplayer,
+                game.awayplayer,
             ):
-                if p.event is None or p.startdate is None or p.enddate is None:
-                    p.event = self.schedule.es_name
-                    p.startdate = self.schedule.es_startdate
-                    p.enddate = self.schedule.es_enddate
-                    p.section = self.schedule._section
+                if (
+                    player.event is None
+                    or player.startdate is None
+                    or player.enddate is None
+                ):
+                    player.event = self.schedule.es_name
+                    player.startdate = self.schedule.es_startdate
+                    player.enddate = self.schedule.es_enddate
+                    player.section = self.schedule._section
 
                     # The default pin=None is surely fine but False is what pin
                     # becomes in earlier versions and it does not happen here
                     # unless set so.
-                    p.pin = False
+                    player.pin = False
 
-                    p.__dict__["_identity"] = (
-                        p.name,
-                        p.event,
-                        p.startdate,
-                        p.enddate,
+                    player.__dict__["_identity"] = (
+                        player.name,
+                        player.event,
+                        player.startdate,
+                        player.enddate,
                     )
-            if g.date is None:
-                g.date = self.schedule.es_startdate
-            self.set_player(g.homeplayer)
-            self.set_player(g.awayplayer)
+            if game.date is None:
+                game.date = self.schedule.es_startdate
+            self.set_player(game.homeplayer)
+            self.set_player(game.awayplayer)
         self.set_games(section, sectiongames)
 
     def _collate_league(self, section):
@@ -438,17 +429,17 @@ class Collation(GameCollation):
             return
 
         round_dates = dict()
-        for r in range(1, len(self.reports.er_swiss_table[section]) + 1):
-            if r in self.schedule.es_round_dates[section]:
-                round_dates[r] = self.schedule.es_round_dates[section][r]
+        for i in range(1, len(self.reports.er_swiss_table[section]) + 1):
+            if i in self.schedule.es_round_dates[section]:
+                round_dates[i] = self.schedule.es_round_dates[section][i]
             else:
-                round_dates[r] = self.schedule.es_startdate
+                round_dates[i] = self.schedule.es_startdate
         games = []
         for pin in self.reports.er_swiss_table[section]:
             card = self.reports.er_swiss_table[section][pin]
-            r = 0
+            round_ = 0
             for game in card:
-                r += 1
+                round_ += 1
                 opponent = game["opponent"]
                 if opponent:
                     colour = game["colour"]
@@ -456,7 +447,7 @@ class Collation(GameCollation):
                         if colour == "b":
                             games.append(
                                 (
-                                    r,
+                                    round_,
                                     pin,
                                     opponent,
                                     opponent,
@@ -468,7 +459,7 @@ class Collation(GameCollation):
                         else:
                             games.append(
                                 (
-                                    r,
+                                    round_,
                                     pin,
                                     opponent,
                                     pin,
@@ -481,22 +472,22 @@ class Collation(GameCollation):
         sectiongames = Section(competition=section, games=[])
         es_pins = self.schedule.es_pins[section]
         es_players = self.schedule.es_players[section]
-        for g in games:
-            hp = es_players[(es_pins[g[3]], g[3])]
-            ap = es_players[(es_pins[g[4]], g[4])]
+        for game in games:
+            homeplayer = es_players[(es_pins[game[3]], game[3])]
+            awayplayer = es_players[(es_pins[game[4]], game[4])]
             sectiongames.games.append(
                 SwissGame(
-                    tagger=g[6],
-                    round=str(g[0]),
-                    result=g[5],
-                    date=round_dates[g[0]],
+                    tagger=game[6],
+                    round=str(game[0]),
+                    result=game[5],
+                    date=round_dates[game[0]],
                     homeplayerwhite=True,
-                    homeplayer=hp,  # should be the Player instance now
-                    awayplayer=ap,
+                    homeplayer=homeplayer,  # should be the Player instance now
+                    awayplayer=awayplayer,
                 )
             )  # should be the Player instance now
-            self.set_player(hp)  # use existing
-            self.set_player(ap)  # Player instances
+            self.set_player(homeplayer)  # use existing
+            self.set_player(awayplayer)  # Player instances
         self.set_games(section, sectiongames)
 
     def _section_type_unknown(self, section):
@@ -514,11 +505,10 @@ class Collation(GameCollation):
     def collate_unfinished_games(self, schedule):
         """Collate games played but reported unfinished."""
 
-        def nullstring(s):
-            if isinstance(s, str):
-                return s
-            else:
-                return ""
+        def nullstring(string):
+            if isinstance(string, str):
+                return string
+            return ""
 
         self.finishedgames.clear()
         self.gamesxref.clear()
@@ -542,10 +532,9 @@ class Collation(GameCollation):
             else:
                 unique_game[game.section][ugkey].append(game)
 
-        for s in unique_game:
-            teamalias = schedule.es_team_alias.get(s, {})
-            for u in unique_game[s]:
-                ugsu = unique_game[s][u]
+        for ugkey in unique_game:
+            for key in unique_game[ugkey]:
+                ugsu = unique_game[ugkey][key]
                 mrg = ugsu[-1]
                 game_problems = {}
                 for prevreport in ugsu[:-1]:
@@ -565,7 +554,7 @@ class Collation(GameCollation):
                             match = self.matches[mrg.section][umkey][-1]
                             done = False
                             for game in match.games:
-                                if game.result != tobereported:
+                                if game.result != constants.TOBEREPORTED:
                                     continue
                                 if (
                                     game.homeplayer != mrg.homeplayer
@@ -585,8 +574,8 @@ class Collation(GameCollation):
                     if isinstance(mrg.section, (str, bytes)):
                         sect.append(mrg.section)
                     else:
-                        for w in mrg.section:
-                            sect.append(w)
+                        for sitem in mrg.section:
+                            sect.append(sitem)
                     self.reports.error.append(
                         (
                             " ".join(
@@ -642,7 +631,7 @@ class Collation(GameCollation):
     # The pdlcollation version is identical.
 
     def get_finished_games(self):
-        """Return list of finished games"""
+        """Return list of finished games."""
         finished = []
         for section in self.finishedgames:
             for ugkey in self.finishedgames[section]:
@@ -655,7 +644,7 @@ class Collation(GameCollation):
 
     # Changed to populate er_results from er_matchresults
     def collate_matches(self, reports, schedule):
-        """Collate results in matchrecords with expected results in schedule
+        """Collate results in matchrecords with expected results in schedule.
 
         Match score inconsistent with game scores is reported as an error when
         the condition occurs on an earlier report: the condition is accepted on
@@ -671,20 +660,18 @@ class Collation(GameCollation):
 
         """
 
-        def nullstring(s):
-            if isinstance(s, str):
-                return s
-            else:
-                return ""
+        def nullstring(string):
+            if isinstance(string, str):
+                return string
+            return ""
 
         matchrecords = reports.er_matchresults
 
         self.matches.clear()
         self.matchesxref.clear()
         unique_match = self.matches
-        for e, f, match in sorted(
-            [(m.order, m.source, m) for m in matchrecords]
-        ):
+        for match in sorted([(m.order, m.source, m) for m in matchrecords]):
+            match = match[-1]
             if match.competition not in unique_match:
                 unique_match[match.competition] = dict()
             umkey = (match.hometeam, match.awayteam, match.source)
@@ -700,10 +687,10 @@ class Collation(GameCollation):
             [(f.date, e, f) for e, f in enumerate(schedule.es_fixtures)]
         )
 
-        for s in unique_match:
-            teamalias = schedule.es_team_alias.get(s, {})
-            for u in sorted(unique_match[s]):
-                umsu = unique_match[s][u]
+        for umkey in unique_match:
+            teamalias = schedule.es_team_alias.get(umkey, {})
+            for key in sorted(unique_match[umkey]):
+                umsu = unique_match[umkey][key]
                 mrm = umsu[-1]
                 authorizor = _MatchAuthorization(mrm)
                 authorizor.authorize_match_report(mrm)
@@ -713,7 +700,7 @@ class Collation(GameCollation):
                 # reports are present.
                 if len(umsu) == 1:
                     if not mrm.get_unfinished_games_and_score_consistency()[1]:
-                        match_problems.setdefault(ONLY_REPORT)
+                        match_problems.setdefault(constants.ONLY_REPORT)
 
                 for pmr in umsu[:-1]:
                     authorizor.authorize_match_report(pmr)
@@ -723,10 +710,10 @@ class Collation(GameCollation):
                     # with the most recent report is enough: but changing a
                     # match score without getting an error may be a surprise.
                     if not pmr.get_unfinished_games_and_score_consistency()[1]:
-                        match_problems.setdefault(MATCH_SCORE)
+                        match_problems.setdefault(constants.MATCH_SCORE)
 
                     if len(pmr.games) != len(mrm.games):
-                        match_problems.setdefault(GAME_COUNT)
+                        match_problems.setdefault(constants.GAME_COUNT)
                         continue
                     for mrmg, prg in zip(mrm.games, pmr.games):
                         problems = set()
@@ -737,12 +724,13 @@ class Collation(GameCollation):
                             )
 
                 if not authorizor.is_match_authorized():
-                    match_problems.setdefault(AUTHORIZATION)
+                    match_problems.setdefault(constants.AUTHORIZATION)
                 if not match_problems:
                     self.matchesxref[mrm] = None
                     hometeam = teamalias.get(mrm.hometeam, {mrm.hometeam: {}})
                     awayteam = teamalias.get(mrm.awayteam, {mrm.awayteam: {}})
-                    for df, ef, fixture in fixtures:
+                    for fixture in fixtures:
+                        fixture = fixture[-1]
                         if mrm.competition == fixture.competition:
                             if fixture.hometeam in hometeam:
                                 if fixture.awayteam in awayteam:
@@ -753,7 +741,7 @@ class Collation(GameCollation):
                                             mrm.date = fixture.date
                                         break
                                     self.matchesxref[mrm] = False
-                    self.games[(s, u)] = mrm
+                    self.games[(umkey, key)] = mrm
 
                     # Add matches which are consistent to er_results
                     reports.set_match_result(mrm)
@@ -764,12 +752,12 @@ class Collation(GameCollation):
                         rep.append(mrm.competition)
                     else:
                         sect = []
-                        for e in mrm.competition:
-                            if isinstance(e, str):
-                                sect.append(e)
+                        for comp in mrm.competition:
+                            if isinstance(comp, str):
+                                sect.append(comp)
                             else:
-                                for w in e:
-                                    sect.append(w)
+                                for section in comp:
+                                    sect.append(section)
                         rep.append(" ".join(sect))
                     rnd = nullstring(mrm.round)
                     if rnd:
@@ -801,37 +789,37 @@ class Collation(GameCollation):
                     self.reports.error.append(
                         ("   Error detail:", self.reports)
                     )
-                    mp = {
+                    problems = {
                         k: v
                         for k, v in match_problems.items()
                         if not isinstance(k, MatchGame)
                     }
-                    if mp:
-                        for k in mp:
+                    if problems:
+                        for k in problems:
                             match_problems.pop(k, None)
                         self.reports.error.append(
                             (
                                 " ".join(
                                     (
                                         "      ",
-                                        ", ".join([e for e in sorted(mp)]),
+                                        ", ".join(sorted(problems)),
                                     )
                                 ),
                                 self.reports,
                             )
                         )
-                    for g, d in match_problems.items():
+                    for game, detail in match_problems.items():
                         self.reports.error.append(
                             (
                                 " ".join(
                                     (
                                         "      ",
-                                        nullstring(g.board),
-                                        nullstring(g.homeplayer.name),
-                                        g.get_print_result()[0],
-                                        nullstring(g.awayplayer.name),
+                                        nullstring(game.board),
+                                        nullstring(game.homeplayer.name),
+                                        game.get_print_result()[0],
+                                        nullstring(game.awayplayer.name),
                                         "  **",
-                                        ", ".join([e for e in sorted(d)]),
+                                        ", ".join(sorted(detail)),
                                     )
                                 ),
                                 self.reports,
@@ -840,34 +828,34 @@ class Collation(GameCollation):
                     mrm.tagger.append_generated_report(
                         self.reports.error, "   Most recent report:"
                     )
-                    for g in mrm.games:
-                        g.tagger.append_generated_report(
+                    for game in mrm.games:
+                        game.tagger.append_generated_report(
                             self.reports.error,
                             " ".join(
                                 (
                                     "      ",
-                                    nullstring(g.board),
-                                    nullstring(g.homeplayer.name),
-                                    g.get_print_result()[0],
-                                    nullstring(g.awayplayer.name),
+                                    nullstring(game.board),
+                                    nullstring(game.homeplayer.name),
+                                    game.get_print_result()[0],
+                                    nullstring(game.awayplayer.name),
                                 )
                             ),
                         )
-                    for m in umsu[:-1]:
-                        games = m.games
-                        m.tagger.append_generated_report(
+                    for match in umsu[:-1]:
+                        games = match.games
+                        match.tagger.append_generated_report(
                             self.reports.error, "   Earlier report:"
                         )
-                        for g in games:
-                            g.tagger.append_generated_report(
+                        for game in games:
+                            game.tagger.append_generated_report(
                                 self.reports.error,
                                 " ".join(
                                     (
                                         "      ",
-                                        nullstring(g.board),
-                                        nullstring(g.homeplayer.name),
-                                        g.get_print_result()[0],
-                                        nullstring(g.awayplayer.name),
+                                        nullstring(game.board),
+                                        nullstring(game.homeplayer.name),
+                                        game.get_print_result()[0],
+                                        nullstring(game.awayplayer.name),
                                     )
                                 ),
                             )
@@ -903,7 +891,6 @@ class Collation(GameCollation):
         Generate data for player reports.
 
         """
-
         players = dict()
         teamclub = dict()
         identities = dict()
@@ -947,8 +934,8 @@ class Collation(GameCollation):
                                         ]
 
         # complete the player identities by adding in event and club details
-        for p in players:
-            player = players[p]
+        for identity in players:
+            player = players[identity]
             player.startdate = schedule.es_startdate
             player.enddate = schedule.es_enddate
             player.club = teamclub[player.club]
@@ -1005,15 +992,15 @@ class Collation(GameCollation):
                             cpa[awayp].update(game.awayplayer.reported_codes)
 
     def get_fixtures_not_played(self):
-        """Return list of fixtures not played"""
+        """Return list of fixtures not played."""
         return self.fixturesnotplayed
 
     def get_fixtures_played(self):
-        """Return list of fixtures played"""
+        """Return list of fixtures played."""
         return [f for f in self.matchesxref if isinstance(f, MatchFixture)]
 
     def get_non_fixtures_played(self):
-        """Return list of matches played that are not on fixture list"""
+        """Return list of matches played that are not on fixture list."""
         xref = self.matchesxref
         nfp = [f for f in xref if (xref[f] is None or xref[f] is False)]
         return [
@@ -1035,25 +1022,25 @@ class Collation(GameCollation):
         ]
 
     def get_players_by_club(self, separator=None):
-        """Return dict(<club name>=[<player name>, ...], ...)"""
-        cp = dict()
+        """Return dict(<club name>=[<player name>, ...], ...)."""
+        players = dict()
         for club in self.clubplayers:
             clubplayers = self.clubplayers[club]
-            ps = []
+            named = []
             for player in clubplayers:
-                if player != None:
-                    ps.append((AppSysPersonName(player[0]).name, player))
-            ps.sort()
-            cp[club] = [p[-1] for p in ps]
-        return cp
+                if player is not None:
+                    named.append((AppSysPersonName(player[0]).name, player))
+            named.sort()
+            players[club] = [p[-1] for p in named]
+        return players
 
     def get_reports_by_match(self):
-        """Return list of matches sorted by competition and team names"""
-        rm = []
+        """Return list of matches sorted by competition and team names."""
+        matches = []
         for section in self.matches:
             for umkey in self.matches[section]:
                 match = self.matches[section][umkey][-1]
-                rm.append(
+                matches.append(
                     (
                         match.competition,
                         match.hometeam,
@@ -1061,22 +1048,22 @@ class Collation(GameCollation):
                         match,
                     )
                 )
-        rm.sort()
-        return [m[-1] for m in rm]
+        matches.sort()
+        return [m[-1] for m in matches]
 
     def get_reports_by_player(self, separator=None):
-        """Return dict(<player name>=[(<team>, <match>), ...], ...)"""
+        """Return dict(<player name>=[(<team>, <match>), ...], ...)."""
         players = dict()
         for team in self.teamplayers:
             for player in self.teamplayers[team]:
                 if player:
-                    ps = (AppSysPersonName(player[0]).name, player)
-                    if ps not in players:
-                        players[ps] = []
+                    named = (AppSysPersonName(player[0]).name, player)
+                    if named not in players:
+                        players[named] = []
                     for match in self.teamplayers[team][player]:
-                        players[ps].append((team, match))
-        for p in players:
-            players[p].sort()
+                        players[named].append((team, match))
+        for named in players:
+            players[named].sort()
         return players
 
     def get_matches_by_source(self):
@@ -1087,37 +1074,44 @@ class Collation(GameCollation):
         for a match.
 
         """
-        tm = dict()
+        matches = dict()
         for section in self.matches:
             for umkey in self.matches[section]:
                 for match in self.matches[section][umkey]:
-                    ufg, c = match.get_unfinished_games_and_score_consistency()
+                    (
+                        ufg,
+                        con,
+                    ) = match.get_unfinished_games_and_score_consistency()
                     key = (len(match.tagger.datatag), match.tagger.datatag)
-                    if key not in tm:
-                        tm[key] = [
-                            (match.hometeam, match.awayteam, (match, ufg, c))
+                    if key not in matches:
+                        matches[key] = [
+                            (match.hometeam, match.awayteam, (match, ufg, con))
                         ]
                     else:
-                        tm[key].append(
-                            (match.hometeam, match.awayteam, (match, ufg, c))
+                        matches[key].append(
+                            (match.hometeam, match.awayteam, (match, ufg, con))
                         )
-        return tm
+        return matches
 
     def get_reports_by_source(self):
-        """Return list of match reports collated by source"""
-        tm = self.get_matches_by_source()
-        ta = []
-        for ms in sorted(tm):
-            for m in sorted(tm[ms]):
-                ta.append(m[-1])
-        tg = []
-        for fg in self.finishedgames:
-            for fgi in self.finishedgames[fg]:
-                for g in self.finishedgames[fg][fgi]:
-                    tg.append(
-                        ((len(g.tagger.datatag), g.tagger.datatag), len(tg), g)
+        """Return list of match reports collated by source."""
+        matches = self.get_matches_by_source()
+        match_list = []
+        for match_key in sorted(matches):
+            for reports in sorted(matches[match_key]):
+                match_list.append(reports[-1])
+        tags = []
+        for finished in self.finishedgames:
+            for fgi in self.finishedgames[finished]:
+                for game in self.finishedgames[finished][fgi]:
+                    tags.append(
+                        (
+                            (len(game.tagger.datatag), game.tagger.datatag),
+                            len(tags),
+                            game,
+                        )
                     )
-        return ta, [t[-1] for t in sorted(tg)]
+        return match_list, [t[-1] for t in sorted(tags)]
 
     def get_unfinished_games(self):
         """Return list of games with no reported result.
@@ -1144,34 +1138,37 @@ class Collation(GameCollation):
         return [(u[-1]) for u in sorted(unfinished)]
 
 
-class _MatchAuthorization(object):
+class _MatchAuthorization:
     """Authorization status of match based on time since receipt."""
 
     _authorization_time = mktime(gmtime())
 
     def __init__(self, match):
-        """ """
+        """Initialize authorization state of match to False."""
         self._match = match
         self._dates_ok = False
 
     def authorize_match_report(self, match):
-        """ """
-        a = match.tagger.headers
-        m = self._match
-        if m.hometeam != match.hometeam or m.awayteam != match.awayteam:
+        """Set authorization state of match from time since latest report."""
+        headers = match.tagger.headers
+        _match = self._match
+        if (
+            _match.hometeam != match.hometeam
+            or _match.awayteam != match.awayteam
+        ):
             return
-        if a.authorization_delay is None:
+        if headers.authorization_delay is None:
             self._dates_ok = True
             return
         try:
-            date, delivery_date = a.dates
+            date, delivery_date = headers.dates
             max_date = mktime(max(max(date), max(delivery_date)))
         except (ValueError, TypeError):
             return
         self._dates_ok = (
-            self._authorization_time - max_date > a.authorization_delay
+            self._authorization_time - max_date > headers.authorization_delay
         )
 
     def is_match_authorized(self):
-        """ """
+        """Return True if if match result is authorized."""
         return self._dates_ok

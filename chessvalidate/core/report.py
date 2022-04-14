@@ -2,8 +2,7 @@
 # Copyright 2008 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Generate a report comparing results with schedule.
-"""
+"""Generate a report comparing results with schedule."""
 import re
 
 from solentware_misc.core import utilities
@@ -16,63 +15,64 @@ from .gameobjects import (
     Game,
     Player,
     UnfinishedGame,
-    code_in_name,
+    split_codes_from_name,
 )
-from .gameresults import resultmap, NULL_PLAYER
+from . import constants
+from .gameresults import resultmap
 from .eventparser import PLAYED_ON
 
 cross_table_row = re.compile(
-    "".join(("(?P<pin>\d*)\.?", "(?P<row>(?:\s+[wb]?[-+=~])* *\Z)"))
+    "".join((r"(?P<pin>\d*)\.?", r"(?P<row>(?:\s+[wb]?[-+=~])* *\Z)"))
 )
 cross_table_result = re.compile(
-    "".join(("(?P<colour>[wb]?)", "(?P<score>[-+=~])\Z"))
+    "".join(("(?P<colour>[wb]?)", r"(?P<score>[-+=~])\Z"))
 )
 swiss_table_row = re.compile(
     "".join(
         (
-            "(?P<pin>\d*)\.?",
+            r"(?P<pin>\d*)\.?",
             "(?P<row>",
-            "(?:\s+(?:x|--|def[-+]|bye[-=+]|[wb][123456789][0123456789]*[-=+pme]))*",
-            " *\Z)",
+            r"(?:\s+(?:x|--|def[-+]|bye[-=+]|[wb][123456789][0123456789]*[-=+pme]))*",
+            r" *\Z)",
         )
     )
 )
 swiss_table_result = re.compile(
     "".join(
         (
-            "(?P<notplayed>x|--|def[-+]|bye[-=+])\Z|",
+            r"(?P<notplayed>x|--|def[-+]|bye[-=+])\Z|",
             "(?P<colour>[wb])",
             "(?P<opponent>[123456789][0123456789]*)",
-            "(?P<score>[-=+pme])\Z",
+            r"(?P<score>[-=+pme])\Z",
         )
     )
 )
 match_name = re.compile(
     "".join(
         (
-            "(?P<hometeam>.*?)(?=\s[0-9]*(\.5)?\s*-\s*[0-9]*(\.5)?\s)",
-            "(?P<score>\s[0-9]*(\.5)?\s*-\s*[0-9]*(\.5)?\s)",
-            "(?P<awayteam>.*)\Z",
+            r"(?P<hometeam>.*?)(?=\s[0-9]*(\.5)?\s*-\s*[0-9]*(\.5)?\s)",
+            r"(?P<score>\s[0-9]*(\.5)?\s*-\s*[0-9]*(\.5)?\s)",
+            r"(?P<awayteam>.*)\Z",
         )
     )
 )
 game_result = re.compile(
     "".join(
         (
-            "(?:(?P<board>\d*(?:\.\d*)?)?",
+            r"(?:(?P<board>\d*(?:\.\d*)?)?",
             "(?P<colour>[w|b])?[ \t])?",
             "(?P<date_player>.*?[ \t]|[ \t]*)?",
             "(?P<score>dbld|def-|def[=+]|bye[=+]|draw|1-0|0-1|void|unfinished|default)",
-            "(?P<player>[ \t].*)?\Z",
+            r"(?P<player>[ \t].*)?\Z",
         )
     )
 )
 individual_game_result = re.compile(
     "".join(
         (
-            "(?P<white>.*?)(?=\s[dD][rR][aA][wW]\s|\s1-0\s|\s0-1\s)",
-            "(?P<score>\s[dD][rR][aA][wW]\s|\s1-0\s|\s0-1\s)",
-            "(?P<black>.*)\Z",
+            r"(?P<white>.*?)(?=\s[dD][rR][aA][wW]\s|\s1-0\s|\s0-1\s)",
+            r"(?P<score>\s[dD][rR][aA][wW]\s|\s1-0\s|\s0-1\s)",
+            r"(?P<black>.*)\Z",
         )
     )
 )
@@ -91,9 +91,9 @@ opposite_score = {
     "~": "~",
 }
 
-# BOARD_COLOUR defined for first-named team's players black on odd boards in
+# board_colour defined for first-named team's players black on odd boards in
 # first game (perhaps a multi-game rapidplay match ).
-BOARD_COLOUR = {
+board_colour = {
     (True,): True,
     (False,): False,
     (None,): None,
@@ -107,11 +107,10 @@ BOARD_COLOUR = {
     (None, False): None,
     (None, None): None,
 }
-BOARD_COLOUR_REVERSE = {True: False, False: True, None: None}
+board_colour_reverse = {True: False, False: True, None: None}
 
 
-class Report(object):
-
+class Report:
     """Results extracted from event report file containing one event."""
 
     def __init__(self):
@@ -140,7 +139,6 @@ class Report(object):
     # method of Collation.
     def set_match(self, result):
         """Add match result entry to match result data structures."""
-
         # append not extend because matches are not batched by email instance.
         self.er_matchresults.append(result)
 
@@ -166,19 +164,17 @@ class Report(object):
 
         def black_on_odd(board):
             try:
-                return BOARD_COLOUR[
+                return board_colour[
                     tuple(
-                        [
-                            False
-                            if b[-1] in "13579"
-                            else True
-                            if b[-1] in "02468"
-                            else None
-                            for b in board.split(".")
-                        ]
+                        False
+                        if b[-1] in "13579"
+                        else True
+                        if b[-1] in "02468"
+                        else None
+                        for b in board.split(".")
                     )
                 ]
-            except:
+            except Exception:
                 return None
 
         def colour_none(board):
@@ -189,15 +185,12 @@ class Report(object):
 
         def white_on_odd(board):
             try:
-                return BOARD_COLOUR_REVERSE[black_on_odd(board)]
-            except:
+                return board_colour_reverse[black_on_odd(board)]
+            except Exception:
                 return None
 
         def add_player_record(name, event, team, tagger):
-            codes = set([s.strip() for s in code_in_name.findall(name)])
-            name = " ".join(
-                [s.strip() for s in code_in_name.split(name)]
-            ).strip()
+            name, codes = split_codes_from_name(name)
             key = (name, event, team)
             if key not in players:
                 players[key] = Player(
@@ -215,7 +208,7 @@ class Report(object):
             spc = text.split()
             if spc[0] in sectiontypes:
                 return get_section(text, tagger)
-            elif spc[0] == "source":
+            if spc[0] == "source":
                 get_source(spc)
                 return get_allplayall_games
             ctr = cross_table_row.match(text)
@@ -257,7 +250,7 @@ class Report(object):
                     ),
                 )
                 self.error_repeat = False
-                return
+                return None
             if pin in cross_table:
                 tagger.append_generated_report(
                     self.error,
@@ -270,21 +263,21 @@ class Report(object):
                     ),
                 )
                 self.error_repeat = False
-                return
+                return None
             card = []
             num_rounds = len(row)
             if num_rounds % 2 == 0:
                 num_rounds -= 1
-            for p in row:
+            for i in row:
                 opponent_pin = len(card) + 1
-                strm = cross_table_result.match(p)
+                strm = cross_table_result.match(i)
                 if strm is None:
                     tagger.append_generated_report(
                         self.error,
                         "".join(
                             (
                                 '"',
-                                p,
+                                i,
                                 '" in cross-table row "',
                                 " ".join(
                                     (str(pin), self._section, " ".join(row))
@@ -297,7 +290,7 @@ class Report(object):
                 colour = strm.group("colour")
                 score = strm.group("score")
                 if opponent_pin == pin:
-                    if p != "~":
+                    if i != "~":
                         tagger.append_generated_report(
                             self.error,
                             "".join(
@@ -374,11 +367,11 @@ class Report(object):
         def get_date(tokens, tagger, exact=True):
             datestr = " ".join(tokens[1:])
             gdate = utilities.AppSysDate()
-            d = gdate.parse_date(datestr)
-            if d == len(datestr):
+            doffset = gdate.parse_date(datestr)
+            if doffset == len(datestr):
                 self._date = gdate.iso_format_date()
-                return d
-            elif d < 0:
+                return doffset
+            if doffset < 0:
                 tagger.append_generated_report(
                     self.error,
                     "".join(
@@ -398,12 +391,12 @@ class Report(object):
                 )
             else:
                 self._date = gdate.iso_format_date()
-                return d
+                return doffset
             return False
 
         def get_event_name(text, tagger):
-            en = text.split()
-            self.er_name = " ".join(en)
+            etext = text.split()
+            self.er_name = " ".join(etext)
             if self.er_name in self.er_section:
                 tagger.append_generated_report(
                     self.error,
@@ -421,21 +414,21 @@ class Report(object):
             return get_section
 
         def get_game(text, tagger):
-            gr = game_result.match(text)
-            if gr is None:
+            grmatch = game_result.match(text)
+            if grmatch is None:
                 return False
-            board = gr.group("board")
+            board = grmatch.group("board")
             if not board:
                 board = str(len(self._games) + 1)
-            colour = gr.group("colour")
+            colour = grmatch.group("colour")
             if not colour:
                 colour = self._colourrule(board)
-            gamescore = gr.group("score")
+            gamescore = grmatch.group("score")
             if gamescore is not None:
                 gamescore = resultmap.get(
                     gamescore.lower().strip(), resultmap[None]
                 )
-            awayplayer = gr.group("player")
+            awayplayer = grmatch.group("player")
             awayplayer = (
                 "" if awayplayer is None else " ".join(awayplayer.split())
             )
@@ -445,16 +438,16 @@ class Report(object):
                 )
             else:
                 awayplayer = NullPlayer()
-            date_player = gr.group("date_player")
+            date_player = grmatch.group("date_player")
             if date_player is not None:
                 date_player = " ".join(date_player.split())
                 datetime = utilities.AppSysDate()
-                d = datetime.parse_date(date_player)
-                if d < 0:
+                doffset = datetime.parse_date(date_player)
+                if doffset < 0:
                     gamedate = None
                 else:
                     gamedate = datetime.iso_format_date()
-                    date_player = date_player[d:].strip()
+                    date_player = date_player[doffset:].strip()
             else:
                 gamedate = None
             if date_player:
@@ -485,8 +478,8 @@ class Report(object):
                         )
                     )
                 elif self._playerlimit:
-                    c = self._match_homeplayers.setdefault(homeplayer, 0)
-                    if c >= self._playerlimit:
+                    pcount = self._match_homeplayers.setdefault(homeplayer, 0)
+                    if pcount >= self._playerlimit:
                         tagger.append_generated_report(
                             self.error,
                             "".join(
@@ -500,8 +493,10 @@ class Report(object):
                             ),
                         )
                         self._match_homeplayers[homeplayer] += 1
-                        c = self._match_awayplayers.setdefault(awayplayer, 0)
-                        if c >= self._playerlimit:
+                        pcount = self._match_awayplayers.setdefault(
+                            awayplayer, 0
+                        )
+                        if pcount >= self._playerlimit:
                             tagger.append_generated_report(
                                 self.error,
                                 "".join(
@@ -570,28 +565,28 @@ class Report(object):
             return True
 
         def get_games(text, tagger):
-            gt = text.split()
-            gt0 = gt[0].lower()
+            gtext = text.split()
+            gt0 = gtext[0].lower()
             if set_game_processing_rule(gt0):
                 return get_matches
-            elif gt0 == "source":
-                get_source(gt)
+            if gt0 == "source":
+                get_source(gtext)
                 return get_games
-            elif gt0 == "round":
-                get_round(gt, tagger)
+            if gt0 == "round":
+                get_round(gtext, tagger)
                 return get_matches
-            elif gt0 == "date":
-                get_date(gt, tagger)
+            if gt0 == "date":
+                get_date(gtext, tagger)
                 return get_matches
-            elif gt0 == "games":
-                get_games_per_player_per_match(gt, tagger)
+            if gt0 == "games":
+                get_games_per_player_per_match(gtext, tagger)
                 return get_matches
-            elif gt0 in sectiontypes:
+            if gt0 in sectiontypes:
                 return get_section(text, tagger)
-            elif gt0 == "matchdefaulted":
+            if gt0 == "matchdefaulted":
                 self.er_matchresults[-1].default = True
                 return get_matches
-            elif get_game(text, tagger):
+            if get_game(text, tagger):
                 return get_games
 
             # The current self._played_on value does not apply once a failure
@@ -600,22 +595,21 @@ class Report(object):
 
             if get_match(text, tagger):
                 return get_games
-            elif is_event_name_repeated(text):
+            if is_event_name_repeated(text):
                 return get_matches
-            else:
-                tagger.append_generated_report(
-                    self.error,
-                    "".join(
-                        (
-                            '"',
-                            text,
-                            '" in section "',
-                            self._section,
-                            '" is not recognised as a game result or match ',
-                            "name.\n",
-                        )
-                    ),
-                )
+            tagger.append_generated_report(
+                self.error,
+                "".join(
+                    (
+                        '"',
+                        text,
+                        '" in section "',
+                        self._section,
+                        '" is not recognised as a game result or match ',
+                        "name.\n",
+                    )
+                ),
+            )
             return get_matches
 
         def get_games_per_player_per_match(tokens, tagger):
@@ -653,23 +647,23 @@ class Report(object):
             return True
 
         def get_individual_game(text, tagger):
-            gi = individual_game_result.match(text)
-            if gi is None:
+            gmatch = individual_game_result.match(text)
+            if gmatch is None:
                 return False
-            black = " ".join(gi.group("black").split())
+            black = " ".join(gmatch.group("black").split())
             gamescore = resultmap.get(
-                gi.group("score").lower().strip(), resultmap[None]
+                gmatch.group("score").lower().strip(), resultmap[None]
             )
-            w_and_prefix = gi.group("white").split()
+            w_and_prefix = gmatch.group("white").split()
             gdate = utilities.AppSysDate()
             datestr = " ".join(w_and_prefix)
-            d = gdate.parse_date(datestr)
-            if d < 0:
+            doffset = gdate.parse_date(datestr)
+            if doffset < 0:
                 gamedate = None
                 white = datestr
             else:
                 gamedate = gdate.iso_format_date()
-                white = " ".join(datestr[d:].split())
+                white = " ".join(datestr[doffset:].split())
             white = add_player_record(white, None, None, tagger)
             black = add_player_record(black, None, None, tagger)
             if white.name == black.name:
@@ -693,12 +687,12 @@ class Report(object):
             return True
 
         def get_individual_games(text, tagger):
-            gt = text.split()
-            gt0 = gt[0].lower()
+            gtext = text.split()
+            gt0 = gtext[0].lower()
             if gt0 in sectiontypes:
                 return get_section(text, tagger)
-            elif gt0 == "source":
-                get_source(gt)
+            if gt0 == "source":
+                get_source(gtext)
                 return get_individual_games
             if not get_individual_game(text, tagger):
                 tagger.append_generated_report(
@@ -716,21 +710,21 @@ class Report(object):
             return get_individual_games
 
         def get_match(text, tagger):
-            mn = match_name.match(text)
-            if mn is None:
+            match = match_name.match(text)
+            if match is None:
                 return False
-            awayteam = " ".join(mn.group("awayteam").split())
-            matchscore = mn.group("score").strip().lower().split("-")
+            awayteam = " ".join(match.group("awayteam").split())
+            matchscore = match.group("score").strip().lower().split("-")
             if len(matchscore) == 1:
                 homescore = awayscore = None
             else:
                 homescore = matchscore[0].rstrip()
                 awayscore = matchscore[1].lstrip()
-            ht_and_prefix = mn.group("hometeam").split()
+            ht_and_prefix = match.group("hometeam").split()
             mdate = utilities.AppSysDate()
             datestr = " ".join(ht_and_prefix)
-            d = mdate.parse_date(datestr)
-            if d < 0:
+            doffset = mdate.parse_date(datestr)
+            if doffset < 0:
                 if ht_and_prefix[0].isdigit():
                     matchround = str(int(ht_and_prefix.pop(0)))
                 else:
@@ -739,7 +733,7 @@ class Report(object):
                 hometeam = datestr
             else:
                 matchdate = mdate.iso_format_date()
-                ht_and_prefix = datestr[d:].split()
+                ht_and_prefix = datestr[doffset:].split()
                 if ht_and_prefix[0].isdigit():
                     matchround = str(int(ht_and_prefix.pop(0)))
                 else:
@@ -779,25 +773,25 @@ class Report(object):
             return True
 
         def get_matches(text, tagger):
-            mt = text.split()
-            mt0 = mt[0].lower()
-            if set_game_processing_rule(mt0):
+            mtext = text.split()
+            mtext0 = mtext[0].lower()
+            if set_game_processing_rule(mtext0):
                 return get_matches
-            elif mt0 == "source":
-                get_source(mt)
+            if mtext0 == "source":
+                get_source(mtext)
                 return get_matches
-            elif mt0 == "round":
-                get_round(mt, tagger)
+            if mtext0 == "round":
+                get_round(mtext, tagger)
                 return get_matches
-            elif mt0 == "date":
-                get_date(mt, tagger)
+            if mtext0 == "date":
+                get_date(mtext, tagger)
                 return get_matches
-            elif mt0 == "games":
-                get_games_per_player_per_match(mt, tagger)
+            if mtext0 == "games":
+                get_games_per_player_per_match(mtext, tagger)
                 return get_matches
-            elif mt0 in sectiontypes:
+            if mtext0 in sectiontypes:
                 return get_section(text, tagger)
-            elif get_match(text, tagger):
+            if get_match(text, tagger):
                 return get_games
 
             # The current self._played_on value does not apply once a failure
@@ -806,19 +800,18 @@ class Report(object):
 
             if is_event_name_repeated(text):
                 return get_matches
-            else:
-                tagger.append_generated_report(
-                    self.error,
-                    "".join(
-                        (
-                            '"',
-                            text,
-                            '" in section "',
-                            self._section,
-                            '" is not recognised as a match name.\n',
-                        )
-                    ),
-                )
+            tagger.append_generated_report(
+                self.error,
+                "".join(
+                    (
+                        '"',
+                        text,
+                        '" in section "',
+                        self._section,
+                        '" is not recognised as a match name.\n',
+                    )
+                ),
+            )
             return get_matches
 
         def get_round(tokens, tagger):
@@ -848,29 +841,31 @@ class Report(object):
             # for a section name.  For example 'fixturelist Division 1'.
             # self._played_on = False
 
-            s = text.split()
-            st = s[0].lower()
-            if st == "source":
-                get_source(st)
+            stext = text.split()
+            stext0 = stext[0].lower()
+            if stext0 == "source":
+                get_source(stext0)
                 return get_section
-            if st not in sectiontypes:
+            if stext0 not in sectiontypes:
                 if self.error_repeat:
                     return get_section
                 tagger.append_generated_report(
                     self.error,
-                    "".join(('Section type "', st, '" not recognised.\n')),
+                    "".join(('Section type "', stext0, '" not recognised.\n')),
                 )
                 self.error_repeat = True
                 return get_section
             if self.error_repeat:
                 tagger.append_generated_report(
                     self.error,
-                    "".join(('Section type "', st, '" found after errors.\n')),
+                    "".join(
+                        ('Section type "', stext0, '" found after errors.\n')
+                    ),
                 )
                 self.error_repeat = False
-            self._section = " ".join(s[1:])
+            self._section = " ".join(stext[1:])
             if self._section in self.er_section:
-                if st != "fixturelist":
+                if stext0 != "fixturelist":
                     tagger.append_generated_report(
                         self.error,
                         "".join(
@@ -880,10 +875,10 @@ class Report(object):
                     self.error_repeat = True
                     return get_section
             if self._section not in self.er_section:
-                self.er_section[self._section] = st
+                self.er_section[self._section] = stext0
                 self.er_report_order.append(self._section)
-                sectiondata[st]()
-            return sectiontypes[st]
+                sectiondata[stext0]()
+            return sectiontypes[stext0]
 
         def get_swiss_pairing_card_results(pin, row, tagger):
             swiss_table = self.er_swiss_table[self._section]
@@ -904,18 +899,18 @@ class Report(object):
                     ),
                 )
                 self.error_repeat = False
-                return
+                return None
 
             card = []
-            for p in row:
-                strm = swiss_table_result.match(p)
+            for j in row:
+                strm = swiss_table_result.match(j)
                 if strm is None:
                     tagger.append_generated_report(
                         self.error,
                         "".join(
                             (
                                 '"',
-                                p,
+                                j,
                                 '" in results "',
                                 " ".join(row),
                                 '" pin "',
@@ -946,15 +941,15 @@ class Report(object):
                         ),
                     )
                     continue
-                for p in swiss_table:
-                    if len(swiss_table[p]) <= len(card):
+                for i in swiss_table:
+                    if len(swiss_table[i]) <= len(card):
                         continue  # may be upgraded to error later
-                    opponent_entry = swiss_table[p][len(card)]
+                    opponent_entry = swiss_table[i][len(card)]
                     error = False
                     if opponent_entry["opponent"] != pin:
-                        if p == opponent_pin:
+                        if i == opponent_pin:
                             error = True
-                    elif opponent_pin == p:
+                    elif opponent_pin == i:
                         opponent_colour = opposite_colour[colour]
                         opponent_score = opposite_score[score]
                         if opponent_entry["colour"] != opponent_colour:
@@ -976,7 +971,7 @@ class Report(object):
                                     str(pin),
                                     '") is not consistent with pairing card ',
                                     'for pin "',
-                                    str(p),
+                                    str(i),
                                     '".\n',
                                 )
                             ),
@@ -1001,7 +996,7 @@ class Report(object):
             spc = text.split()
             if spc[0] in sectiontypes:
                 return get_section(text, tagger)
-            elif spc[0].lower() == "source":
+            if spc[0].lower() == "source":
                 get_source(spc)
                 return get_swiss_pairing_cards
             swtr = swiss_table_row.match(text)
@@ -1047,18 +1042,10 @@ class Report(object):
             if text == PLAYED_ON:
                 self._played_on = PlayedOnStatus.seek_played_on_report
                 return True
-            if text in COLOUR_RULES:
-                self._colourrule = COLOUR_RULES[text]
+            if text in colour_rules:
+                self._colourrule = colour_rules[text]
                 return True
             return False
-
-        def split_text_and_pad(text, count, separator=None):
-            if separator == None:
-                separator = "\t"
-            s = text.split(separator, count)
-            if len(s) < count + 1:
-                s.extend([""] * (count - len(s) + 1))
-            return s
 
         def is_event_name_repeated(text):
             return bool(self.er_name == " ".join(text.split()))
@@ -1066,13 +1053,7 @@ class Report(object):
         def get_source(tokens):
             self.er_source = " ".join(tokens[1:])
 
-        def nullstring(s):
-            if isinstance(s, str):
-                return s
-            else:
-                return ""
-
-        COLOUR_RULES = {
+        colour_rules = {
             "whiteonodd": white_on_odd,
             "blackonodd": black_on_odd,
             "whiteonall": white_on_all,
@@ -1096,7 +1077,6 @@ class Report(object):
         }
 
         self.textlines = textlines
-        state = None
         self._colourrule = colour_none
         self._played_on = PlayedOnStatus.reports_not_played_on
         players = dict()
@@ -1115,7 +1095,6 @@ class Report(object):
             linestr = linestr.strip()
             if len(linestr) == 0:
                 continue
-            state = process
             process = process(linestr, linetag)
 
         # hack to spot empty results report
@@ -1131,21 +1110,23 @@ class Report(object):
     # Tagging not used yet so the argument is the text from error, not the key
     # of the item in self._generated_report containing the text (or whatever).
     def get_report_tag_and_text(self, text):  # key):
-        """ """
+        """Return tag, for tkinter Text widget, and text."""
         return ("gash", text)  # self._generated_report[key])
 
 
 class NullPlayer(Null):
-
     """Null player placeholder where player name not known."""
 
     def __len__(self):
+        """Return 0."""
         return 0
 
     def __getattr__(self, name):
+        """Return None."""
         return None
 
     def __getitem__(self, i):
+        """Return self."""
         return self
 
     def is_inconsistent(self, other, problems):
@@ -1158,7 +1139,7 @@ class NullPlayer(Null):
         """
         state = not isinstance(other, self.__class__)
         if state:
-            problems.add(NULL_PLAYER)
+            problems.add(constants.NULL_PLAYER)
         return state
 
 

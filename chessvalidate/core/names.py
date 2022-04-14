@@ -15,7 +15,7 @@ Accurracy is essential.  Compare and contrast with the matchteams module.
 """
 
 
-class Names(object):
+class Names:
     """All pairs of phrases with first word in one phrase and last in other.
 
     The string 'a b c d e f' produces 20 pairs by removing each set, including
@@ -26,7 +26,7 @@ class Names(object):
     """
 
     def __init__(self, string="", split=True):
-        """ """
+        """Initialize namepairs attribute from string argument."""
         super().__init__()
         self._namephrases = None
         if not isinstance(string, str):
@@ -53,20 +53,20 @@ class Names(object):
             self.namepairs = [(self.string, "")]
         else:
             namepairs = []
-            for s1, p1, len1 in position:
-                if p1 == 0:
-                    for s2, p2, len2 in position:
-                        if p2 >= len1:
-                            namepairs.append((len1 * len2, len1, (s1, s2)))
+            for str1, pos1, len1 in position:
+                if pos1 == 0:
+                    for str2, pos2, len2 in position:
+                        if pos2 >= len1:
+                            namepairs.append((len1 * len2, len1, (str1, str2)))
             self.namepairs = [n[-1] for n in sorted(namepairs)]
 
     @property
     def namephrases(self):
-        """ """
+        """Return set of name phrases."""
         if self._namephrases is None:
             namephrases = set()
-            for p in self.namepairs:
-                namephrases.update(p)
+            for name in self.namepairs:
+                namephrases.update(name)
             namephrases.discard("")
             self._namephrases = namephrases
         return self._namephrases
@@ -100,7 +100,7 @@ class Names(object):
         elif ends_with:
             starts_with = string.replace(ends_with, "").strip()
         else:
-            s = string.split()
-            starts_with = " ".join(s[: (1 + len(s)) // 2])
-            ends_with = " ".join(s[(1 + len(s)) // 2 :])
+            words = string.split()
+            starts_with = " ".join(words[: (1 + len(words)) // 2])
+            ends_with = " ".join(words[(1 + len(words)) // 2 :])
         self.namepairs = ((starts_with, ends_with),)

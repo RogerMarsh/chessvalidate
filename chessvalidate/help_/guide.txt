@@ -3,14 +3,6 @@ Summary
 
 Enter and verify results for an event.
 
-Update a database with an event's results.
-
-Identify players in an event as players in previous events or as new players.
-
-Link new players with their English Chess Federation (ECF) grading codes.
-
-Submit results for events to the ECF for grading.
-
 
 Contents
 
@@ -27,7 +19,6 @@ Contents
 	A Real League - Portsmouth District League
 	A Tabular Reported League - Portsmouth District League
 	Monthly Rating
-	Authentication
 
 
 Introduction
@@ -35,19 +26,13 @@ Introduction
 
 This program extracts results from documents in emails sent by sources.
 
-The menu bar has five items: Sources, Documents, Results, Tools, and Help.
+The menu bar has four items: Sources, Documents, Tools, and Help.
 
-Sources, Documents, and Results provide access to the main functions of the program in the order they are used when dealing with an event.
+Sources and Documents provide access to the main functions of the program in the order they are used when dealing with an event.
 
 Sources is used to specify selection rules for emails and extract emails from an email client's mailbox or mailboxes.
 
 Documents is used to extract data relevant to chess game results from emails, validate the data, save any changes made to remove errors or resolve incorrect interpretation of data, and update a database to be processed using the Results item.
-
-Results is used to merge players in an event with players from earlier events, and link new players to an ECF grading code (or a request for a new grading code).  Generally players from earlier events will have been linked to an ECF grading code, so the merge step usually implies the link to a grading code.
-
-Results is used to import reference data (Master List) and result submission feedback (new player grading codes) from the ECF and create result submissions to the ECF.
-
-Results has three variants, provided in different programs. The results_lite variant does not do the interactions with the ECF, but provides some results analysis. The results_ogd variant can import the publically available ECF Grading List, but cannot do result submission to the ECF. The results_ecf variant can be used to submit results to the ECF provided the Master List has been imported.  The Master List is only available to graders.  A database created by one variant can be accessed by the other variants.
 
 Tools provides access to an editor for the URLs to access the ECF database.  Also a font selector which is not implemented.
 
@@ -76,19 +61,6 @@ Results extraction in the Sources menu
 Open in the Documents menu
 Generate on the Edit tab
 Save on the Edit tab
-Upate on the Edit tab
-Open in the Results menu
-Merge on the NewPlayers tab
-ECF Players on the Events tab
-ECF Master File on the Administration tab
-Link Grading Code on the Grading Codes tab
-Affiliate on the Club Codes tab
-Update Event Detail on the ECF Events tab
-Submit on the ECF Events tab
-
-The Link Grading Code and Affiliate actions will not do anything unless the Master List and Club List from the ECF has been applied to the database using ECF Master File on the Administration tab.  You will have these only if you are a grader.  Some of the actions can be done with the Grading List, which is publically available, as described in Getting Started.
-
-The Players tab and the Player ECF Detail tab allow actions to be undone.
 
 
 Getting started
@@ -125,11 +97,11 @@ The dates on the lines starting 'Open' and 'Major' are the dates in round order 
 
 The other lines are copy-typed from the pairing cards.
 
-ECF grading codes are notable by their absence, even though they are usually on the pairing cards.  This program does not use grading codes to identify players: you tell the program which grading code to use when reporting results to the ECF for grading. (This is covered describing the 'Results' menu item: and in practice you will mostly have to do nothing.)
+ECF grading codes are notable by their absence, even though they are usually on the pairing cards.
 
 Validate the results by 'Generate'.
 
-A register of player identities appears in the top-right pane and a list of game results appears in the bottom-right pane.  There are no errors in either pane so updating is allowed: note this does not imply the results are correct, just that they are valid.  You confirm the correctness of the results by using 'Update'.
+A register of player identities appears in the top-right pane and a list of game results appears in the bottom-right pane.  There are no errors in either pane so saving a tabular version of the source document is allowed: note this does not imply the results are correct, just that they are valid.
 
 The player identities are sorted by name.  For example 'Alf' is a name but the player identity is 'Alf Open 1 in the Anytown Chess Congress from 12 may 2012 to 14 may 2012'.
 
@@ -141,107 +113,7 @@ The only way results can be modified, added. or deleted is by editing the data i
 
 Use 'Toggle' to see the data extracted from emails and the data after all edits ever done side-by-side.  The former is an empty pane in this example.
 
-Create a new results database using 'Results | New'.
-
-Normally all the event documents are used to update a single database.  For this example create the database in a directory called 'AnytownEvents' (as a sibling of Anytown12 is probably convenient).
-
-Update the database using 'Update'.
-
-Close the event documents using 'Close' or 'Documents | Close'.
-
-A list of all the events on the database in displayed.
-
-Display the new players using 'NewPlayers'.
-
-Select each player in the top pane in and use 'Merge' to identify the player.  In this example we know each new player cannot be the same person as any player in the bottom pane so do not, repeat not, make a selection in the bottom pane when doing the merge.
-
-Use the left or right arrows, or 'click right-button and select in popup menu' with the pointer over the relevant line, to do the selection.
-
-Confirm the merge by 'Ok' in the Confirm Merge New Player.
-
-The selected entry is moved from the top pane to the bottom pane.
-
-Repeat until the top pane is empty.
-
-You may have noticed that one of the names was 'clara' and prefer it to be 'Clara' ('c' is after 'Z' in the sort).
-
-Open the event documents using 'Documents | Open', edit the name and repeat the 'Generate', 'Save', 'Update', and so on, steps.
-
-On getting back to the 'NewPlayers' tab see that 'Clara' has appeared in the top pane and that 'clara' is not in the lower pane.  Move Clara to the lower pane using 'Merge'.
-
-Decisions recorded on the 'NewPlayers' tab can be undone on the 'Players' tab so that a new decision can be recorded.  Ignored for now.
-
-If you submit results to the ECF for rating you will need the ECF codes of the players, and probably the codes of the clubs they play for.  These can be downloaded using 'Administration | Rated Players Download' and 'Administration | Active Clubs Download', or from www.ecfrating.org.uk (at time of writing the links are at www.ecfrating.org.uk/v2/help/help_api.php).  Note neither is a complete list and you may need to use 'Grading Codes | Download ECF Code' or 'Club Codes | Download Club Code' to get the code for each player or club.  There is a case for downloading all codes one-by-one to avoid cluttering your database with thousands of items you do not need.
-
-Start the player download using 'Administration | Rated Players Download' and choose whether to download or extract from a previously saved download (using a browser probably).  ChessResults does not offer the option of saving the download in a file.
-
-Import the data, if satisfied it is genuine, using 'Apply Rated Players'.
-
-Actions are reported in the lower pane, finishing with 'Player list downloaded on yyyy-mm-dd has been processed'.
-
-Repeat for clubs starting with 'Administration | Active Clubs Download'.
-
-The obsolete master list is still supported in case you happen to have one, but using it is no longer described.  The ECF stopped producing them in mid-2020.
-
-Display the NewPlayers tab by using 'Cancel Import', 'Close File List', and 'NewPlayers'.
-
-The upper pane will have all the players listed.  The lower pane will be empty if this is the first set of results added to the database.
-
-Move each player to the lower pane by selecting the player and using 'Merge'.
-
-When all players for this event have been moved, usually this is when the upper pane is empty, display the Events tab using 'Events'.
-
-Select the event and move it's players to the upper pane of the Grading Codes and Club Codes tabs using 'ECF Players'.
-
-Display Grading Codes tab using 'Grading Codes'.
-
-Obviously the Anytown players are not going to be in the grading list, and the names are not going match except by an amazing fluke.
-
-Select 'Alf' from the top pane and some grading code at random from the bottom pane.  Assign the grading code to 'Alf' using 'Link Grading Code'.
-
-Repeat for all the players in the top pane.
-
-That is it for the Anytown12 event.
-
-Now repeat for the Anytown13 event up to the point where the players appear on the 'New Players' tab.  The results are in sample_anytown13.txt.
-
-Assume that all the players with male names in the Anytown13 Open competition played in the Anytown12 event.  So 'Alf' in the 2013 edition of the event is 'Alf' in the 2012 edition, and so forth.  Also assume that none of the players with female names played in both editions of the event.  So 'Anne' is a new player, and so forth.
-
-Select each player in the top pane with a female name and use 'Merge' to identify the player.  Do not make a selection in the bottom pane.
-
-Select a player in the top pane and select the player with the same name in the bottom pane.  Use Merge to identify 'Alf' in the Anytown13 event to be the same person as 'Alf' in the Anytown 2012 event.  Repeat until the top pane is empty.  (George did not play in 2012, just a half-point bye, so treat this player like the player's with female names.)
-
-Display the list of players and grading codes using 'Grading Codes'.  See that only the players with female names and George from the Anytown 2013 event are not linked to grading codes.  Link all these players to grading codes.
-
-Display the NewPlayers tab using 'NewPlayers'.
-
-Bookmark all the Brian and Carol entries in the bottom pane, four in all, and use 'Player Details' to display their details.  See that three windows are displayed, one for Brian and two for Carol.  The merging and linking gave three people with three different grading codes.
-
-That is it for the results_ogd variant of the application.
-
 Quit using 'Sources | Quit'.
-
-Run the results_ecf variant of the program and use 'Results | Open' to show the Anytown events.
-
-Display the Grading Codes tab using 'Grading Codes' and see that no players are listed.
-
-Display the Club Codes tab using 'Club Codes' and see that no players are listed.
-
-Display the Player ECF Detail tab using 'Player ECF Detail' and see that all the players are listed, but without grading codes.
-
-Display the NewPlayers tab using 'NewPlayers'.
-
-Bookmark all the Brian and Carol entries in the bottom pane, four in all, and use 'Player Details' to display their details.  See that three windows are displayed, one for Brian and two for Carol, and see that no grading codes are given.
-
-Display the Events tab using 'Events'.
-
-Select the Anytown 2012 event and use 'ECF Players' to populate the top pane in the Grading Codes and Club Codes tabs.
-
-The players could be linked to grading codes and club codes if a Master List were available in the same way as with the Grading List.
-
-Because this event is a congress, 'no club' is the preferred club link if the player is linked to a grading code.  Typically all such players would be bookmarked, followed by using 'No Club', on the Club Codes tab.
-
-'New Grading Code' on the Grading Codes tab, and 'New ECF Club' on the Club Codes tab, became almost redundant when the Master List update frequency was made monthly.
 
 
 Selecting emails
@@ -508,9 +380,3 @@ Monthly Rating
 Assumptions may be invalidated by the introduction of monthly rating and effects are mentioned here as met.
 
 Swiss tournament tables may be submitted when only one round has been played but a line with <name> <date> cannot be taken as the round date of a swiss tournament.  This affects tournaments where a round may take place over several weeks.  If the swiss tournament table provides the game results after one round only, remember to add a currently redundant second round date to force swiss tournament table processing.
-
-
-Authentication
-
-
-Web pages are a convenient source of real data to try out but it is the League Secretaries, usually, who have the final say on what counts as the true statement of the match results.  Thus it is the emails sent by the League Secretaries that are processed for grading, not any data grabbed from a convenient website.

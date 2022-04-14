@@ -2,36 +2,17 @@
 # Copyright 2008 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Constants used in the results of games.
-"""
-
-# Game score identifiers.
-# h... refers to first-named player usually the home player in team context.
-# a... refers to second-named player usually the away player in team context.
-# No assumption is made about which player has the white or black pieces.
-hwin = "h"
-awin = "a"
-draw = "d"
-hdefault = "hd"
-adefault = "ad"
-doubledefault = "dd"
-drawdefault = "=d"
-hbye = "hb"
-abye = "ab"
-hbyehalf = "hbh"
-abyehalf = "abh"
-tobereported = None
-void = "v"
-notaresult = "not a result"
-defaulted = "gd"
-
-# Commentary on printed results
-tbrstring = "to be reported"
+"""Lookup tables used in the results of games."""
+from . import constants
 
 # ECF score identifiers.
 # Results are reported to ECF as '10' '01' or '55'.
-# Only hwin awin and draw are reported.
-ecfresult = {hwin: "10", awin: "01", draw: "55"}
+# Only HWIN AWIN and DRAW are reported.
+ecfresult = {
+    constants.HWIN: constants.RESULT_10,
+    constants.AWIN: constants.RESULT_01,
+    constants.DRAW: constants.RESULT_55,
+}
 
 # Particular data entry modules may wish to use their own versions
 # of the following maps.
@@ -41,107 +22,107 @@ ecfresult = {hwin: "10", awin: "01", draw: "55"}
 # Results are displayed as '1-0' '0-1' etc.
 # Use is "A Player 1-0 A N Other".
 displayresult = {
-    hwin: "1-0",
-    awin: "0-1",
-    draw: "draw",
-    hdefault: "1-def",
-    adefault: "def-1",
-    doubledefault: "dbldef",
-    hbye: "bye+",
-    abye: "bye+",
-    hbyehalf: "bye=",
-    abyehalf: "bye=",
-    void: "void",
-    drawdefault: "drawdef",
-    defaulted: "defaulted",
+    constants.HWIN: "1-0",
+    constants.AWIN: "0-1",
+    constants.DRAW: "draw",
+    constants.HWIN_DEFAULT: "1-def",
+    constants.AWIN_DEFAULT: "def-1",
+    constants.DOUBLEDEFAULT: "dbldef",
+    constants.HBYE: "bye+",
+    constants.ABYE: "bye+",
+    constants.HBYEHALF: "bye=",
+    constants.ABYEHALF: "bye=",
+    constants._VOID: "void",
+    constants.DRAWDEFAULT: "drawdef",
+    constants.DEFAULTED: "defaulted",
 }
 
 # Score tags.  Comments displayed after a game result.
 # Use is "A Player  A N Other   to be reported".
 displayresulttag = {
-    tobereported: tbrstring,
-    notaresult: notaresult,
+    constants.TOBEREPORTED: constants.TBRSTRING,
+    constants.NOTARESULT: constants.NOTARESULT,
 }
 
-# Map of all strings representing a result to result.
+# Map strings representing a result to database representation of result.
 # Where the context implies that a string is a result treat as "void"
 # if no map exists i.e. resultmap.get(resultstring, resultmap['void']).
 # resultstring may have been initialised to None and not been set.
-# Thus the extra entry None:tobereported.
+# Thus the extra entry None:TOBEREPORTED.
 resultmap = {
-    "1-0": hwin,
-    "0-1": awin,
-    "draw": draw,
-    "void": void,
-    "tbr": tobereported,
-    "": tobereported,
-    None: tobereported,
-    "def+": hdefault,
-    "def-": adefault,
-    "dbld": doubledefault,
-    "def=": drawdefault,
-    "default": defaulted,
+    "1-0": constants.HWIN,
+    "0-1": constants.AWIN,
+    "draw": constants.DRAW,
+    "void": constants._VOID,
+    "tbr": constants.TOBEREPORTED,
+    "": constants.TOBEREPORTED,
+    None: constants.TOBEREPORTED,
+    "def+": constants.HWIN_DEFAULT,
+    "def-": constants.AWIN_DEFAULT,
+    "dbld": constants.DOUBLEDEFAULT,
+    "def=": constants.DRAWDEFAULT,
+    "default": constants.DEFAULTED,
 }
 
-# Map game results to the difference created in the match score
+# Map strings representing a result to database representation of result.
+resultmapecf = {
+    "1-0": constants.RESULT_10,
+    "0-1": constants.RESULT_01,
+    "draw": constants.RESULT_55,
+    "def+": constants.ECF_RESULT_1D,
+    "def-": constants.ECF_RESULT_D1,
+    "dbld": constants.ECF_RESULT_DD,
+    "def=": constants.DRAWDEFAULT,
+    "default": constants.DEFAULTED,
+}
+
+# Map game results to the difference created in the match score.
 match_score_difference = {
-    hwin: 1,
-    awin: -1,
-    draw: 0,
-    hdefault: 1,
-    adefault: -1,
-    doubledefault: 0,
-    drawdefault: 0,
-    hbye: 1,
-    abye: -1,
-    hbyehalf: 0.5,
-    abyehalf: -0.5,
-    tobereported: 0,
-    void: 0,
-    notaresult: 0,
+    constants.HWIN: 1,
+    constants.AWIN: -1,
+    constants.DRAW: 0,
+    constants.HWIN_DEFAULT: 1,
+    constants.AWIN_DEFAULT: -1,
+    constants.DOUBLEDEFAULT: 0,
+    constants.DRAWDEFAULT: 0,
+    constants.HBYE: 1,
+    constants.ABYE: -1,
+    constants.HBYEHALF: 0.5,
+    constants.ABYEHALF: -0.5,
+    constants.TOBEREPORTED: 0,
+    constants._VOID: 0,
+    constants.NOTARESULT: 0,
 }
 
-# Map game results to the contribution to the total match score
+# Map game results to the contribution to the total match score.
 match_score_total = {
-    hwin: 1,
-    awin: 1,
-    draw: 1,
-    hdefault: 1,
-    adefault: 1,
-    doubledefault: 0,
-    drawdefault: 0.5,
-    hbye: 1,
-    abye: 1,
-    hbyehalf: 0.5,
-    abyehalf: 0.5,
-    tobereported: 0,
-    void: 0,
-    notaresult: 0,
+    constants.HWIN: 1,
+    constants.AWIN: 1,
+    constants.DRAW: 1,
+    constants.HWIN_DEFAULT: 1,
+    constants.AWIN_DEFAULT: 1,
+    constants.DOUBLEDEFAULT: 0,
+    constants.DRAWDEFAULT: 0.5,
+    constants.HBYE: 1,
+    constants.ABYE: 1,
+    constants.HBYEHALF: 0.5,
+    constants.ABYEHALF: 0.5,
+    constants.TOBEREPORTED: 0,
+    constants._VOID: 0,
+    constants.NOTARESULT: 0,
 }
 
-# Games with following results are stored on database
-# Maybe move to gameresults
-# Not sure if the mapping is needed
-_loss = "0-1"
-_draw = "draw"
-_win = "1-0"
-_storeresults = {awin: _loss, draw: _draw, hwin: _win}
+# Games with following results are stored on database.
+# Not sure if the mapping is needed.
+storeresults = {
+    constants.AWIN: constants.LOSS,
+    constants.DRAW: constants.DRAWN,
+    constants.HWIN: constants.WIN,
+}
 
-# Duplicate game report inconsistency flags
-NULL_PLAYER = "null"
-HOME_PLAYER_WHITE = "home player white"
-RESULT = "result"
-BOARD = "board"
-GRADING_ONLY = "grading only"
-SOURCE = "source"
-SECTION = "section"
-COMPETITION = "competition"
-HOME_TEAM_NAME = "home team name"
-AWAY_TEAM_NAME = "away team name"
-HOME_PLAYER = "home player"
-AWAY_PLAYER = "away player"
-ROUND = "round"
-GAME_COUNT = "game count"
-MATCH_SCORE = "match and game scores in earlier reports"
-ONLY_REPORT = "match and game scores in only report"
-AUTHORIZATION = "authorization"
+# Pieces (or side) of first named player (home player in team matches).
+# True and False used as indicators since long ago on database records.
+home_player_pieces = {
+    True: constants.FIRST_PLAYER_WHITE_PIECES,
+    False: constants.FIRST_PLAYER_BLACK_PIECES,
+}

@@ -1,58 +1,44 @@
-# help.py
+# help_.py
 # Copyright 2009 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Functions to create Help widgets for Results.
-"""
+"""Functions to create Help widgets for Validate Results."""
 
 import tkinter
 
-import solentware_misc.gui.textreadonly
 from solentware_misc.gui.help import help_widget
 
-from .. import help
+from .. import help_
 
 
 def help_about(master):
-    """Display About document"""
-
-    help_widget(master, help.ABOUT, help)
-
-
-def help_file_size(master):
-    """Display File Size document"""
-
-    help_widget(master, help.FILESIZE, help)
+    """Display About document."""
+    help_widget(master, help_.ABOUT, help_)
 
 
 def help_guide(master):
-    """Display Guide document"""
-
-    help_widget(master, help.GUIDE, help)
+    """Display Guide document."""
+    help_widget(master, help_.GUIDE, help_)
 
 
 def help_keyboard(master):
-    """Display Keyboard actions document"""
-
-    help_widget(master, help.ACTIONS, help)
+    """Display Keyboard actions document."""
+    help_widget(master, help_.ACTIONS, help_)
 
 
 def help_samples(master):
-    """Display Samples document"""
-
-    help_widget(master, help.SAMPLES, help)
+    """Display Samples document."""
+    help_widget(master, help_.SAMPLES, help_)
 
 
 def help_tablespecs(master):
-    """Display csv file layouts document"""
-
-    help_widget(master, help.TABLESPECS, help)
+    """Display csv file layouts document."""
+    help_widget(master, help_.TABLESPECS, help_)
 
 
 def help_notes(master):
-    """Display Notes document"""
-
-    help_widget(master, help.NOTES, help)
+    """Display Notes document."""
+    help_widget(master, help_.NOTES, help_)
 
 
 if __name__ == "__main__":
@@ -60,7 +46,6 @@ if __name__ == "__main__":
 
     root = tkinter.Tk()
     help_about(root)
-    help_file_size(root)
     help_guide(root)
     help_keyboard(root)
     help_notes(root)

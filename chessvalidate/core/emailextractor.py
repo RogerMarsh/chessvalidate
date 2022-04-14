@@ -17,13 +17,7 @@ email did so.  It depends on which mailbox format the email client uses.
 import re
 import csv
 
-from emailextract.core.emailextractor import (
-    EmailExtractor,
-    EmailExtractorError,
-    ExtractEmail,
-    ExtractText,
-    Parser,
-)
+from emailextract.core import emailextractor
 
 # File containing typed-in results
 TEXTENTRY = "textentry"
@@ -189,7 +183,13 @@ AUTHORIZATION_DELAY = "authorization_delay"
 DEFAULT_IF_DELAY_NOT_VALID = 5
 
 
-class EmailExtractor(EmailExtractor):
+class EmailExtractorError(emailextractor.EmailExtractorError):
+    """Exception class for emailextractor module."""
+
+
+class EmailExtractor(emailextractor.EmailExtractor):
+    """Extract text from emails containing chess game results."""
+
     def __init__(
         self,
         folder,
@@ -216,11 +216,11 @@ class EmailExtractor(EmailExtractor):
         )
 
 
-class Parser(Parser):
-
+class Parser(emailextractor.Parser):
     """Parse configuration file."""
 
     def __init__(self, parent=None):
+        """Set up keyword to method map."""
         super().__init__(parent=parent)
         self.keyword_rules.update(
             {
@@ -283,74 +283,117 @@ class Parser(Parser):
             _REPLACE: [None, None, None],
         }
 
-    def re_from_value(self, v):
-        return re.compile(v, flags=re.IGNORECASE | re.DOTALL)
+    def re_from_value(self, val):
+        """Process elements for various keyword methods."""
+        return re.compile(val, flags=re.IGNORECASE | re.DOTALL)
 
-    def add_value_to_lookup(self, v, args, args_key):
-        v, r = v.split(sep=v[0], maxsplit=2)[1:]
+    def add_value_to_lookup(self, val, args, args_key):
+        """Process TEAM_NAME keyword."""
+        val, rep = val.split(sep=val[0], maxsplit=2)[1:]
         if args_key not in args:
             args[args_key] = dict()
-        args[args_key][v] = r
+        args[args_key][val] = rep
 
-    def add_value_to_lookup_set(self, v, args, args_key):
-        v, r = v.split(sep=v[0], maxsplit=2)[1:]
+    def add_value_to_lookup_set(self, val, args, args_key):
+        """Process lookup set values. (Not used currently)."""
+        val, rep = val.split(sep=val[0], maxsplit=2)[1:]
         if args_key not in args:
             args[args_key] = dict()
-        args[args_key].setdefault(v, set()).add(r)
+        args[args_key].setdefault(val, set()).add(rep)
 
-    def add_defaulted_value_to_lookup(self, v, args, args_key):
-        v = v.split(sep=v[0], maxsplit=2)[1:]
+    def add_defaulted_value_to_lookup(self, val, args, args_key):
+        """Process COMPETITION keyword. (Commented alternative)."""
+        val = val.split(sep=val[0], maxsplit=2)[1:]
         if args_key not in args:
             args[args_key] = dict()
-        args[args_key][v[0]] = v[-1]
+        args[args_key][val[0]] = val[-1]
 
-    def csv_data_name(self, v, args, args_key):
-        elements = v.split(sep=" ")
+    def csv_data_name(self, val, args, args_key):
+        """Process the keywords listed below.
+
+        _SCHEDULE_CSV_DATA_NAME
+        _REPORT_CSV_DATA_NAME
+
+        """
+        elements = val.split(sep=" ")
         csv_name = elements.pop(0)
         args.setdefault(args_key, []).append((csv_name, elements, {}))
 
-    def csv_columns(self, kt, v, args, args_key):
-        elements = EmailExtractor.replace_value_columns.split(v)
+    def csv_columns(self, key, val, args, args_key):
+        """Perform detail for csv_..._columns methods."""
+        elements = EmailExtractor.replace_value_columns.split(val)
         sep = [""]
         sep.extend(
             [
                 " " if s == "+" else ""
-                for s in EmailExtractor.replace_value_columns.findall(v)
+                for s in EmailExtractor.replace_value_columns.findall(val)
             ]
         )
-        args[kt][-1][-1][args_key] = (
+        args[key][-1][-1][args_key] = (
             elements,
             {e: sep[i] for i, e in enumerate(elements)},
             {e: {} for e in elements},
         )
-        self.context_keys[_REPLACE][0] = kt
+        self.context_keys[_REPLACE][0] = key
         self.context_keys[_REPLACE][1] = args_key
-        self.context_keys[_REPLACE][2] = v
+        self.context_keys[_REPLACE][2] = val
 
-    def csv_schedule_columns(self, v, *a):
-        self.csv_columns(_SCHEDULE_CSV_DATA_NAME, v, *a)
+    def csv_schedule_columns(self, val, *a):
+        """Process the keywords listed below.
 
-    def csv_report_columns(self, v, *a):
-        self.csv_columns(_REPORT_CSV_DATA_NAME, v, *a)
+        _SCHED_DATE
+        _SCHED_DAY
+        _SCHED_SECTION
+        _SCHED_HOME_TEAM
+        _SCHED_AWAY_TEAM
+        _SCHED_DATA_COLUMNS
 
-    def csv_value_partial_replace(self, v, args, args_key):
-        pvc, v, r = v.split(sep=v[0], maxsplit=3)[1:]
-        cdn, dt, c = self.context_keys[_REPLACE]
-        if pvc not in EmailExtractor.replace_value_columns.split(c):
-            raise EmailExtractorError(" ".join((pvc, "is not included in", c)))
-        args[cdn][-1][-1][dt][-1][pvc][v] = r
+        """
+        self.csv_columns(_SCHEDULE_CSV_DATA_NAME, val, *a)
 
-    def csv_value_replace(self, v, args, args_key):
-        v, r = v.split(sep=v[0], maxsplit=2)[1:]
-        cdn, dt, c = self.context_keys[_REPLACE]
-        args[cdn][-1][-1][dt][-1][c][v] = r
+    def csv_report_columns(self, val, *a):
+        """Process the keywords listed below.
 
-    def add_event_re(self, v, args, args_key):
+        _REPORT_DATE
+        _REPORT_DAY
+        _REPORT_SECTION
+        _REPORT_HOME_TEAM
+        _REPORT_AWAY_TEAM
+        _REPORT_HOME_TEAM_SCORE
+        _REPORT_AWAY_TEAM_SCORE
+        _REPORT_HOME_PLAYER
+        _REPORT_AWAY_PLAYER
+        _REPORT_RESULT
+        _REPORT_BOARD
+        _REPORT_ROUND
+        _REPORT_HOME_PLAYER_COLOUR
+        _REPORT_EVENT
+        _REPORT_DATA_COLUMNS
+
+        """
+        self.csv_columns(_REPORT_CSV_DATA_NAME, val, *a)
+
+    def csv_value_partial_replace(self, val, args, args_key):
+        """Process _PARTIAL_REPLACE keyword."""
+        pvc, val, rep = val.split(sep=val[0], maxsplit=3)[1:]
+        cdn, dti, i = self.context_keys[_REPLACE]
+        if pvc not in EmailExtractor.replace_value_columns.split(i):
+            raise EmailExtractorError(" ".join((pvc, "is not included in", i)))
+        args[cdn][-1][-1][dti][-1][pvc][val] = rep
+
+    def csv_value_replace(self, val, args, args_key):
+        """Process _REPLACE keyword."""
+        val, rep = val.split(sep=val[0], maxsplit=2)[1:]
+        cdn, dti, i = self.context_keys[_REPLACE]
+        args[cdn][-1][-1][dti][-1][i][val] = rep
+
+    def add_event_re(self, val, args, args_key):
+        """Process RESULTS_PREFIX keyword."""
         if args_key not in args:
             args[args_key] = list()
         args[args_key].append(
             {
-                args_key: self.re_from_value(v),
+                args_key: self.re_from_value(val),
                 SECTION_PREFIX: self.re_from_value(""),
                 SECTION_BODY: self.re_from_value(""),
                 MATCH_FORMATS: [],
@@ -363,46 +406,83 @@ class Parser(Parser):
             },
         )
 
-    def add_re(self, v, args, args_key):
-        args[RESULTS_PREFIX][-1][args_key] = self.re_from_value(v)
+    def add_re(self, val, args, args_key):
+        """Process the keywords listed below.
 
-    def add_format_re(self, fi, v, args, args_key):
-        args[RESULTS_PREFIX][-1][fi].append({args_key: self.re_from_value(v)})
+        SECTION_PREFIX
+        SECTION_BODY
+        SOURCE
+
+        """
+        args[RESULTS_PREFIX][-1][args_key] = self.re_from_value(val)
+
+    def add_format_re(self, fin, val, args, args_key):
+        """Perform detail for ..._format_re methods."""
+        args[RESULTS_PREFIX][-1][fin].append(
+            {args_key: self.re_from_value(val)}
+        )
 
     def add_match_format_re(self, *a):
+        """Process MATCH_BODY keyword."""
         self.add_format_re(MATCH_FORMATS, *a)
 
     def add_played_on_format_re(self, *a):
+        """Process PLAYED_ON_BODY keyword."""
         self.add_format_re(PLAYED_ON_FORMATS, *a)
 
     def add_fixture_format_re(self, *a):
+        """Process SCHEDULE_BODY keyword."""
         self.add_format_re(FIXTURE_FORMATS, *a)
 
-    def add_item_re(self, fi, v, args, args_key):
-        args[RESULTS_PREFIX][-1][fi][-1][args_key] = self.re_from_value(v)
+    def add_item_re(self, fin, val, args, args_key):
+        """Perform detail for ..._item_re methods."""
+        args[RESULTS_PREFIX][-1][fin][-1][args_key] = self.re_from_value(val)
 
     def add_match_item_re(self, *a):
+        """Process the keywords listed below.
+
+        TEAMS_BODY
+        GAMES_BODY
+        FINISHED
+        UNFINISHED
+        DEFAULT
+        MATCH_DEFAULT
+        MATCH_DATE_BODY
+
+        """
         self.add_item_re(MATCH_FORMATS, *a)
 
     def add_played_on_item_re(self, *a):
+        """Process the keywords listed below.
+
+        TEAMS_PLAYED_ON_BODY
+        GAMES_PLAYED_ON_BODY
+        FINISHED_PLAYED_ON
+        UNFINISHED_PLAYED_ON
+        MATCH_DATE_PLAYED_ON_BODY
+
+        """
         self.add_item_re(PLAYED_ON_FORMATS, *a)
 
     def add_fixture_item_re(self, *a):
+        """Process FIXTURE_BODY keyword."""
         self.add_item_re(FIXTURE_FORMATS, *a)
 
-    def assign_event_value(self, v, args, args_key):
-        args[RESULTS_PREFIX][-1][args_key] = v
+    def assign_event_value(self, val, args, args_key):
+        """Process KEEP_WORD_SPLITTERS and DROP_FORWARDED_MARKERS keywords."""
+        args[RESULTS_PREFIX][-1][args_key] = val
 
-    def add_format_replace(self, fi, v, args, args_key):
-        v, r = v.split(sep=v[0], maxsplit=2)[1:]
-        args[RESULTS_PREFIX][-1][fi][v] = r
+    def add_format_replace(self, fin, val, args, args_key):
+        """Set value lookup for <fin> keyword."""
+        val, rep = val.split(sep=val[0], maxsplit=2)[1:]
+        args[RESULTS_PREFIX][-1][fin][val] = rep
 
     def add_section_name(self, *a):
+        """Process SECTION_NAME keyword."""
         self.add_format_replace(SECTION_NAME, *a)
 
 
-class ExtractEmail(ExtractEmail):
-
+class ExtractEmail(emailextractor.ExtractEmail):
     """Extract emails matching selection criteria from email store."""
 
     def __init__(
@@ -445,16 +525,16 @@ class ExtractEmail(ExtractEmail):
         self._selectors = {}
 
 
-class ExtractText(ExtractText):
+class ExtractText(emailextractor.ExtractText):
     """Repreresent the stages in processing an email."""
 
     def get_spreadsheet_text(self, *a):
         """Return (sheetname, text) filtered by schedule and report data names."""
         ems = self._emailstore
-        fs = set([n[0] for n in ems._sched_csv_data_name]).union(
+        fsn = set(n[0] for n in ems._sched_csv_data_name).union(
             [n[0] for n in ems._report_csv_data_name]
         )
-        return [t for t in super().get_spreadsheet_text(*a) if t[0] in fs]
+        return [t for t in super().get_spreadsheet_text(*a) if t[0] in fsn]
 
     def extract_text_from_csv(self, text, sheet=None, filename=None):
         """Extract text using all profiles in configuration file.
@@ -497,51 +577,53 @@ class ExtractText(ExtractText):
             column_identities = set()
             translate = {}
             for columns in [v[-1].items() for v in cdn[-1].values()]:
-                for k, v in columns:
+                for k, value in columns:
                     column_identities.add(k)
-                    translate[k] = v
+                    translate[k] = value
             try:
-                for c in column_identities:
-                    int(c)
+                for col in column_identities:
+                    int(col)
                 column_names = False
             except:
                 column_names = True
             if column_names:
                 reader = csv.DictReader(csvlines)
-                sr = set(reader.fieldnames)
-                if column_identities != column_identities.intersection(sr):
+                srm = set(reader.fieldnames)
+                if column_identities != column_identities.intersection(srm):
                     csv_text.clear()
                     continue
             else:
                 reader = csv.reader(csvlines)
             for row in reader:
                 if column_names:
-                    r = row
+                    rowmap = row
                 else:
-                    r = {str(e): v for e, v in enumerate(row)}
-                    sr = set(r)
-                    if column_identities != sr.intersection(column_identities):
+                    rowmap = {str(e): v for e, v in enumerate(row)}
+                    srm = set(rowmap)
+                    if column_identities != srm.intersection(
+                        column_identities
+                    ):
                         csv_text.clear()
                         break
-                for k, v in r.items():
-                    if k in translate:
-                        r[k] = translate[k].get(v, v)
-                ev = []
+                for key, value in rowmap.items():
+                    if key in translate:
+                        rowmap[key] = translate[key].get(value, value)
+                evtext = []
                 if not tabular:
-                    for e in all_columns:
-                        acf = cdn[-1].get(e)
+                    for ename in all_columns:
+                        acf = cdn[-1].get(ename)
                         if acf is None:
-                            ev.append("")
+                            evtext.append("")
                         else:
                             prefix = acf[1]
                             acev = []
-                            for c in acf[0]:
-                                if prefix[c]:
-                                    acev.append(prefix[c])
-                                acev.append(r[c])
-                            ev.append(" ".join(acev))
+                            for col in acf[0]:
+                                if prefix[col]:
+                                    acev.append(prefix[col])
+                                acev.append(rowmap[col])
+                            evtext.append(" ".join(acev))
                 else:
-                    for e in cdn[1]:
+                    for ename in cdn[1]:
 
                         # This test requires all the relevant columns to be
                         # named in the format's report_csv_data_name line in
@@ -549,19 +631,19 @@ class ExtractText(ExtractText):
                         # Assumption is len(cdn[-1]) == 1 and
                         # set(cdn[0]) == set(cdn[-1]) when this style of report
                         # is not used.
-                        if e in cdn[-1]:
+                        if ename in cdn[-1]:
 
-                            prefix = cdn[-1][e][1]
+                            prefix = cdn[-1][ename][1]
                             acev = []
-                            for c in cdn[-1][e][0]:
-                                if prefix[c]:
-                                    acev.append(prefix[c])
-                                acev.append(r[c])
+                            for col in cdn[-1][ename][0]:
+                                if prefix[col]:
+                                    acev.append(prefix[col])
+                                acev.append(rowmap[col])
                             if acev:
-                                ev.append(" ".join(acev))
+                                evtext.append(" ".join(acev))
                         else:
-                            ev.append("")
-                csv_text.append(delimiter.join(ev))
+                            evtext.append("")
+                csv_text.append(delimiter.join(evtext))
 
                 # Left over from Hampshire website database interface where
                 # both Portsmouth District League and Southampton League could

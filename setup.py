@@ -1,7 +1,7 @@
 # setup.py
-# Copyright 2011 Roger Marsh
+# Copyright 2022 Roger Marsh
 # Licence: See LICENCE (BSD licence)
-"""chessresults setup file.
+"""chessvalidate setup file.
 
 Retained so 'python setup.py ...' can be used by my build scripts until
 conversion to 'python -m pip ...'.

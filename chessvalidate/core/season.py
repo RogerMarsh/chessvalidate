@@ -16,15 +16,8 @@ report results and have a subclass of ReportedSeason extract the data.
 
 import difflib
 import os
-import mailbox
-import email.parser
-import subprocess
-import csv
-import io
 import tkinter.messagebox
 import re
-
-from solentware_misc.core.utilities import AppSysDate
 
 from emailextract.core.emailextractor import (
     COLLECTED,
@@ -32,7 +25,6 @@ from emailextract.core.emailextractor import (
     TEXT_CONTENT_TYPE,
     PDF_CONTENT_TYPE,
     CSV_CONTENT_TYPE,
-    COLLECT_CONF,
 )
 
 from .schedule import Schedule
@@ -48,7 +40,7 @@ from .emailextractor import (
     DEFAULT_IF_DELAY_NOT_VALID,
 )
 from .eventparser import EventParser
-from ..core.constants import EVENT_CONF
+from . import constants
 
 # Content types always put in an event configuration file when created.
 _CSV_CONTENT = "text/comma-separated-values"
@@ -74,11 +66,10 @@ SEPARATOR = "x"
 
 
 class SeasonError(Exception):
-    pass
+    """Exceptions raised in season module."""
 
 
-class Season(object):
-
+class Season:
     """Default management of source and derived data files for an event.
 
     Details of an event are collected in a directory <event>nn which is created
@@ -149,7 +140,7 @@ class Season(object):
         database and subsequent updates.
 
         """
-        if self._collation == None:
+        if self._collation is None:
             self.get_schedule_from_file()
             results = Report()
             results.build_results(self._event_data.get_results_text())
@@ -164,7 +155,7 @@ class Season(object):
                 title="Open event results data",
             )
             return False
-        config = os.path.join(self.folder, EVENT_CONF)
+        config = os.path.join(self.folder, constants.EVENT_CONF)
         if not os.path.exists(config):
             create_event_configuration_file(config)
 
@@ -216,14 +207,14 @@ class Season(object):
                     os.mkdir(os.path.join(self.folder, EXTRACTED))
                 except:
                     pass
-        ef = len(
+        fcount = len(
             [
                 f
                 for f in folders
                 if os.path.exists(os.path.join(self.folder, emc.criteria[f]))
             ]
         )
-        if ef != 0 and ef != len(folders):
+        if fcount != 0 and fcount != len(folders):
             tkinter.messagebox.showinfo(
                 parent=parent,
                 title="Open event results data",
@@ -249,32 +240,32 @@ class Season(object):
                 ),
             )
             empty_text = ["\n"]
-            f = open(
+            ofile = open(
                 os.path.join(self.folder, emc.criteria[TEXTENTRY]),
                 mode="x",
                 encoding="utf8",
             )
             try:
-                f.writelines(difflib.ndiff(empty_text, empty_text))
+                ofile.writelines(difflib.ndiff(empty_text, empty_text))
             finally:
-                f.close()
-        ef = len(
+                ofile.close()
+        fcount = len(
             [
                 f
                 for f in folders
                 if os.path.isdir(os.path.join(self.folder, emc.criteria[f]))
             ]
         )
-        if ef != 0 and ef != len(folders):
+        if fcount != 0 and fcount != len(folders):
             tkinter.messagebox.showinfo(
                 parent=parent,
                 title="Open event results data",
                 message="Either or both mailbox and extracts is not a folder.",
             )
             return False
-        if ef == 0:
-            for f in folders:
-                os.mkdir(os.path.join(self.folder, emc.criteria[f]))
+        if fcount == 0:
+            for fname in folders:
+                os.mkdir(os.path.join(self.folder, emc.criteria[fname]))
             tkinter.messagebox.showinfo(
                 parent=parent,
                 title="Open event results data",
@@ -284,11 +275,10 @@ class Season(object):
         # Extract the event text
         # This will probably and eventually be put in season.Season which still
         # works the old way to support the takenonseason module.
-        fp = os.path.join(self.folder, emc.criteria[TEXTENTRY])
+        fpath = os.path.join(self.folder, emc.criteria[TEXTENTRY])
         try:
-            f = open(fp, mode="r", encoding="utf8")
+            ofile = open(fpath, mode="r", encoding="utf8")
         except FileNotFoundError as exc:
-            excdir = os.path.basename(os.path.dirname(exc.filename))
             tkinter.messagebox.showinfo(
                 parent=parent,
                 title="Open event results data",
@@ -301,18 +291,18 @@ class Season(object):
                     )
                 ),
             )
-            return
+            return None
         try:
-            entry_text = _DifferenceText(fp, f.readlines())
+            entry_text = _DifferenceText(fpath, ofile.readlines())
         finally:
-            f.close()
+            ofile.close()
 
         email_text = []
         email_headers = {}
-        for em in emc.selected_emails:
-            email_text.append((em.filename, "\n".join(em.extracted_text)))
-            email_headers[os.path.splitext(em.filename)[0]] = _Headers(
-                dates=em.dates,
+        for sem in emc.selected_emails:
+            email_text.append((sem.filename, "\n".join(sem.extracted_text)))
+            email_headers[os.path.splitext(sem.filename)[0]] = _Headers(
+                dates=sem.dates,
                 authorization_delay=emc.criteria.get(AUTHORIZATION_DELAY),
             )
         diff_text = []
@@ -321,12 +311,11 @@ class Season(object):
 
         # Process works without sort at this point, but the file names are
         # in date order and that is a good order for display.
-        for p in sorted(os.listdir(folder)):
-            fp = os.path.join(folder, p)
+        for fname in sorted(os.listdir(folder)):
+            fpath = os.path.join(folder, fname)
             try:
-                f = open(fp, mode="r", encoding="utf8")
+                ofile = open(fpath, mode="r", encoding="utf8")
             except FileNotFoundError as exc:
-                excdir = os.path.basename(os.path.dirname(exc.filename))
                 tkinter.messagebox.showinfo(
                     parent=parent,
                     title="Open event results data",
@@ -339,29 +328,31 @@ class Season(object):
                         )
                     ),
                 )
-                return
+                return None
             try:
                 diff_text.append(
-                    _DifferenceText(fp, f.readlines(), headers=email_headers)
+                    _DifferenceText(
+                        fpath, ofile.readlines(), headers=email_headers
+                    )
                 )
-                extracted_text.append((p, diff_text[-1].original_text))
+                extracted_text.append((fname, diff_text[-1].original_text))
             finally:
-                f.close()
+                ofile.close()
 
         # Extract text from all emails to make initial difference text if none
         # already exist.
         if not extracted_text:
-            for f, t in email_text:
-                p = os.path.splitext(f)[0]
-                t = t.splitlines(True)
+            for efile, etext in email_text:
+                epath = os.path.splitext(efile)[0]
+                etext = etext.splitlines(True)
                 diff_text.append(
                     _DifferenceText(
-                        os.path.join(folder, p),
-                        list(difflib.ndiff(t, t)),
+                        os.path.join(folder, epath),
+                        list(difflib.ndiff(etext, etext)),
                         headers=email_headers,
                     )
                 )
-                extracted_text.append((p, diff_text[-1].original_text))
+                extracted_text.append((epath, diff_text[-1].original_text))
 
         # The original version from the difference files must be consistent
         # with the version extracted from the available email files.
@@ -452,12 +443,12 @@ class Season(object):
                 emt_file = emt[0]
                 format_fault = True
                 format_fault_count = 0
-                for x, m in zip(ext_lines, emt_lines):
-                    if "".join(x.split()) != "".join(m.split()):
+                for x_line, mail_line in zip(ext_lines, emt_lines):
+                    if "".join(x_line.split()) != "".join(mail_line.split()):
                         format_fault = False
-                    elif x != m:
+                    elif x_line != mail_line:
                         format_fault_count += 1
-                    fx, fm = x, m
+                    fx_line, fm_line = x_line, mail_line
                 preamble = "".join(
                     (
                         "The text extracted previously to file:\n\n",
@@ -478,10 +469,10 @@ class Season(object):
                             "\n\n\nThe files are identical if whitespace is ",
                             "removed from each line.  The last different ",
                             "line previously extracted is:\n\n",
-                            repr(fx),
+                            repr(fx_line),
                             "\n\nand the same line just taken from the ",
                             "email is:\n\n",
-                            repr(fm),
+                            repr(fm_line),
                             "\n\n",
                             str(format_fault_count),
                             " lines are affected.\n",
@@ -507,9 +498,9 @@ class Season(object):
         # first of all and used to detect substantive edits.
         entry_text.clear_original_text()
         entry_text.edited_text_on_file
-        for dt in diff_text:
-            dt.clear_original_text()
-            dt.edited_text_on_file
+        for dte in diff_text:
+            dte.clear_original_text()
+            dte.edited_text_on_file
 
         # Make the list of difference files and their source data available via
         # the difference_text property'
@@ -522,14 +513,14 @@ class Season(object):
 
     def extract_event(self):
         """Extend, specify Schedule as class used to process newfixtures."""
-        t = [dt for dt in self._difference_text]
-        t.insert(0, self._entry_text)
+        difflistcopy = [dt for dt in self._difference_text]
+        difflistcopy.insert(0, self._entry_text)
         # The old code allowed for different classes for varying formats.
         # The idea here is that 'one class fits all' and any differences can
         # be dealt with in the configuration file. There are only a few ways of
         # structuring fixture lists and match results, but syntax will vary.
         # It seems a lot of messing about can be avoided by just doing:
-        self._event_parser = EventParser(t)
+        self._event_parser = EventParser(difflistcopy)
         self._event_data = self._event_parser.build_event(
             self._event_extraction_rules,
             self._event_competitions,
@@ -538,12 +529,12 @@ class Season(object):
 
     @property
     def difference_text(self):
-        """ """
+        """Return list of _DifferenceText instances for text from emails."""
         return self._difference_text
 
     @property
     def entry_text(self):
-        """ """
+        """Return the _DifferenceText instance for typed-in text."""
         return self._entry_text
 
     def get_schedule_from_file(self):
@@ -552,7 +543,7 @@ class Season(object):
         getfixtures - the Schedule class or a subclass
 
         """
-        if self._fixtures == None:
+        if self._fixtures is None:
             self._fixtures = Schedule()
             self._fixtures.build_schedule(self._event_data.get_schedule_text())
 
@@ -568,7 +559,7 @@ class Season(object):
 
     @property
     def collation(self):
-        """ """
+        """Return the Collation instance."""
         return self._collation
 
     # Copied from Season
@@ -593,11 +584,11 @@ class Season(object):
         return self._collation.gamesxref
 
 
-class _DifferenceText(object):
+class _DifferenceText:
     """Repreresent stages of processing text containing event information."""
 
     def __init__(self, filepath, diff_lines, headers=None, junk_rules=None):
-        """ """
+        """Initialise difference texts for event data."""
         self._folder = os.path.dirname(filepath)
         self._filename = os.path.basename(filepath)
         self._diff_lines = diff_lines
@@ -623,38 +614,38 @@ class _DifferenceText(object):
 
     @property
     def filename_header(self):
-        """ """
+        """Return header text for type-in text area."""
         return "\n".join((self._filename, "Results added by typing."))
 
     @property
     def original_text(self):
-        """ """
+        """Return original version of text built from difference files."""
         if self._original_text is None:
             self._original_text = "".join(difflib.restore(self._diff_lines, 1))
         return self._original_text
 
     @property
     def data_tag(self):
-        """ """
+        """Return data tag set for most recent suffix."""
         return self._data_tag
 
     @property
     def header_tag(self):
-        """ """
+        """Return header tag set for most recent suffix."""
         return self._header_tag
 
     @property
     def trailer_tag(self):
-        """ """
+        """Return trailer tag set for most recent suffix."""
         return self._trailer_tag
 
     @property
     def headers(self):
-        """ """
+        """Return headers for this _DifferenceText instance."""
         return self._headers
 
     def set_tags(self, suffix):
-        """ """
+        """Set header, data, and trailer, tags for suffix."""
         if (
             self._data_tag is None
             and self._header_tag is None
@@ -666,14 +657,14 @@ class _DifferenceText(object):
 
     @property
     def edited_text(self):
-        """ """
+        """Return edited version of text in difference files."""
         if self._edited_text is None:
             self._edited_text = "".join(difflib.restore(self._diff_lines, 2))
         return self._edited_text
 
     @edited_text.setter
     def edited_text(self, value):
-        """ """
+        """Set edited version of text to value."""
         if isinstance(value, str):
             self._edited_text = value
         else:
@@ -690,7 +681,7 @@ class _DifferenceText(object):
 
     @property
     def edited_text_on_file(self):
-        """ """
+        """Return edited version of text on file in difference files."""
         if self._edited_text_on_file is None:
             self._edited_text_on_file = self._edited_text
         return self._edited_text_on_file
@@ -722,30 +713,27 @@ class _DifferenceText(object):
         return "Unknown sender and date"
 
     def clear_original_text(self):
-        """ """
+        """Clear out origial text."""
         self._original_text = None
 
     def save_edited_text_as_new(self):
-        """ """
+        """Save edited text in file self._filename with "new" suffix."""
         newdiff = list(
             difflib.ndiff(
                 self.original_text.splitlines(True),
                 self._edited_text.splitlines(True),
             )
         )
-        f = open(
+        with open(
             os.path.join(self._folder, "".join((self._filename, "new"))),
             mode="w",
             encoding="utf8",
-        )
-        try:
-            f.writelines(newdiff)
-        finally:
-            f.close()
+        ) as newfile:
+            newfile.writelines(newdiff)
         self._edited_text_on_file = self._edited_text
 
     def rename_new_edited_text(self):
-        """ """
+        """Rename self._filename removing "new"."""
         try:
             os.replace(
                 os.path.join(self._folder, "".join((self._filename, "new"))),
@@ -766,29 +754,30 @@ class _DifferenceText(object):
 
 
 def create_event_configuration_file(file_path):
-    """ """
+    """Create event configuration file with default settings."""
     if upgrade_event_configuration_files(file_path):
         return
-    cf = open(file_path, "w", encoding="utf8")
-    try:
-        cf.writelines((" ".join((COLLECTED, COLLECTED)), os.linesep))
-        cf.writelines((" ".join((EXTRACTED, EXTRACTED)), os.linesep))
-        cf.writelines((" ".join((TEXTENTRY, TEXTENTRY)), os.linesep))
-        cf.writelines(
+    with open(file_path, "w", encoding="utf8") as config_file:
+        config_file.writelines((" ".join((COLLECTED, COLLECTED)), os.linesep))
+        config_file.writelines((" ".join((EXTRACTED, EXTRACTED)), os.linesep))
+        config_file.writelines((" ".join((TEXTENTRY, TEXTENTRY)), os.linesep))
+        config_file.writelines(
             (" ".join((TEXT_CONTENT_TYPE, _TEXT_CONTENT)), os.linesep)
         )
-        cf.writelines((" ".join((PDF_CONTENT_TYPE, _PDF_CONTENT)), os.linesep))
-        cf.writelines((" ".join((CSV_CONTENT_TYPE, _CSV_CONTENT)), os.linesep))
-    finally:
-        cf.close()
+        config_file.writelines(
+            (" ".join((PDF_CONTENT_TYPE, _PDF_CONTENT)), os.linesep)
+        )
+        config_file.writelines(
+            (" ".join((CSV_CONTENT_TYPE, _CSV_CONTENT)), os.linesep)
+        )
 
 
 def upgrade_event_configuration_files(file_path):
-    """Upgrade conf and *.ems files to event.conf and collected.conf"""
+    """Upgrade conf and *.ems files to event.conf and collected.conf."""
     directory = os.path.dirname(file_path)
     names = os.listdir(directory)
     if COLLECTED + ".conf" not in names:
-        conflictname = os.path.splitext(EVENT_CONF)[0] + ".ems"
+        conflictname = os.path.splitext(constants.EVENT_CONF)[0] + ".ems"
         if conflictname in names:
             tkinter.messagebox.showinfo(
                 title="Upgrade Event Configuration Files",
@@ -801,38 +790,32 @@ def upgrade_event_configuration_files(file_path):
                     )
                 ),
             )
-        ems = [fn for fn in names if os.path.splitext(fn)[-1] == ".ems"]
-        for fn in ems:
-            n, e = os.path.splitext(fn)
-            if e == ".ems" and fn != conflictname:
-                ocf = open(os.path.join(directory, fn), encoding="utf8")
-                try:
-                    if len(ems) > 1:
-                        cf = open(
-                            os.path.join(directory, n + ".conf"),
-                            "w",
-                            encoding="utf8",
-                        )
-                    else:
-                        cf = open(
-                            os.path.join(directory, COLLECTED + ".conf"),
-                            "w",
-                            encoding="utf8",
-                        )
-                    try:
+        ems = [name for name in names if os.path.splitext(name)[-1] == ".ems"]
+        for name in ems:
+            bname, ename = os.path.splitext(name)
+            if ename == ".ems" and name != conflictname:
+                with open(
+                    os.path.join(directory, name), encoding="utf8"
+                ) as ocf:
+                    newname = bname if len(ems) > 1 else COLLECTED
+                    with open(
+                        os.path.join(directory, newname + ".conf"),
+                        "w",
+                        encoding="utf8",
+                    ) as ncf:
                         for line in ocf:
-                            m = re.match(
+                            match = re.match(
                                 r"([\s#]*)(outputdirectory)(\s+)(.*)", line
                             )
-                            if m:
-                                data = os.path.basename(m.group(4))
-                                cf.writelines(
+                            if match:
+                                data = os.path.basename(match.group(4))
+                                ncf.writelines(
                                     (
                                         "".join(
                                             (
-                                                m.group(1),
+                                                match.group(1),
                                                 COLLECTED,
-                                                m.group(3),
+                                                match.group(3),
                                                 data,
                                             )
                                         ),
@@ -840,65 +823,56 @@ def upgrade_event_configuration_files(file_path):
                                     )
                                 )
                             else:
-                                cf.write(line)
-                    finally:
-                        cf.close()
-                finally:
-                    ocf.close()
+                                ncf.write(line)
         if not ems:
-            cf = open(
+            with open(
                 os.path.join(directory, COLLECTED + ".conf"),
                 "w",
                 encoding="utf8",
-            )
-            try:
-                cf.writelines(
+            ) as config_file:
+                config_file.writelines(
                     ("# collected.conf email collection rules.", os.linesep)
                 )
-                cf.writelines((" ".join((COLLECTED, COLLECTED)), os.linesep))
-            finally:
-                cf.close()
-    if EVENT_CONF in names:
+                config_file.writelines(
+                    (" ".join((COLLECTED, COLLECTED)), os.linesep)
+                )
+    if constants.EVENT_CONF in names:
         return True
     if "conf" not in names:
         return False
-    kr = dict(mailbox=COLLECTED, extracts=EXTRACTED)
-    ocf = open(os.path.join(directory, "conf"), encoding="utf8")
-    try:
-        cf = open(file_path, "w", encoding="utf8")
-        try:
-            for line in ocf:
-                m = re.match(r"([\s#]*)([^=\s]+)(\s*)(=)(.*)", line)
-                if m:
-                    k = m.group(2)
-                    cf.writelines(
+    keymap = dict(mailbox=COLLECTED, extracts=EXTRACTED)
+    with open(
+        os.path.join(directory, "conf"), encoding="utf8"
+    ) as old_config_file:
+        with open(file_path, "w", encoding="utf8") as config_file:
+            for line in old_config_file:
+                match = re.match(r"([\s#]*)([^=\s]+)(\s*)(=)(.*)", line)
+                if match:
+                    k = match.group(2)
+                    config_file.writelines(
                         (
                             "".join(
                                 (
-                                    m.group(1),
-                                    kr.get(k, k),
-                                    m.group(3),
+                                    match.group(1),
+                                    keymap.get(k, k),
+                                    match.group(3),
                                     " ",
-                                    m.group(5),
+                                    match.group(5),
                                 )
                             ),
                             os.linesep,
                         )
                     )
                 else:
-                    cf.write(line)
+                    config_file.write(line)
             return True
-        finally:
-            cf.close()
-    finally:
-        ocf.close()
 
 
-class _Headers(object):
+class _Headers:
     """Data relevant to authorization of matches from email headers."""
 
     def __init__(self, dates=None, authorization_delay=None):
-        """ """
+        """Initialise dates for email authorisation."""
         self.dates = dates
         if authorization_delay is None:
             self.authorization_delay = None

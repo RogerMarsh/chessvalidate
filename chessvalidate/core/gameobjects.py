@@ -12,42 +12,27 @@ similarity of the class definitions.
 
 """
 import re
+from collections import namedtuple
 
 from solentware_misc.core.null import Null
 
 from .gameresults import (
     displayresult,
+    home_player_pieces,
     displayresulttag,
     resultmap,
     match_score_difference,
     match_score_total,
-    hwin,
-    awin,
-    draw,
-    tobereported,
-    notaresult,
-    tbrstring,
-    HOME_PLAYER_WHITE,
-    RESULT,
-    BOARD,
-    GRADING_ONLY,
-    SOURCE,
-    SECTION,
-    COMPETITION,
-    HOME_TEAM_NAME,
-    AWAY_TEAM_NAME,
-    HOME_PLAYER,
-    AWAY_PLAYER,
-    ROUND,
 )
+from . import constants
 
 # May need displayresulttag constant from slcollation too.
 # Probably add this to gameresults.resultmap.
 _GAME_RESULT = {
-    ("1", "0"): hwin,
-    ("0", "1"): awin,
-    ("0.5", "0.5"): draw,
-    (None, None): tobereported,
+    ("1", "0"): constants.HWIN,
+    ("0", "1"): constants.AWIN,
+    ("0.5", "0.5"): constants.DRAW,
+    (None, None): constants.TOBEREPORTED,
 }
 
 _GRADE_ONLY_TAG = {
@@ -62,10 +47,23 @@ _GRADE_ONLY_TAG = {
 # Text in brackets containing a digit are treated as a code: '(UG est 170)' for
 # example. The '{}', '[]', and '<>', pairs are not treated as codes at present
 # because they do not survive till code_in_name is used.
-code_in_name = re.compile("\([^0-9]*[0-9].*?\)|\s*[^\s]*[0-9]{3}[^\s]*\s*")
+code_in_name = re.compile(r"\([^0-9]*[0-9].*?\)|\s*[^\s]*[0-9]{3}[^\s]*\s*")
 
 
-class MatchFixture(object):
+class GameObjectsError(Exception):
+    """Exception class for gameobjects module."""
+
+
+def split_codes_from_name(name_and_codes):
+    """Return tuple(name, set(codes)) from name_and_codes."""
+    codes = set(s.strip() for s in code_in_name.findall(name_and_codes))
+    name = " ".join(
+        [s.strip() for s in code_in_name.split(name_and_codes)]
+    ).strip()
+    return (name, codes)
+
+
+class MatchFixture:
     """Detail of a fixture extracted from a fixture list file."""
 
     attributes = {
@@ -83,16 +81,16 @@ class MatchFixture(object):
     def __init__(self, tagger=None, **kargs):
         """Override, set default values for <class>.attributes not in kargs."""
         self.__dict__["tagger"] = tagger
-        for a in kargs:
-            if a not in self.__class__.attributes:
-                raise AttributeError(a)
+        for attribute in kargs:
+            if attribute not in self.__class__.attributes:
+                raise AttributeError(attribute)
         self.__dict__.update(self.attributes)
         self.__dict__.update(kargs)
 
     def __eq__(self, other):
         """Return True if self[a]==other[a] for a in MatchFixture.attributes."""
-        for a in MatchFixture.attributes:
-            if self.__dict__[a] != other.__dict__[a]:
+        for attribute in MatchFixture.attributes:
+            if self.__dict__[attribute] != other.__dict__[attribute]:
                 return False
         return True
 
@@ -108,7 +106,7 @@ class MatchFixture(object):
         return id(self)
 
 
-class Game(object):
+class Game:
     """Detail of a game result extracted from event report."""
 
     attributes = {
@@ -127,23 +125,23 @@ class Game(object):
         # setting gradegame argument.  Round by round swiss results, not match
         # games, may say something like 'J Smith 1-0 default' too.
         self.__dict__["tagger"] = tagger
-        for a in kargs:
-            if a not in self.__class__.attributes:
-                raise AttributeError(a)
+        for attribute in kargs:
+            if attribute not in self.__class__.attributes:
+                raise AttributeError(attribute)
         self.__dict__.update(self.attributes)
         self.__dict__.update(kargs)
 
     def __eq__(self, other):
         """Return True if self[a] == other[a] for a in Game.attributes."""
-        for a in self.__class__.attributes:
-            if self.__dict__[a] != other.__dict__[a]:
+        for attribute in self.__class__.attributes:
+            if self.__dict__[attribute] != other.__dict__[attribute]:
                 return False
         return True
 
     def __ne__(self, other):
         """Return True if self[a] != other[a] for a in Game.attributes."""
-        for a in self.__class__.attributes:
-            if self.__dict__[a] != other.__dict__[a]:
+        for attribute in self.__class__.attributes:
+            if self.__dict__[attribute] != other.__dict__[attribute]:
                 return True
         return False
 
@@ -161,11 +159,11 @@ class Game(object):
     @staticmethod
     def game_result(result):
         """Return value representing game result such as 'h' for '1-0'."""
-        return resultmap.get(result, notaresult)
+        return resultmap.get(result, constants.NOTARESULT)
 
     @staticmethod
     def game_result_exists(result):
-        """Return True if game result is allowed"""
+        """Return True if game result is allowed."""
         return result in resultmap
 
     def get_print_result(self):
@@ -190,20 +188,24 @@ class Game(object):
         """
         state = False
         if self.homeplayer.is_inconsistent(other.homeplayer, problems):
-            problems.add(HOME_PLAYER)
+            problems.add(constants.HOME_PLAYER)
             state = True
         if self.awayplayer.is_inconsistent(other.awayplayer, problems):
-            problems.add(AWAY_PLAYER)
+            problems.add(constants.AWAY_PLAYER)
             state = True
         if self.homeplayerwhite != other.homeplayerwhite:
             if other.homeplayer:
-                problems.add(HOME_PLAYER_WHITE)
+                problems.add(constants.HOME_PLAYER_WHITE)
                 state = True
         if self.result != other.result:
             if other.result:
-                problems.add(RESULT)
+                problems.add(constants.RESULT_DUP_REP)
                 state = True
         return state
+
+    def get_game_board_and_round(self):
+        """Return tuple of ""s for game details in tabular format."""
+        return ("",) * 2
 
 
 class MatchGame(Game):
@@ -230,13 +232,13 @@ class MatchGame(Game):
         state = False
         if self.board != other.board:
             if other.board:
-                problems.add(BOARD)
+                problems.add(constants.BOARD_DUP_REP)
                 state = True
         if self.gradingonly != other.gradingonly:
-            problems.add(GRADING_ONLY)
+            problems.add(constants.GRADING_ONLY)
             state = True
-        s = super(MatchGame, self).is_inconsistent(other, problems)
-        return s or state
+        i = super().is_inconsistent(other, problems)
+        return i or state
 
     def is_game_counted_in_match_score(self):
         """Return True if game is not 'for grading only'."""
@@ -257,6 +259,10 @@ class MatchGame(Game):
             ),
             _GRADE_ONLY_TAG.get(self.gradingonly, ""),
         )
+
+    def get_game_board_and_round(self):
+        """Return tuple(self.board, ""0 for game details in tabular format."""
+        return (self.board, "")
 
 
 class UnfinishedGame(MatchGame):
@@ -287,19 +293,19 @@ class UnfinishedGame(MatchGame):
         """Extend to compare PDL attributes. Return True if inconsistent."""
         state = False
         if self.source != other.source:
-            problems.add(SOURCE)
+            problems.add(constants.SOURCE_DUP_REP)
             state = True
         if self.section != other.section:
-            problems.add(SECTION)
+            problems.add(constants.SECTION)
             state = True
         if self.competition != other.competition:
-            problems.add(COMPETITION)
+            problems.add(constants.COMPETITION_DUP_REP)
             state = True
         if self.hometeam != other.hometeam:
-            problems.add(HOME_TEAM_NAME)
+            problems.add(constants.HOME_TEAM_NAME)
             state = True
         if self.awayteam != other.awayteam:
-            problems.add(AWAY_TEAM_NAME)
+            problems.add(constants.AWAY_TEAM_NAME)
             state = True
 
         # The MatchGame notion for consistency of board may not be reliable for
@@ -313,10 +319,10 @@ class UnfinishedGame(MatchGame):
         # Better would be a separate class for defaulted games, as it seems to
         # be the use of UnfinishedGame for those which first caused the problem.
         if self.homeplayer.is_inconsistent(other.homeplayer, problems):
-            problems.add(HOME_PLAYER)
+            problems.add(constants.HOME_PLAYER)
             state = True
         if self.awayplayer.is_inconsistent(other.awayplayer, problems):
-            problems.add(AWAY_PLAYER)
+            problems.add(constants.AWAY_PLAYER)
             state = True
 
         # Surely wrong to do this now, or in pre problems argument code.
@@ -325,12 +331,12 @@ class UnfinishedGame(MatchGame):
         #    self.gradingonly == other.gradingonly):
         #    return state
 
-        for g in (self, other):
-            for p in (g.homeplayer, g.awayplayer):
-                if not isinstance(p, Null):
+        for game in (self, other):
+            for player in (game.homeplayer, game.awayplayer):
+                if not isinstance(player, Null):
                     if self.result != other.result:
                         if other.result:
-                            problems.add(RESULT)
+                            problems.add(constants.RESULT_DUP_REP)
                             state = True
         return state
 
@@ -352,10 +358,14 @@ class SwissGame(Game):
         state = False
         if self.round != other.round:
             if other.round:
-                problems.add(ROUND)
+                problems.add(constants.ROUND_DUP_REP)
                 state = True
-        s = super(SwissGame, self).is_inconsistent(other, problems)
-        return s or state
+        i = super().is_inconsistent(other, problems)
+        return i or state
+
+    def get_game_board_and_round(self):
+        """Return tuple("", self.round) for game details in tabular format."""
+        return ("", self.round)
 
 
 class SwissMatchGame(Game):
@@ -376,17 +386,21 @@ class SwissMatchGame(Game):
         state = False
         if self.round != other.round:
             if other.round:
-                problems.add(ROUND)
+                problems.add(constants.ROUND_DUP_REP)
                 state = True
         if self.board != other.board:
             if other.board:
-                problems.add(BOARD)
+                problems.add(constants.BOARD_DUP_REP)
                 state = True
-        s = super(SwissMatchGame, self).is_inconsistent(other, problems)
-        return s or state
+        i = super().is_inconsistent(other, problems)
+        return i or state
+
+    def get_game_board_and_round(self):
+        """Return tuple(self.board, self.round) for tabular format."""
+        return (self.board, self.round)
 
 
-class Section(object):
+class Section:
     """Detail of a result extracted from a file of event reports."""
 
     attributes = {
@@ -403,23 +417,23 @@ class Section(object):
     def __init__(self, tagger=None, **kargs):
         """Override, set default values for <class>.attributes not in kargs."""
         self.__dict__["tagger"] = tagger
-        for a in kargs:
-            if a not in self.__class__.attributes:
-                raise AttributeError(a)
+        for attribute in kargs:
+            if attribute not in self.__class__.attributes:
+                raise AttributeError(attribute)
         self.__dict__.update(self.attributes)
         self.__dict__.update(kargs)
 
     def __eq__(self, other):
         """Return True if self[a] == other[a] for a in Section.attributes."""
-        for a in self.__class__.attributes:
-            if self.__dict__[a] != other.__dict__[a]:
+        for attribute in self.__class__.attributes:
+            if self.__dict__[attribute] != other.__dict__[attribute]:
                 return False
         return True
 
     def __ne__(self, other):
         """Return True if self[a] != other[a] for a in Section.attributes."""
-        for a in self.__class__.attributes:
-            if self.__dict__[a] != other.__dict__[a]:
+        for attribute in self.__class__.attributes:
+            if self.__dict__[attribute] != other.__dict__[attribute]:
                 return True
         return False
 
@@ -449,6 +463,10 @@ class Section(object):
     def __lt__(self, other):
         """Return True if id(self) < id(other)."""
         return id(self) < id(other)
+
+    def get_team_details(self):
+        """Return tuple of ""s for team details in tabular format."""
+        return ("",) * 6
 
 
 class MatchReport(Section):
@@ -484,16 +502,16 @@ class MatchReport(Section):
             if game.result not in displayresult:
                 ufg.append(game)
             if game.is_game_counted_in_match_score():
-                d = match_score_difference.get(game.result)
-                if d is None:
+                i = match_score_difference.get(game.result)
+                if i is None:
                     force_inconsistent = True
                 else:
-                    difference += d
-                p = match_score_total.get(game.result)
-                if p is None:
+                    difference += i
+                i = match_score_total.get(game.result)
+                if i is None:
                     force_inconsistent = True
                 else:
-                    points += p
+                    points += i
         try:
             homepoints = float(self.homescore)
         except:
@@ -502,7 +520,7 @@ class MatchReport(Section):
             awaypoints = float(self.awayscore)
         except:
             awaypoints = 0
-        if self.default and not len(ufg):
+        if self.default and len(ufg) == 0:
             consistent = True
         elif points != homepoints + awaypoints:
             consistent = False
@@ -512,8 +530,19 @@ class MatchReport(Section):
             consistent = True
         return ufg, consistent or force_inconsistent
 
+    def get_team_details(self):
+        """Return tuple of team details for tabular format."""
+        return (
+            self.round,
+            self.hometeam,
+            self.homescore,
+            self.awayteam,
+            self.awayscore,
+            self.default,
+        )
 
-class Player(object):
+
+class Player:
     """A player in an event."""
 
     # There is a design flaw here because the attributes 'tagger', '_identity',
@@ -535,9 +564,9 @@ class Player(object):
         """Override, set default values for <class>.attributes not in kargs."""
         self.__dict__["tagger"] = tagger
         self.__dict__["reported_codes"] = reported_codes
-        for a in kargs:
-            if a not in self.__class__.attributes:
-                raise AttributeError(a)
+        for attribute in kargs:
+            if attribute not in self.__class__.attributes:
+                raise AttributeError(attribute)
         self.__dict__.update(self.attributes)
         self.__dict__.update(kargs)
         if self.club:
@@ -548,7 +577,7 @@ class Player(object):
                 self.enddate,
                 self.club,
             )
-            affiliation = self.club
+            affiliation = self.club  # Should this be "self.affiliation ="?
         elif self.section:
             self.__dict__["_identity"] = (
                 self.name,
@@ -568,12 +597,12 @@ class Player(object):
 
     def __eq__(self, other):
         """Return True if self[a] == other[a] for a in Player.attributes."""
-        for a in Player.attributes:
+        for attribute in Player.attributes:
 
             # Hack because Null instance represents a defaulting player, and
             # may get compared when sorting.
             try:
-                if self.__dict__[a] != other.__dict__[a]:
+                if self.__dict__[attribute] != other.__dict__[attribute]:
                     return False
             except KeyError:
                 if isinstance(other, Null):
@@ -583,12 +612,12 @@ class Player(object):
 
     def __ne__(self, other):
         """Return True if self[a] != other[a] for a in Player.attributes."""
-        for a in Player.attributes:
+        for attribute in Player.attributes:
 
             # Hack because Null instance represents a defaulting player, and
             # may get compared when sorting.
             try:
-                if self.__dict__[a] != other.__getattr__(a):
+                if self.__dict__[attribute] != other.__getattr__(attribute):
                     return True
             except KeyError:
                 if isinstance(other, Null):
@@ -602,8 +631,7 @@ class Player(object):
         """Allow return self[name] if name is in <class>.attributes."""
         if name in self.__class__.attributes:
             return self.__dict__[name]
-        else:
-            raise AttributeError(name)
+        raise AttributeError(name)
 
     def __setattr__(self, name, value):
         """Allow self[name] = value if name is in <class>.attributes."""
@@ -624,13 +652,11 @@ class Player(object):
         """
         if self.club:
             return (self.name, self.club)
-        elif self.section:
+        if self.section:
             if self.pin:
                 return (self.name, self.pin)
-            else:
-                return (self.name, False)
-        else:
-            return (self.name, None)
+            return (self.name, False)
+        return (self.name, None)
 
     def get_full_identity(self):
         """Return a tab separated string containing player identity."""
@@ -644,7 +670,7 @@ class Player(object):
                     self.club,
                 )
             )
-        elif self.section:
+        if self.section:
             if self.pin:
                 return "\t".join(
                     (
@@ -656,20 +682,16 @@ class Player(object):
                         str(self.pin),
                     )
                 )
-            else:
-                return "\t".join(
-                    (
-                        self.name,
-                        self.event,
-                        self.startdate,
-                        self.enddate,
-                        self.section,
-                    )
-                )
-        else:
             return "\t".join(
-                (self.name, self.event, self.startdate, self.enddate)
+                (
+                    self.name,
+                    self.event,
+                    self.startdate,
+                    self.enddate,
+                    self.section,
+                )
             )
+        return "\t".join((self.name, self.event, self.startdate, self.enddate))
 
     def get_identity(self):
         """Return tuple of player identity with fillers for absent elements.
@@ -686,7 +708,7 @@ class Player(object):
                 self.club,
                 None,
             )
-        elif self.section:
+        if self.section:
             if self.pin:
                 return (
                     self.name,
@@ -696,24 +718,22 @@ class Player(object):
                     self.section,
                     self.pin,
                 )
-            else:
-                return (
-                    self.name,
-                    self.event,
-                    self.startdate,
-                    self.enddate,
-                    self.section,
-                    False,
-                )
-        else:
             return (
                 self.name,
                 self.event,
                 self.startdate,
                 self.enddate,
-                None,
-                None,
+                self.section,
+                False,
             )
+        return (
+            self.name,
+            self.event,
+            self.startdate,
+            self.enddate,
+            None,
+            None,
+        )
 
     def get_player_event(self):
         """Return a tuple containing event part of player identity."""
@@ -727,10 +747,9 @@ class Player(object):
         """Return section part of player identity or None."""
         if self.club:
             return self.club
-        elif self.section:
+        if self.section:
             return self.section
-        else:
-            return None
+        return None
 
     def get_short_identity(self):
         """Return tab separated string of player identity excluding event.
@@ -740,15 +759,13 @@ class Player(object):
         """
         if self.club:
             return "\t\t".join((self.name, self.club))
-        elif self.section:
+        if self.section:
             if self.pin:
                 return "".join(
                     (self.name, "\t\t", self.section, " ", str(self.pin))
                 )
-            else:
-                return "".join((self.name, "\t\t", self.section))
-        else:
-            return "\t".join((self.name,))
+            return "".join((self.name, "\t\t", self.section))
+        return "\t".join((self.name,))
 
     def is_inconsistent(self, other, problems):
         """Return True if attribute values of self and other are inconsistent.
@@ -759,12 +776,12 @@ class Player(object):
 
         """
         # state = False
-        for a in Player.attributes:
-            if self.__dict__[a] != other.__getattr__(a):
-                if other.__getattr__(a):
+        for attribute in Player.attributes:
+            if self.__dict__[attribute] != other.__getattr__(attribute):
+                if other.__getattr__(attribute):
 
                     # Listing attribute names as problems may be too much.
-                    # problems.add(a)
+                    # problems.add(attribute)
 
                     # state = True
                     return True
@@ -790,13 +807,12 @@ class Player(object):
 
 # GameCollation is superclass of Collation and CollationEvents, the latter used
 # when importing data from another database.
-class GameCollation(object):
-
+class GameCollation:
     """Base class for results extracted from a file of game reports."""
 
     def __init__(self):
         """Extend, define game and player dictionaries and error report list."""
-        super(GameCollation, self).__init__()
+        super().__init__()
         self.games = dict()
         self.players = dict()
 
@@ -811,9 +827,125 @@ class GameCollation(object):
             self.players[key] = player
 
 
-# Collation is separate from EventCollation because it provides behaviour shared
-# by EventCollation, PDLCollation, PDLCollationWeekly, and SLCollation.
-# The last three are being removed.
-# So this class is copied into EventCollation for modification to fit other
-# changes, and will be removed eventually.
-# Added later: it actually went to collation.Collation.
+# The element names are in the order which gives a useful sort order.
+TabularReportRow = namedtuple(
+    "TabularReportRow",
+    constants.TABULAR_REPORT_ROW_ORDER,
+    defaults=("",) * len(constants.TABULAR_REPORT_ROW_ORDER),
+)
+
+
+def get_game_rows_for_csv_format(collated_games):
+    """Return list of dicts representing collated games for an event.
+
+    It is assumed sourceedit.SourceEdit._collate_unfinished_games()
+    has been called if required.
+
+    """
+    rows = []
+
+    # The event name is only available as an attribute of the Player
+    # instances found.  All these instances must have the same event
+    # name, except that defaulted games will produce None as the
+    # event name for one or both players of a game.
+    # Player represents a bundle of games reported under one name in
+    # a section of an event: it does not represent the person playing
+    # in an event or a game.
+    # If eventname is None after processing the report either there
+    # are no games or all games were double defaults.
+    eventname = None
+
+    for value in collated_games.values():
+        (
+            round_,
+            hometeam,
+            homescore,
+            awayteam,
+            awayscore,
+            default,
+        ) = value.get_team_details()
+        if default:
+            continue
+        for game in value.games:
+            if not game.gradegame:
+                continue
+            gameboard, gameround = game.get_game_board_and_round()
+            if round_:
+                if gameround and round_ != gameround:
+                    raise GameObjectsError(
+                        "Inconsistent round given in game and section"
+                    )
+
+            # Note re-binding of homeplayer and awayplayer in this block.
+            # Allow for double default games when checking consistency of
+            # event name references.
+            homeplayer = game.homeplayer
+            awayplayer = game.awayplayer
+            if (
+                homeplayer is not None
+                and awayplayer is not None
+                and homeplayer.event is not None
+                and awayplayer.event is not None
+            ):
+                if homeplayer.event != awayplayer.event:
+                    raise GameObjectsError(
+                        "Inconsistent event names for players of game"
+                    )
+            game_eventname = homeplayer.event or awayplayer.event
+            if eventname is None:
+                eventname = game_eventname
+            if (
+                homeplayer.event is not None
+                and awayplayer.event is not None
+                and game_eventname != eventname
+            ):
+                raise GameObjectsError(
+                    "Inconsistent event names for game in event"
+                )
+            if homeplayer.reported_codes is not None:
+                homeplayer = " ".join(
+                    (
+                        " ".join(homeplayer.reported_codes),
+                        homeplayer.name,
+                    )
+                ).strip()
+            else:
+                homeplayer = homeplayer.name
+            if awayplayer.reported_codes is not None:
+                awayplayer = " ".join(
+                    (
+                        awayplayer.name,
+                        " ".join(awayplayer.reported_codes),
+                    )
+                ).strip()
+            else:
+                awayplayer = awayplayer.name
+
+            # The **{} arguments are in the default order of a tabular
+            # source report. (The order before conversion to namedtuple.)
+            rows.append(
+                TabularReportRow(
+                    **{
+                        constants.REPORT_SECTION: value.competition,
+                        constants.REPORT_DAY: "",
+                        constants.REPORT_DATE: game.date,
+                        constants.REPORT_ROUND: gameround,
+                        constants.REPORT_HOME_TEAM: hometeam,
+                        constants.REPORT_HOME_TEAM_SCORE: homescore,
+                        constants.REPORT_HOME_PLAYER: homeplayer,
+                        constants.REPORT_RESULT: displayresult.get(
+                            game.result, ""
+                        ),
+                        constants.REPORT_AWAY_PLAYER: awayplayer,
+                        constants.REPORT_AWAY_TEAM_SCORE: awayscore,
+                        constants.REPORT_AWAY_TEAM: awayteam,
+                        constants.REPORT_BOARD: gameboard,
+                        constants.REPORT_HOME_PLAYER_COLOUR: home_player_pieces[
+                            game.homeplayerwhite
+                        ],
+                        constants.REPORT_EVENT: eventname,
+                    }
+                )
+            )
+
+    return rows

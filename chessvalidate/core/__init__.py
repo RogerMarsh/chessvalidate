@@ -2,5 +2,4 @@
 # Copyright 2009 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Data manipulation for Results data and access to databases.
-"""
+"""Data validation for actions such as database update or reformatting."""

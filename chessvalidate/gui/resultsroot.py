@@ -2,13 +2,11 @@
 # Copyright 2010 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Results database application.
-"""
+"""Results validation application."""
 
 import tkinter
 import tkinter.messagebox
 import tkinter.filedialog
-import os
 
 from solentware_misc.gui.exceptionhandler import ExceptionHandler
 from solentware_misc.gui import fontchooser
@@ -18,17 +16,14 @@ from emailstore.gui import help_ as emailstore_help
 from emailextract.gui import help as emailextract_help
 
 from .. import APPLICATION_NAME
-from . import help
+from . import help_
 from . import configure
 from . import selectemail
-from ..core.season import create_event_configuration_file
-from ..core.constants import EVENT_CONF
 
 ExceptionHandler.set_application_name(APPLICATION_NAME)
 
 
 class Results(ExceptionHandler):
-
     """Results application."""
 
     def __init__(self, title, gui_module, width, height):
@@ -46,10 +41,10 @@ class Results(ExceptionHandler):
         menubar = tkinter.Menu(self.root)
         self.root.configure(menu=menubar)
 
-        menu0 = tkinter.Menu(menubar, name="sources", tearoff=False)
+        menu0 = tkinter.Menu(menubar, tearoff=False)
         menubar.add_cascade(label="Sources", menu=menu0, underline=0)
 
-        self.mf = gui_module(
+        self.app_module = gui_module(
             master=self.root,
             background="cyan",
             width=width,
@@ -60,7 +55,7 @@ class Results(ExceptionHandler):
         )
 
         # subclasses of Leagues have done their results menu item additions
-        del self.mf.menu_results
+        del self.app_module.menu_results
 
         menu0.add_command(
             label="Email selection",
@@ -78,19 +73,31 @@ class Results(ExceptionHandler):
         menu0.add_command(
             label="Quit",
             underline=0,
-            command=self.try_command(self.mf.database_quit, menu0),
+            command=self.try_command(self.app_module.database_quit, menu0),
         )
 
-        menu3 = tkinter.Menu(menubar, name="tools", tearoff=False)
+        self.make_tools_menu(menubar)
+        self.make_help_menu(menubar)
+        self.app_module.create_tabs()
+
+        self.app_module.get_widget().pack(fill=tkinter.BOTH, expand=True)
+        self.app_module.get_widget().pack_propagate(False)
+        self.app_module.show_state()
+
+    def make_tools_menu(self, menubar):
+        """Return Tools menu with Fonts entry."""
+        menu3 = tkinter.Menu(menubar, tearoff=False)
         menubar.add_cascade(label="Tools", menu=menu3, underline=0)
-        menu3.add_separator()
-        self.mf._add_ecf_url_item(menu3)
         menu3.add_command(
             label="Fonts",
             underline=0,
             command=self.try_command(self.select_fonts, menu3),
         )
-        menu4 = tkinter.Menu(menubar, name="help", tearoff=False)
+        return menu3
+
+    def make_help_menu(self, menubar):
+        """Return Help menu with validation entries."""
+        menu4 = tkinter.Menu(menubar, tearoff=False)
         menubar.add_cascade(label="Help", menu=menu4, underline=0)
         menu4.add_command(
             label="Guide",
@@ -119,11 +126,6 @@ class Results(ExceptionHandler):
             command=self.try_command(self.help_tablespecs, menu4),
         )
         menu4.add_command(
-            label="File size",
-            underline=0,
-            command=self.try_command(self.help_file_size, menu4),
-        )
-        menu4.add_command(
             label="Notes",
             underline=0,
             command=self.try_command(self.help_notes, menu4),
@@ -139,39 +141,31 @@ class Results(ExceptionHandler):
             underline=2,
             command=self.try_command(self.help_text_extraction, menu4),
         )
-        self.mf.create_tabs()
-
-        self.mf.get_widget().pack(fill=tkinter.BOTH, expand=True)
-        self.mf.get_widget().pack_propagate(False)
-        self.mf.show_state()
+        return menu4
 
     def help_about(self):
         """Display information about Results application."""
-        help.help_about(self.root)
-
-    def help_file_size(self):
-        """Display brief instructions for file size dialogue."""
-        help.help_file_size(self.root)
+        help_.help_about(self.root)
 
     def help_guide(self):
         """Display brief User Guide for Results application."""
-        help.help_guide(self.root)
+        help_.help_guide(self.root)
 
     def help_keyboard(self):
         """Display list of keyboard actions for Results application."""
-        help.help_keyboard(self.root)
+        help_.help_keyboard(self.root)
 
     def help_notes(self):
         """Display technical notes about Results application."""
-        help.help_notes(self.root)
+        help_.help_notes(self.root)
 
     def help_samples(self):
         """Display description of sample files."""
-        help.help_samples(self.root)
+        help_.help_samples(self.root)
 
     def help_tablespecs(self):
         """Display csv file specifications."""
-        help.help_tablespecs(self.root)
+        help_.help_tablespecs(self.root)
 
     def help_email_selection(self):
         """Display Emailstore Notes document."""
@@ -195,7 +189,7 @@ class Results(ExceptionHandler):
             title="Select a Font",
         ):
             return
-        cs = fontchooser.AppSysFontChooser(self.root, "Select a Font")
+        fontchooser.AppSysFontChooser(self.root, "Select a Font")
 
     def configure_extract_text_from_emails(self):
         """Set parameters that control results extraction from emails."""
