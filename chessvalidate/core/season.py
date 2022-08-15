@@ -155,23 +155,24 @@ class Season:
                 title="Open event results data",
             )
             return False
-        config = os.path.join(self.folder, constants.EVENT_CONF)
+        config = os.path.join(self.folder, EXTRACTED + ".conf")
         if not os.path.exists(config):
-            create_event_configuration_file(config)
-
-            tkinter.messagebox.showinfo(
-                parent=parent,
-                message=" ".join(
-                    (
-                        "Configuration file\n\n",
-                        config,
-                        "\n\ncreated.\n\n",
-                        "The mailbox and extract folders will be created when ",
-                        "this message is dismissed.",
-                    )
-                ),
-                title="Open event results data",
-            )
+            if create_extract_and_event_configuration_files(config):
+                tkinter.messagebox.showinfo(
+                    parent=parent,
+                    message=" ".join(
+                        (
+                            "Configuration files\n\n",
+                            os.path.basename(config),
+                            "and",
+                            constants.EVENT_CONF,
+                            "\n\ncreated.\n\nThe mailbox and extract",
+                            "folders will be created when",
+                            "this message is dismissed.",
+                        )
+                    ),
+                    title="Open event results data",
+                )
 
         emc = EmailExtractor(
             self.folder,
@@ -753,10 +754,20 @@ class _DifferenceText:
             )
 
 
-def create_event_configuration_file(file_path):
-    """Create event configuration file with default settings."""
-    if upgrade_event_configuration_files(file_path):
-        return
+def _create_event_configuration_file(directory):
+    """Create event configuration file with Event Details header."""
+    with open(
+        os.path.join(directory, constants.EVENT_CONF),
+        "w",
+        encoding="utf8"
+    ) as config_file:
+        config_file.writelines(("#eventdetails", os.linesep))
+
+
+def create_extract_and_event_configuration_files(file_path):
+    """Create extract and event configuration files with default settings."""
+    if upgrade_configuration_files(file_path):
+        return False
     with open(file_path, "w", encoding="utf8") as config_file:
         config_file.writelines((" ".join((COLLECTED, COLLECTED)), os.linesep))
         config_file.writelines((" ".join((EXTRACTED, EXTRACTED)), os.linesep))
@@ -770,14 +781,33 @@ def create_event_configuration_file(file_path):
         config_file.writelines(
             (" ".join((CSV_CONTENT_TYPE, _CSV_CONTENT)), os.linesep)
         )
+    _create_event_configuration_file(os.path.dirname(file_path))
+    return True
 
 
-def upgrade_event_configuration_files(file_path):
-    """Upgrade conf and *.ems files to event.conf and collected.conf."""
+def upgrade_configuration_files(file_path):
+    """Upgrade conf and *.ems files to extracted.conf and collected.conf.
+
+    Earlier versions of this method changes *.ems files to event.conf but
+    event.conf is going to be used to hold details such as event name and
+    date and time limits.
+
+    """
     directory = os.path.dirname(file_path)
     names = os.listdir(directory)
+    if COLLECTED + ".conf" in names and EXTRACTED + ".conf" in names:
+        if constants.EVENT_CONF not in names:
+            _create_event_configuration_file(directory)
+        return True
+    if COLLECTED + ".conf" in names and "event.conf" in names:
+        os.rename(
+            os.path.join(directory, "event.conf"),
+            os.path.join(directory, EXTRACTED + ".conf"),
+        )
+        _create_event_configuration_file(directory)
+        return True
     if COLLECTED + ".conf" not in names:
-        conflictname = os.path.splitext(constants.EVENT_CONF)[0] + ".ems"
+        conflictname = EXTRACTED + ".ems"
         if conflictname in names:
             tkinter.messagebox.showinfo(
                 title="Upgrade Event Configuration Files",
@@ -836,7 +866,9 @@ def upgrade_event_configuration_files(file_path):
                 config_file.writelines(
                     (" ".join((COLLECTED, COLLECTED)), os.linesep)
                 )
-    if constants.EVENT_CONF in names:
+    if EXTRACTED + ".conf" in names:
+        if constants.EVENT_CONF not in names:
+            _create_event_configuration_file(directory)
         return True
     if "conf" not in names:
         return False
@@ -865,6 +897,8 @@ def upgrade_event_configuration_files(file_path):
                     )
                 else:
                     config_file.write(line)
+            if constants.EVENT_CONF not in names:
+                _create_event_configuration_file(directory)
             return True
 
 
