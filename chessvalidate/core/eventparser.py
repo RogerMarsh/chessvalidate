@@ -336,7 +336,9 @@ class EventParser:
         self._difference_items = difference_items
         self.error = []
 
-    def build_event(self, rules, competitions, team_name_lookup):
+    def build_event(
+        self, rules, competitions, team_name_lookup, event_identity
+    ):
         """Return an instance of AdaptEventContext.
 
         The AdaptEventContext instance contains EventData instances arranged
@@ -376,7 +378,7 @@ class EventParser:
                     ),
                     flags=re.IGNORECASE | re.DOTALL,
                 )
-        selected_text = AdaptEventContext()
+        selected_text = AdaptEventContext(event_identity)
         for difference_item in self._difference_items:
             found = False
             for eitem, event in enumerate(rules):

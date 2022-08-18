@@ -18,6 +18,7 @@ import difflib
 import os
 import tkinter.messagebox
 import re
+import tkinter
 
 from emailextract.core.emailextractor import (
     COLLECTED,
@@ -41,6 +42,7 @@ from .emailextractor import (
 )
 from .eventparser import EventParser
 from . import constants
+from . import eventdetails
 
 # Content types always put in an event configuration file when created.
 _CSV_CONTENT = "text/comma-separated-values"
@@ -516,16 +518,31 @@ class Season:
         """Extend, specify Schedule as class used to process newfixtures."""
         difflistcopy = [dt for dt in self._difference_text]
         difflistcopy.insert(0, self._entry_text)
+
         # The old code allowed for different classes for varying formats.
         # The idea here is that 'one class fits all' and any differences can
         # be dealt with in the configuration file. There are only a few ways of
         # structuring fixture lists and match results, but syntax will vary.
-        # It seems a lot of messing about can be avoided by just doing:
+        # Later an extra configuration file was added, with old event.conf
+        # becoming extracted.conf and new event.conf holding stuff which is
+        # put in the EVENT DETAILS part of an ECF results submission file.
+        # For a while, at least, allow for presence or absence of the new
+        # configuration file: giving priority to the new case.
+        # Should event_identity be self._event_identity in future?
+        for name in (
+            COLLECTED + ".conf", EXTRACTED + ".conf", constants.EVENT_CONF
+        ):
+            if not os.path.isfile(os.path.join(self.folder, name)):
+                event_identity = (None, None, None)
+                break
+        else:
+            event_identity = eventdetails.get_event_details(self.folder)
         self._event_parser = EventParser(difflistcopy)
         self._event_data = self._event_parser.build_event(
             self._event_extraction_rules,
             self._event_competitions,
             self._event_team_name_lookup,
+            event_identity,
         )
 
     @property

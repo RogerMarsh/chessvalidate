@@ -19,6 +19,7 @@ from .. import APPLICATION_NAME
 from . import help_
 from . import configure
 from . import selectemail
+from . import eventdetails
 
 ExceptionHandler.set_application_name(APPLICATION_NAME)
 
@@ -67,6 +68,13 @@ class Results(ExceptionHandler):
             underline=0,
             command=self.try_command(
                 self.configure_extract_text_from_emails, menu0
+            ),
+        )
+        menu0.add_command(
+            label="Event Details",
+            underline=6,
+            command=self.try_command(
+                self.configure_event_details, menu0
             ),
         )
         menu0.add_separator()
@@ -208,5 +216,15 @@ class Results(ExceptionHandler):
             use_toplevel=True,
             application_name="".join(
                 (self.get_application_name(), " (select emails)")
+            ),
+        )
+
+    def configure_event_details(self):
+        """Set event details to event and for ECF results submission files."""
+        eventdetails.EventDetails(
+            master=self.root,
+            use_toplevel=True,
+            application_name="".join(
+                (self.get_application_name(), " (event details)")
             ),
         )

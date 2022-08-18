@@ -410,14 +410,13 @@ class TableEventData(EventData):
 class EventContext:
     """Context for creation of an EventData instance."""
 
-    def __init__(self):
+    def __init__(self, event_identity):
         """Initialise event context."""
         # Event identity
+        # The event_identity property implementation was not changed when
+        # event_identity argument to __init__ was added.
         self._event_identity = _EVENT_IDENTITY_NONE
-        self._eventname = None
-        self._eventdate = None
-        self._event_startdate = None
-        self._event_enddate = None
+        self.event_identity = event_identity
 
         # Default competition data if not given for a result
         self._competition_name = None
@@ -474,7 +473,7 @@ class EventContext:
     @event_identity.setter
     def event_identity(self, value):
         """Set event name and identity (name plus start and end dates)."""
-        if self._event_identity is not _EVENT_IDENTITY_NONE:
+        if self._event_identity != _EVENT_IDENTITY_NONE:
             return
         self._eventname, self._event_startdate, self._event_enddate = value
         self._event_identity = (
@@ -583,6 +582,9 @@ class EventContext:
 
     def _event_and_dates(self, eventdata):
         """Process Found.EVENT_AND_DATES eventdata instances."""
+        self.event_identity = (
+            eventdata.eventname, eventdata.startdate, eventdata.enddate
+        )
         self.set_eventdate((eventdata.startdate, eventdata.enddate))
         if "eventname" in eventdata.__dict__:
             self.set_eventname(eventdata.eventname)
