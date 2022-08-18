@@ -37,12 +37,14 @@ from .emailextractor import (
 )
 
 from .eventdata import (
-    Score,
     EventData,
-    AdaptEventContext,
-    Found,
     TableEventData,
 )
+from .found import (
+    Score,
+    Found,
+)
+from .adapteventcontext import AdaptEventContext
 
 # The competition name used in tabular inputs if no competition name is given.
 # Usually the competition 'All Sections' is but in event's conf file if needed.
