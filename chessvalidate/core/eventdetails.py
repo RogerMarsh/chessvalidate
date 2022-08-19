@@ -26,7 +26,9 @@ def get_text_at_value_after_name(name, widget):
     value_range = widget.tag_nextrange(constants.FIELD_VALUE_TAG, range_[-1])
     if not value_range:
         return None
-    if range_ != widget.tag_prevrange(constants.FIELD_NAME_TAG, value_range[0]):
+    if range_ != widget.tag_prevrange(
+        constants.FIELD_NAME_TAG, value_range[0]
+    ):
         return None
     return widget.get(*value_range)
 

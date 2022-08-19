@@ -73,9 +73,7 @@ class Results(ExceptionHandler):
         menu0.add_command(
             label="Event Details",
             underline=6,
-            command=self.try_command(
-                self.configure_event_details, menu0
-            ),
+            command=self.try_command(self.configure_event_details, menu0),
         )
         menu0.add_separator()
         menu0.add_command(

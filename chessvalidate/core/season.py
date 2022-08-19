@@ -530,7 +530,9 @@ class Season:
         # configuration file: giving priority to the new case.
         # Should event_identity be self._event_identity in future?
         for name in (
-            COLLECTED + ".conf", EXTRACTED + ".conf", constants.EVENT_CONF
+            COLLECTED + ".conf",
+            EXTRACTED + ".conf",
+            constants.EVENT_CONF,
         ):
             if not os.path.isfile(os.path.join(self.folder, name)):
                 event_identity = (None, None, None)
@@ -774,9 +776,7 @@ class _DifferenceText:
 def _create_event_configuration_file(directory):
     """Create event configuration file with Event Details header."""
     with open(
-        os.path.join(directory, constants.EVENT_CONF),
-        "w",
-        encoding="utf8"
+        os.path.join(directory, constants.EVENT_CONF), "w", encoding="utf8"
     ) as config_file:
         config_file.writelines(("#eventdetails", os.linesep))
 
