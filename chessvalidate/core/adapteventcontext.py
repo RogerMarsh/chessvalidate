@@ -222,16 +222,16 @@ class AdaptEventContext(EventContext):
 
     def get_schedule_text(self):
         """Return list of text lines giving fixture and player details."""
-        if not self._eventname:
+        if not self._event_identity:
             return []
-        text = [(self._eventname, None)]
+        text = [(self._event_identity[0], None)]
 
         # Force an error from old-style processing, usually absence of event
         # name and dates.
-        try:
-            text.append((" ".join(self._eventdate), None))
-        except TypeError:
+        if self._event_identity[1] is None or self._event_identity[2] is None:
             text.append(("", None))
+        else:
+            text.append((" ".join(self._event_identity[1:]), None))
 
         # Although any kind of result is allowed in an _EventItems instance,
         # the Schedule (and Report) classes will object if it happens.
@@ -321,9 +321,9 @@ class AdaptEventContext(EventContext):
 
     def get_results_text(self):
         """Return list of text lines giving game result details."""
-        if not self._eventname:
+        if not self._event_identity:
             return []
-        text = [(self._eventname, None)]
+        text = [(self._event_identity[0], None)]
 
         # source is used as an alternative to match or game date to identify
         # repeated reports of results.  Often it is a date but any reference

@@ -19,6 +19,7 @@ from . import names
 from .found import Found
 
 _EVENT_IDENTITY_NONE = (None, None, None)
+_EVENT_DATE_NONE = (None, None)
 
 
 class EventContext:
@@ -31,6 +32,13 @@ class EventContext:
         # event_identity argument to __init__ was added.
         self._event_identity = _EVENT_IDENTITY_NONE
         self.event_identity = event_identity
+
+        # This makes the _*date attributes a marker to prevent setting
+        # event name after event date: there are points at which _*date's
+        # are None while the dates are in _event_identity.
+        self._event_startdate = None
+        self._event_enddate = None
+        self._eventdate = (self._event_startdate, self._event_enddate)
 
         # Default competition data if not given for a result
         self._competition_name = None
@@ -75,9 +83,33 @@ class EventContext:
         self._items.append(eventdata)
         return self._process.get(eventdata.found, self._exception)(eventdata)
 
-    # Rvent identity is set once.
+    # Event identity is set once.
     # It is composed from the event's name, and start and end dates.
-    # The two components, name and dates, can be set again until both are set.
+    # Event name can be changed until the start and end date are set: the
+    # event identity is set at this point, after which the start and end
+    # date cannot be changed and changes to event name are ignored but
+    # noted.
+
+    @property
+    def event_name(self):
+        """Return event name held in _event_identity.
+
+        self._eventname is the most recent value supplied as a potential
+        event name: it can be a ridiculous value in some cases where stuff
+        is extracted automatically from a document.
+
+        """
+        return self._event_identity[0]
+
+    @property
+    def event_start_date(self):
+        """Return event start date held in event_identity."""
+        return self._event_identity[1]
+
+    @property
+    def event_end_date(self):
+        """Return event end date held in event identity."""
+        return self._event_identity[2]
 
     @property
     def event_identity(self):
@@ -97,20 +129,6 @@ class EventContext:
         )
         self._eventdate = (self._event_startdate, self._event_enddate)
 
-    def set_eventname(self, value):
-        """Set event name and identity (name plus start and end dates)."""
-        if self._event_identity is not _EVENT_IDENTITY_NONE:
-            return
-        self._eventname = value
-        if self._eventdate is not None:
-            self._event_identity = (
-                self._eventname,
-                self._event_startdate,
-                self._event_enddate,
-            )
-
-    eventname = property(fset=set_eventname)
-
     def set_eventdate(self, value):
         """Set event start date and event end date."""
         if self._event_identity is not _EVENT_IDENTITY_NONE:
@@ -123,8 +141,6 @@ class EventContext:
                 self._event_startdate,
                 self._event_enddate,
             )
-
-    eventdate = property(fset=set_eventdate)
 
     # Competition name, game date, and game round can have default values which
     # are used if not specified by the individual games.
@@ -153,15 +169,11 @@ class EventContext:
             return
         self._gameround = value
 
-    gameround = property(fset=set_gameround)
-
     def set_gamedate(self, value):
         """Set gamedate."""
         if self._competition_name is None:
             return
         self._gamedate = value
-
-    gamedate = property(fset=set_gamedate)
 
     def set_competition_name(self, value):
         """Set competition name."""
@@ -172,8 +184,6 @@ class EventContext:
         self._gameround = None
         self._add_key()
 
-    competition_name = property(fset=set_competition_name)
-
     def set_competition_name_gamedate(self, value):
         """Set competition_name, gamedate, and gameround."""
         if self._event_identity is _EVENT_IDENTITY_NONE:
@@ -181,8 +191,6 @@ class EventContext:
         self._competition_name, self._gamedate = value
         self._gameround = None
         self._add_key()
-
-    competition_name_gamedate = property(fset=set_competition_name_gamedate)
 
     def set_competition_name_gameround(self, value):
         """Set competition_name and gameround."""
@@ -192,22 +200,27 @@ class EventContext:
         self._gamedate = None
         self._add_key()
 
-    competition_name_gameround = property(fset=set_competition_name_gameround)
-
     def _event_and_dates(self, eventdata):
         """Process Found.EVENT_AND_DATES eventdata instances."""
+        if "eventname" in eventdata.__dict__:
+            self._eventname = eventdata.eventname
         self.event_identity = (
-            eventdata.eventname, eventdata.startdate, eventdata.enddate
+            self._eventname,
+            eventdata.startdate,
+            eventdata.enddate,
         )
         self.set_eventdate((eventdata.startdate, eventdata.enddate))
-        if "eventname" in eventdata.__dict__:
-            self.set_eventname(eventdata.eventname)
 
     def _possible_event_name(self, eventdata):
-        """Process Found.POSSIBLE_EVENT_NAME eventdata instances."""
-        # This is the default attempt at processing data which is not known to
-        # be wrong.  Ignore unless an event name is still allowed.
-        self.set_eventname(eventdata.eventname)
+        """Process Found.POSSIBLE_EVENT_NAME eventdata instances.
+
+        The event name will be on the same line as, or the line before, a
+        line contaning just two dates.
+
+        """
+        if self._eventdate != _EVENT_DATE_NONE:
+            return
+        self._eventname = eventdata.eventname
 
     def _swiss_pairing_card(self, eventdata):
         """Process Found.SWISS_PAIRING_CARD eventdata instances."""

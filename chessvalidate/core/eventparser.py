@@ -1820,12 +1820,25 @@ def _select_result_line(result_line_description, text):
                     source=source,
                     headers=headers,
                 )
+
+            # Text is the event name if it is followed by line with two dates
+            # and event date has not already been set.
+            if context._event_startdate or context._event_enddate:
+                return EventData(
+                    datatag=data_tag,
+                    found=Found.NOT_COMPETITION_ONLY,
+                    raw=text,
+                    headers=headers,
+                )
             return EventData(
                 datatag=data_tag,
-                found=Found.NOT_COMPETITION_ONLY,
-                raw=text,
+                found=Found.POSSIBLE_EVENT_NAME,
+                context=context,
+                eventname=" ".join(text.split()),
+                source=source,
                 headers=headers,
             )
+
         return EventData(
             datatag=data_tag,
             found=Found.EXTRA_ROUNDS_COMPETITION,
