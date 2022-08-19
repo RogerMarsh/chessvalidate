@@ -2,7 +2,7 @@
 # Copyright 2014 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Classes providing data type and unusual score identifiers.
+"""Classes providing data type and unusual score identifiers.
 
 Found provides the data type identifiers: negative numbers for valid data,
 zero for ignored data, positive numbers for errors.
