@@ -108,7 +108,7 @@ _SCHEDULE_CSV_DATA_NAME = "sched_csv_data_name"
 _REPORT_CSV_DATA_NAME = "report_csv_data_name"
 
 # Name the rules to transform input lines for inclusion in difference file
-# Added to guide transformation of game per row csv files to match report style.
+# Added to guide transformation of game per row csv files to fit report style.
 # Absence means no transformation.
 _REPLACE = "replace"
 _PARTIAL_REPLACE = "partial_replace"
@@ -272,7 +272,7 @@ class Parser(emailextractor.Parser):
                 FIXTURE_BODY: self.add_fixture_item_re,
                 KEEP_WORD_SPLITTERS: self.assign_event_value,
                 SECTION_NAME: self.add_section_name,
-                COMPETITION: self.add_value_to_set,  # add_defaulted_value_to_lookup,
+                COMPETITION: self.add_value_to_set,
                 SOURCE: self.add_re,
                 DROP_FORWARDED_MARKERS: self.assign_event_value,
                 TEAM_NAME: self.add_value_to_lookup,
@@ -283,32 +283,37 @@ class Parser(emailextractor.Parser):
             _REPLACE: [None, None, None],
         }
 
-    def re_from_value(self, val):
+    @staticmethod
+    def re_from_value(val):
         """Process elements for various keyword methods."""
         return re.compile(val, flags=re.IGNORECASE | re.DOTALL)
 
-    def add_value_to_lookup(self, val, args, args_key):
+    @staticmethod
+    def add_value_to_lookup(val, args, args_key):
         """Process TEAM_NAME keyword."""
         val, rep = val.split(sep=val[0], maxsplit=2)[1:]
         if args_key not in args:
             args[args_key] = dict()
         args[args_key][val] = rep
 
-    def add_value_to_lookup_set(self, val, args, args_key):
+    @staticmethod
+    def add_value_to_lookup_set(val, args, args_key):
         """Process lookup set values. (Not used currently)."""
         val, rep = val.split(sep=val[0], maxsplit=2)[1:]
         if args_key not in args:
             args[args_key] = dict()
         args[args_key].setdefault(val, set()).add(rep)
 
-    def add_defaulted_value_to_lookup(self, val, args, args_key):
+    @staticmethod
+    def add_defaulted_value_to_lookup(val, args, args_key):
         """Process COMPETITION keyword. (Commented alternative)."""
         val = val.split(sep=val[0], maxsplit=2)[1:]
         if args_key not in args:
             args[args_key] = dict()
         args[args_key][val[0]] = val[-1]
 
-    def csv_data_name(self, val, args, args_key):
+    @staticmethod
+    def csv_data_name(val, args, args_key):
         """Process the keywords listed below.
 
         _SCHEDULE_CSV_DATA_NAME
@@ -375,6 +380,7 @@ class Parser(emailextractor.Parser):
 
     def csv_value_partial_replace(self, val, args, args_key):
         """Process _PARTIAL_REPLACE keyword."""
+        del args_key
         pvc, val, rep = val.split(sep=val[0], maxsplit=3)[1:]
         cdn, dti, i = self.context_keys[_REPLACE]
         if pvc not in EmailExtractor.replace_value_columns.split(i):
@@ -383,6 +389,7 @@ class Parser(emailextractor.Parser):
 
     def csv_value_replace(self, val, args, args_key):
         """Process _REPLACE keyword."""
+        del args_key
         val, rep = val.split(sep=val[0], maxsplit=2)[1:]
         cdn, dti, i = self.context_keys[_REPLACE]
         args[cdn][-1][-1][dti][-1][i][val] = rep
@@ -468,12 +475,15 @@ class Parser(emailextractor.Parser):
         """Process FIXTURE_BODY keyword."""
         self.add_item_re(FIXTURE_FORMATS, *a)
 
-    def assign_event_value(self, val, args, args_key):
+    @staticmethod
+    def assign_event_value(val, args, args_key):
         """Process KEEP_WORD_SPLITTERS and DROP_FORWARDED_MARKERS keywords."""
         args[RESULTS_PREFIX][-1][args_key] = val
 
-    def add_format_replace(self, fin, val, args, args_key):
+    @staticmethod
+    def add_format_replace(fin, val, args, args_key):
         """Set value lookup for <fin> keyword."""
+        del args_key
         val, rep = val.split(sep=val[0], maxsplit=2)[1:]
         args[RESULTS_PREFIX][-1][fin][val] = rep
 
@@ -529,7 +539,7 @@ class ExtractText(emailextractor.ExtractText):
     """Repreresent the stages in processing an email."""
 
     def get_spreadsheet_text(self, *a):
-        """Return (sheetname, text) filtered by schedule and report data names."""
+        """Return (sheetname, text) matching schedule and report data names."""
         ems = self._emailstore
         fsn = set(n[0] for n in ems._sched_csv_data_name).union(
             [n[0] for n in ems._report_csv_data_name]
@@ -649,7 +659,8 @@ class ExtractText(emailextractor.ExtractText):
                 # both Portsmouth District League and Southampton League could
                 # be sent in same CSV file. The selector was used to pick rows
                 # for the appropriate event.
-                # _REPORT_EVENT allows this feature to be implemented if needed.
+                # _REPORT_EVENT allows this feature to be implemented if
+                # needed.
                 # if len(selector):
                 #    if selector not in row:
                 #        continue

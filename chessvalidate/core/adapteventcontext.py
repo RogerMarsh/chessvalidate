@@ -646,11 +646,11 @@ class AdaptEventContext(EventContext):
             tkinter.messagebox.showinfo(
                 message="".join(
                     (
-                        "An inconsistency has been found in the match results ",
-                        "data extracted from a CSV file.\n\n",
-                        "One or more errors will be reported but it may not be ",
-                        "immediately obvious what is wrong with the CSV file ",
-                        "data, or where the problems are.",
+                        "An inconsistency has been found in the match ",
+                        "results data extracted from a CSV file.\n\n",
+                        "One or more errors will be reported but it may not ",
+                        "be immediately obvious what is wrong with the CSV ",
+                        "file data, or where the problems are.",
                     )
                 ),
                 title="Tabular Results Error",
@@ -711,14 +711,16 @@ class AdaptEventContext(EventContext):
                             numbers=[bkey],
                         )
 
-    def _is_results_individual(self, results):
+    @staticmethod
+    def _is_results_individual(results):
         """Return True if no EventData instances describe a match result."""
         for data in results:
             if data.is_match_result():
                 return False
         return True
 
-    def _print_text(self, text):
+    @staticmethod
+    def _print_text(text):
         """Print lines in text.  Intended for tracing bugs."""
         print("\n")
         for line in text:
@@ -729,8 +731,9 @@ class AdaptEventContext(EventContext):
                 print("".join([c if ord(c) < 128 else "@@" for c in line]))
                 print("<<<<<<<<\n")
 
-    def _set_source(self, eventdata, source, text):
-        """Emit source command if eventdata changes source and return source."""
+    @staticmethod
+    def _set_source(eventdata, source, text):
+        """Reurn eventdata.source after appending source command to text."""
         if eventdata.source != source:
             text.append((" ".join(("source", eventdata.source)), None))
         return eventdata.source

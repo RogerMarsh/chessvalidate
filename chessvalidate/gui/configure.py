@@ -31,7 +31,7 @@ class Configure(Select):
         if self._configuration is not None:
             tkinter.messagebox.showinfo(
                 parent=self.root,
-                title=self.READ_FILE_TITLE,
+                title=self._READ_FILE_TITLE,
                 message="The configuration file has already been read.",
             )
             return
@@ -42,7 +42,7 @@ class Configure(Select):
         self._configuration = config_file
 
     def file_new(self, conf=None):
-        """Delegate then update configuration if a file was opened."""
+        """Set configuration, delegate, note opened file in configuration."""
         if conf is None:
             conf = configuration
         conf = conf.Configuration()
@@ -54,7 +54,7 @@ class Configure(Select):
         self._update_configuration(conf)
 
     def file_open(self, conf=None):
-        """Delegate then update configuration if a file was opened."""
+        """Set configuration, delegate, note opened file in configuration."""
         if conf is None:
             conf = configuration
         conf = conf.Configuration()

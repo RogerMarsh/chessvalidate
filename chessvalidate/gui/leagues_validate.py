@@ -141,12 +141,13 @@ class Leagues(threadqueue.AppSysThreadQueue):
         self.get_widget().winfo_toplevel().destroy()
         return None
 
-    def document_edit(self, **kargs):
+    @staticmethod
+    def document_edit(**kargs):
         """Return sourceedit.SourceEdit class instance."""
         return sourceedit.SourceEdit(**kargs)
 
     def get_thread_queue(self):
-        """Return the queue for methods to be called in the background thread."""
+        """Return queue for methods to be called in the background thread."""
         return self.queue
 
     def get_results_context(self):
@@ -282,8 +283,10 @@ class Leagues(threadqueue.AppSysThreadQueue):
             os.path.join(self.results_folder, ERROR_LOG)
         )
 
-    def set_error_file_on_close_source(self):
+    @staticmethod
+    def set_error_file_on_close_source():
         """Set the error log after source file is closed."""
+        print("close")
         Leagues.set_error_file_name(None)
 
     def set_ecfdataimport_module(self, enginename):
@@ -292,7 +295,8 @@ class Leagues(threadqueue.AppSysThreadQueue):
     def set_ecfogddataimport_module(self, enginename):
         """Do nothing.  Subclass must override to import module."""
 
-    def make_configuration_instance(self):
+    @staticmethod
+    def make_configuration_instance():
         """Return Configuration() made with imported configuration module.
 
         Subclasses should override this method to use their configuration

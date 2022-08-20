@@ -32,7 +32,8 @@ swiss_table_row = re.compile(
         (
             r"(?P<pin>\d*)\.?",
             "(?P<row>",
-            r"(?:\s+(?:x|--|def[-+]|bye[-=+]|[wb][123456789][0123456789]*[-=+pme]))*",
+            r"(?:\s+(?:x|--|def[-+]|bye[-=+]|[wb][123456789][0123456789]*",
+            r"[-=+pme]))*",
             r" *\Z)",
         )
     )
@@ -62,7 +63,8 @@ game_result = re.compile(
             r"(?:(?P<board>\d*(?:\.\d*)?)?",
             "(?P<colour>[w|b])?[ \t])?",
             "(?P<date_player>.*?[ \t]|[ \t]*)?",
-            "(?P<score>dbld|def-|def[=+]|bye[=+]|draw|1-0|0-1|void|unfinished|default)",
+            "(?P<score>dbld|def-|def[=+]|bye[=+]|draw|1-0|0-1|void",
+            "|unfinished|default)",
             r"(?P<player>[ \t].*)?\Z",
         )
     )
@@ -160,6 +162,7 @@ class Report:
         """Populate the event results report from textlines."""
 
         def black_on_all(board):
+            del board
             return False
 
         def black_on_odd(board):
@@ -178,9 +181,11 @@ class Report:
                 return None
 
         def colour_none(board):
+            del board
             return None
 
         def white_on_all(board):
+            del board
             return True
 
         def white_on_odd(board):
@@ -242,8 +247,8 @@ class Report:
                     self.error,
                     "".join(
                         (
-                            "PIN is greater than number of players implied in ",
-                            'cross-table row "',
+                            "PIN is greater than number of players implied ",
+                            'in cross-table row "',
                             " ".join((str(pin), self._section, " ".join(row))),
                             '".\n',
                         )
@@ -295,7 +300,8 @@ class Report:
                             self.error,
                             "".join(
                                 (
-                                    'Crosstable entry where opponent is self in "',
+                                    "Crosstable entry where opponent is self ",
+                                    'in "',
                                     " ".join(
                                         (
                                             str(pin),
@@ -347,7 +353,8 @@ class Report:
                                             " ".join(row),
                                         )
                                     ),
-                                    '") is not consistent with row for opponent "',
+                                    '") is not consistent with row for ',
+                                    'opponent "',
                                     str(opponent_pin),
                                     '".\n',
                                 )
@@ -620,9 +627,9 @@ class Report:
                         (
                             '"',
                             " ".join(tokens),
-                            '" must be like "games 2" to specify the number of ',
-                            "times a player may appear in a match without a ",
-                            "warning message being generated.\n",
+                            '" must be like "games 2" to specify the number ',
+                            "of times a player may appear in a match without ",
+                            "a warning message being generated.\n",
                         )
                     ),
                 )
@@ -1071,7 +1078,7 @@ class Report:
         sectiontypes = {
             "allplayall": get_allplayall_games,  # individuals
             "league": get_matches,  # team all play all
-            "swiss": get_swiss_pairing_cards,  # self.GetSwissRounds, #individuals
+            "swiss": get_swiss_pairing_cards,  # individuals
             "fixturelist": get_matches,  # matches between teams
             "individual": get_individual_games,  # games between players
         }
@@ -1102,14 +1109,20 @@ class Report:
         if self.er_name is None:
             self.error.append(
                 (
-                    "Results report has too few lines for event name to be present",
+                    "".join(
+                        (
+                            "Results report has too few lines for event ",
+                            "name to be present",
+                        )
+                    ),
                     self,
                 )
             )
 
     # Tagging not used yet so the argument is the text from error, not the key
     # of the item in self._generated_report containing the text (or whatever).
-    def get_report_tag_and_text(self, text):  # key):
+    @staticmethod
+    def get_report_tag_and_text(text):  # key):
         """Return tag, for tkinter Text widget, and text."""
         return ("gash", text)  # self._generated_report[key])
 

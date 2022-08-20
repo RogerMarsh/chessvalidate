@@ -102,5 +102,8 @@ class Names:
         else:
             words = string.split()
             starts_with = " ".join(words[: (1 + len(words)) // 2])
+
+            # pylint and black disagree with pycodestyle on spaces before ":".
             ends_with = " ".join(words[(1 + len(words)) // 2 :])
+
         self.namepairs = ((starts_with, ends_with),)

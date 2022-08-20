@@ -88,7 +88,7 @@ class MatchFixture:
         self.__dict__.update(kargs)
 
     def __eq__(self, other):
-        """Return True if self[a]==other[a] for a in MatchFixture.attributes."""
+        """Return True if self[a]==other[a] for MatchFixture.attributes."""
         for attribute in MatchFixture.attributes:
             if self.__dict__[attribute] != other.__dict__[attribute]:
                 return False
@@ -266,7 +266,7 @@ class MatchGame(Game):
 
 
 class UnfinishedGame(MatchGame):
-    """Detail of completed match game that was originally reported unfinished."""
+    """Detail of a completed match game originally reported unfinished."""
 
     # A merge of pdlcollation.UnfinishedGame and slcollation.SLMatchGame is
     # used.  The PDL version has the right superclass but the game_result
@@ -317,7 +317,7 @@ class UnfinishedGame(MatchGame):
         # it is possible for individual games to be unfinished.  Such games are
         # almost always not reported at all until they are finished.
         # Better would be a separate class for defaulted games, as it seems to
-        # be the use of UnfinishedGame for those which first caused the problem.
+        # be use of UnfinishedGame for those which first caused the problem.
         if self.homeplayer.is_inconsistent(other.homeplayer, problems):
             problems.add(constants.HOME_PLAYER)
             state = True
@@ -775,6 +775,7 @@ class Player:
         player.
 
         """
+        del problems
         # state = False
         for attribute in Player.attributes:
             if self.__dict__[attribute] != other.__getattr__(attribute):
@@ -811,7 +812,7 @@ class GameCollation:
     """Base class for results extracted from a file of game reports."""
 
     def __init__(self):
-        """Extend, define game and player dictionaries and error report list."""
+        """Define game and player dictionaries and error report list."""
         super().__init__()
         self.games = dict()
         self.players = dict()
@@ -940,9 +941,9 @@ def get_game_rows_for_csv_format(collated_games):
                         constants.REPORT_AWAY_TEAM_SCORE: awayscore,
                         constants.REPORT_AWAY_TEAM: awayteam,
                         constants.REPORT_BOARD: gameboard,
-                        constants.REPORT_HOME_PLAYER_COLOUR: home_player_pieces[
-                            game.homeplayerwhite
-                        ],
+                        constants.REPORT_HOME_PLAYER_COLOUR: (
+                            home_player_pieces[game.homeplayerwhite]
+                        ),
                         constants.REPORT_EVENT: eventname,
                     }
                 )

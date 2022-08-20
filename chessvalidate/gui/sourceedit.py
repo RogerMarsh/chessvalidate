@@ -27,14 +27,11 @@ import tkinter.messagebox
 import os
 import datetime
 import collections
-import csv
 
 from solentware_misc.core.utilities import AppSysPersonName
 from solentware_misc.gui import panel, textreadonly, texttab
 
 from ..core.eventparser import EventParserError, IEIREE
-from ..core import constants
-from ..core import configuration
 from ..core.season import (
     LOCAL_SOURCE,
     HEADER_TAG,
@@ -43,9 +40,6 @@ from ..core.season import (
     SEPARATOR,
 )
 from ..core.gameresults import displayresult
-from ..core.gameobjects import (
-    get_game_rows_for_csv_format,
-)
 from ..core.schedule import ScheduleError
 
 _SENDER_COLOUR = "#e0f113"  # a pale yellow
@@ -156,8 +150,8 @@ class SourceEdit(panel.PlainPanel):
             text="Show Original",
             tooltip=" ".join(
                 (
-                    "Display original and edited results data but not generated",
-                    "data.",
+                    "Display original and edited results data but not",
+                    "generated data.",
                 )
             ),
             underline=5,
@@ -168,8 +162,8 @@ class SourceEdit(panel.PlainPanel):
             text="Hide Original",
             tooltip=" ".join(
                 (
-                    "Display edited source and generated data but not original",
-                    "source.",
+                    "Display edited source and generated data but not",
+                    "original source.",
                 )
             ),
             underline=5,
@@ -226,31 +220,37 @@ class SourceEdit(panel.PlainPanel):
 
     def on_close_data(self, event=None):
         """Close the source document."""
+        del event
         self.close_data_folder()
         self.inhibit_context_switch(self._btn_closedata)
 
     def on_generate(self, event=None):
         """Generate a validation report."""
+        del event
         if self.generate_event_report():
             self.show_buttons_for_update()
             self.create_buttons()
 
     def on_report(self, event=None):
         """Save validation report."""
+        del event
         self.save_reports()
 
     def on_save(self, event=None):
         """Save source document."""
+        del event
         self.save_data_folder()
 
     def on_toggle_compare(self, event=None):
-        """Display original source document alongside edited source document."""
+        """Display original source document next to edited source document."""
+        del event
         self.show_buttons_for_compare()
         self.create_buttons()
         self.show_originals_and_edits()
 
     def on_toggle_generate(self, event=None):
-        """Display edited source document alongside validation report widgets."""
+        """Display edited source document next to validation report widgets."""
+        del event
         self.show_buttons_for_generate()
         self.create_buttons()
         self.show_edits_and_generated()
@@ -456,7 +456,8 @@ class SourceEdit(panel.PlainPanel):
         # inserts are commented now. Also wrong when tagging ready.
         # self.schedulectrl.insert(tkinter.END, '\n'.join(
         #    self.generated_schedule))
-        # self.resultsctrl.insert(tkinter.END, '\n'.join(self.generated_results))
+        # self.resultsctrl.insert(tkinter.END,
+        #                        '\n'.join(self.generated_results))
 
     def show_originals_and_edits(self):
         """Display widgets comparing database and edited versions of data."""
@@ -622,10 +623,11 @@ class SourceEdit(panel.PlainPanel):
             return "break"
 
         # Copy the _EDITABLE characters between SEL_FIRST and SEL_LAST to the
-        # clipboard.  The _NON_EDITABLE characters which may split the selection
-        # into regions are present to preserve source identification of text,
-        # and are not copied.  These are in the highlighted areas,
+        # clipboard.  The _NON_EDITABLE characters which may split the
+        # selection into regions are present to preserve source identification
+        # of text, and are not copied.  These are in the highlighted areas.
         def clip(event=None):
+            del event
             ranges = list(widget.tag_ranges(_EDITABLE))
             widget.clipboard_clear()
             while ranges:
@@ -658,6 +660,7 @@ class SourceEdit(panel.PlainPanel):
         # Neither paste binding nor paste function is needed on FreeBSD.
         # The situation with other BSDs, and any Linux, is not known.
         def paste(event=None):
+            del event
             widget.insert(
                 tkinter.INSERT, widget.clipboard_get(type="UTF8_STRING")
             )
@@ -667,7 +670,8 @@ class SourceEdit(panel.PlainPanel):
 
         return widget
 
-    def _insert_entry(self, widget, tagsuffix, entry, text):  # title, text):
+    @staticmethod
+    def _insert_entry(widget, tagsuffix, entry, text):  # title, text):
         """Insert entry header and tagged text into widget."""
         # Just the whole text tag is put back in the _DifferenceText instance.
         # To be extended later when it is clear how it works exactly.
@@ -816,7 +820,7 @@ class SourceEdit(panel.PlainPanel):
         """
         sectiontypes = {
             "allplayall": self._report_allplayall,  # individuals
-            "league": lambda s, d: None,  # self._report_league, #team all play all
+            "league": lambda s, d: None,  # team all play all
             "swiss": self._report_swiss,  # individuals
             "fixturelist": lambda s, d: None,  # matches from fixture list
             "individual": self._report_individual,  # games between players
@@ -836,15 +840,15 @@ class SourceEdit(panel.PlainPanel):
             if str(exp) == IEIREE:
                 tkinter.messagebox.showinfo(
                     parent=self.get_widget(),
-                    message="".join(
+                    message=" ".join(
                         (
-                            "An exception has occurred while extracting result ",
-                            "information using one of the default regular ",
-                            "expressions.\n\nThe latest version of Python, or at ",
-                            "least a different version (change between 3.3.1 and ",
-                            "3.3.2 for example) may process the text correctly.",
-                            "\n\nAn exception will be raised on dismissing this ",
-                            "dialogue.",
+                            "An exception has occurred while extracting",
+                            "result information using one of the default",
+                            "regular expressions.\n\nThe latest version of",
+                            "Python, or at least a different version (change",
+                            "between 3.3.1 and 3.3.2 for example) may process",
+                            "the text correctly.\n\nAn exception will be",
+                            "raised on dismissing this dialogue.",
                         )
                     ),
                     title="Regular Expression Runtime Error",
@@ -880,11 +884,11 @@ class SourceEdit(panel.PlainPanel):
                 message="".join(
                     (
                         "Known causes of this exception are:\n\n",
-                        "A badly-formed entry in a swiss table: for example 'x' ",
-                        "or 'w12w'.\n",
-                        "\nA well-formed entry in a swiss table refering to a ",
-                        "row which does not exist: for example 'w12+' where ",
-                        "'12' is not a player's PIN.\n",
+                        "A badly-formed entry in a swiss table: for example ",
+                        "'x' or 'w12w'.\n",
+                        "\nA well-formed entry in a swiss table refering to ",
+                        "a row which does not exist: for example 'w12+' ",
+                        "where '12' is not a player's PIN.\n",
                         "\nAn ECF code or membership number missing the ",
                         "single alpha character suffix or prefix.\n",
                         "\n Edit document as workaround (or solution).",
@@ -1047,6 +1051,7 @@ class SourceEdit(panel.PlainPanel):
                 )
             fixtures.sort()
             for fixture, count, tagger in fixtures:
+                del count
                 tagger.append_generated_schedule(genfix, "".join(fixture))
             genfix.append(("", None))
 
@@ -1147,10 +1152,6 @@ class SourceEdit(panel.PlainPanel):
                 )
             genres.append(("", None))
 
-    # The versions of report_matches_by_source in SourceEdit, PDLEdit and SLEdit
-    # are slightly different.
-    # Seems best to take the PDLEdit version and fit the differences somehow.
-
     def report_matches_by_source(self, data):
         """Override, append list of fixtures by source to results report.
 
@@ -1159,6 +1160,8 @@ class SourceEdit(panel.PlainPanel):
         fixture are not consistent with total score.
 
         """
+        # The PDLEdit and SLEdit references are long since deleted, but they
+        # are why code is as is here.
         # PDLEdit should have had some tests on source attribute according to
         # docstring for report_matches_by_source.
 
@@ -1178,6 +1181,7 @@ class SourceEdit(panel.PlainPanel):
         if matches:
             currtag = matches[0][0].tagger.datatag
         for match, ufg, consistent in matches:
+            del ufg
             if currtag != match.tagger.datatag:
                 currtag = match.tagger.datatag
                 genres.append(("", None))
@@ -1284,7 +1288,7 @@ class SourceEdit(panel.PlainPanel):
             )
         genres.append(("", None))
 
-    def report_players(self, data, separator=None):
+    def report_players(self, data):
         """Append list of players sorted by affiliation to schedule report."""
         if len(data.collation.reports.error):
             return
@@ -1294,10 +1298,10 @@ class SourceEdit(panel.PlainPanel):
             genfix.append(("", None))
             genfix.append(
                 (
-                    "".join(
+                    " ".join(
                         (
-                            "Player identities (with club or place association ",
-                            "and reported codes)",
+                            "Player identities (with club or place",
+                            "association and reported codes)",
                         )
                     ),
                     None,
@@ -1353,15 +1357,16 @@ class SourceEdit(panel.PlainPanel):
                 )
             )
 
-    def get_player_brief(self, player):
+    @staticmethod
+    def get_player_brief(player):
         """Return player identity for schedule report."""
         return player.get_short_identity()
 
-    def report_player_matches(self, data, separator=None):
+    def report_player_matches(self, data):
         """Append list of fixtures for each player to results report."""
         if len(data.collation.reports.error):
             return
-        teamplayers = data.collation.get_reports_by_player(separator)
+        teamplayers = data.collation.get_reports_by_player()
         genres = self.generated_results
         genres.append(("Player reports\n", None))
         for player in sorted(teamplayers.keys()):
@@ -1395,11 +1400,11 @@ class SourceEdit(panel.PlainPanel):
                 )
             genres.append(("", None))
 
-    def report_players_by_club(self, data, separator=None):
+    def report_players_by_club(self, data):
         """Append list of players sorted by club to results report."""
         if len(data.collation.reports.error):
             return
-        clubs = data.collation.get_players_by_club(separator)
+        clubs = data.collation.get_players_by_club()
         eventname = set()
         for club_players in clubs.values():
             for player_name in club_players:
@@ -1612,6 +1617,7 @@ class SourceEdit(panel.PlainPanel):
 
     def _report_league(self, section, data):
         """Generate results report for matches in a league."""
+        del section
         self.report_matches_by_source(data)
         self.report_fixtures_played_status(data)
         self.report_non_fixtures_played(data)
@@ -1620,7 +1626,8 @@ class SourceEdit(panel.PlainPanel):
         self.report_players_by_club(data)
         self.report_player_matches(data)
 
-    def _report_not_implemented(self, section, data):
+    @staticmethod
+    def _report_not_implemented(section, data):
         data.collation.error.append(("", None))
         data.collation.error.append(
             (
@@ -1675,9 +1682,9 @@ class SourceEdit(panel.PlainPanel):
                         (
                             " ".join(
                                 (
-                                    "The following rounds have no specified date.",
-                                    "These are deemed played on the event",
-                                    "start date.",
+                                    "The following rounds have no specified",
+                                    "date. These are deemed played on the",
+                                    "eventstart date.",
                                 )
                             ),
                             None,
@@ -1693,8 +1700,9 @@ class SourceEdit(panel.PlainPanel):
                     (
                         " ".join(
                             (
-                                "All rounds are deemed played on the event start date",
-                                "because no round dates are specified.",
+                                "All rounds are deemed played on the event",
+                                "start datebecause no round dates are",
+                                "specified.",
                             )
                         ),
                         None,
@@ -1752,7 +1760,8 @@ class SourceEdit(panel.PlainPanel):
                         ),
                     )
 
-    def _section_type_unknown(self, section, data):
+    @staticmethod
+    def _section_type_unknown(section, data):
         data.collation.error.append(("", None))
         data.collation.error.append(
             (" ".join((section, "type not known")), None)

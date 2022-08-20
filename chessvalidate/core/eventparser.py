@@ -162,8 +162,8 @@ _VOID = "".join(
         r"(?:(?<=\s)|\A)",
         "(?:",
         "void|unfinished|",
-        r"(?:1\s*-|dbl|double)?default(?:-\s*1)?|",  # includes default as a word
-        r"1\s*-def|def\s*-1|(?:dbl|double)\s*def|",  # def allowed in context
+        r"(?:1\s*-|dbl|double)?default(?:-\s*1)?|",
+        r"1\s*-def|def\s*-1|(?:dbl|double)\s*def|",
         r"match\s+default",
         ")",
         r"(?=\s|\Z)",
@@ -458,7 +458,7 @@ class EventParser:
                                         raise_re_error(mbn, ssi)
                                     raise
                                 # tracer for fixing regular expressions
-                                # print(mfn, repr(ski), len(kditems), end='  ') # tracer
+                                # print(mfn, repr(ski), len(kditems), end='  ')
                                 for kdi in kditems:
                                     # tracer for fixing regular expressions
                                     # print(repr(kdi[:20]), end='  ') # tracer
@@ -491,7 +491,7 @@ class EventParser:
                                                 raise_re_error(fvi, kdi)
                                             raise
                                         # tracer for fixing regular expressions
-                                        # print(fvi, len(tle), end='  ') # tracer
+                                        # print(fvi, len(tle), end='  ')
                                         if len(tle) != 1:
                                             continue
                                         gdi = tle[0].groupdict()
@@ -528,7 +528,7 @@ class EventParser:
                                         for t in emf[gbn].findall(kdi)
                                     ]
                                     # tracer for fixing regular expressions
-                                    # print(gbn, len(vditems), end='  ') # tracer
+                                    # print(gbn, len(vditems), end='  ')
                                     for vdi in vditems:
                                         if not vdi:
                                             continue
@@ -561,7 +561,7 @@ class EventParser:
                                                 tle[0].groupdict(),
                                             )
                                             break
-                                # print() # tracer for fixing regular expressions
+                                # print() # tracer for fixing regexes
                 found |= bool(est)
                 # print() # tracer for fixing regular expressions
             if not found:
@@ -865,7 +865,8 @@ def _select_result_line(result_line_description, text):
                     )
 
     # text must contain less than three dates.
-    # Use tsdate, not split_text, to keep for later if text turns out to be fixture.
+    # Use tsdate, not split_text, to keep for later if text turns out to be
+    # fixture.
     tsdate = RE_DATE.split(text)
     if len(tsdate) > 3:
         return EventData(
@@ -1452,8 +1453,8 @@ def _select_result_line(result_line_description, text):
                         ed_kargs["numbers"] = [numbers.pop(0)]
                         ed_kargs["score"] = " ".join((numbers[0], numbers[1]))
 
-                    # If two of the other items in numbers are '1' use the first
-                    # '1' item as the round or board.
+                    # If two of the other items in numbers are '1' use the
+                    # first '1' item as the round or board.
                     # The explicit test is used but it should be equivalent to
                     # 'anything else'.
                     elif len(one) == 2:
@@ -2029,7 +2030,8 @@ def _lookup_competition(competition_lookup, key):
                 (
                     "Lookup proper competition name for\n\n",
                     key,
-                    "\n\nfailed: it is likely not listed in configuration file.",
+                    "\n\nfailed: it is likely not listed in configuration ",
+                    "file.",
                 )
             )
         )
@@ -2052,13 +2054,14 @@ def raise_re_error(name, text):
             (
                 "A regular expression derived from a\n\n",
                 name,
-                "\n\nentry in the event configuration file failed processing\n\n",
+                "\n\nentry in the event configuration file failed ",
+                "processing\n\n",
                 repr(text).join(("", ".\n\n")),
-                "This is known to depend on the Python version for at least one ",
-                "regular expression.  Try the latest version of Python, or at ",
-                "least a different version (change between 3.3.1 and 3.3.2 for ",
-                "example) before blaming the event configuration file entry or ",
-                "the application.",
+                "This is known to depend on the Python version for at least ",
+                "one regular expression.  Try the latest version of Python, ",
+                "or at least a different version (change between 3.3.1 and ",
+                "3.3.2 for example) before blaming the event configuration ",
+                "file entry or the application.",
             )
         )
     )

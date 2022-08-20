@@ -67,7 +67,9 @@ class EventContext:
             Found.COMPETITION_NAME: self._competition,
             Found.COMPETITION_ROUND: self._competition_round,
             Found.ROUND_HEADER: self._round_header,
-            Found.COMPETITION_ROUND_GAME_DATE: self._competition_round_game_date,
+            Found.COMPETITION_ROUND_GAME_DATE: (
+                self._competition_round_game_date
+            ),
             Found.FIXTURE_TEAMS: self._fixture_teams,
             Found.FIXTURE: self._fixture,
             Found.COMPETITION_DATE: self._competition_date,
@@ -343,7 +345,8 @@ class EventContext:
         # self._players
         # self._print(eventdata)
 
-    def _print(self, eventdata):
+    @staticmethod
+    def _print(eventdata):
         """Wrap print eventdata method used when fixing problems.
 
         Otherwise not used.
@@ -443,13 +446,13 @@ def get_names_from_joined_names(joined_names, attrnames, truncate):
                     message="".join(
                         (
                             "Truncate to 20 words?\n\n",
-                            "Attempting to decide how to split more than 50 words ",
-                            "into 2 names, which is unlikely to be worth the time ",
-                            "it will take.  This is probably happening because ",
-                            "you have not had chances to delete text which is ",
-                            "obviously irrelevant.\n\nYou may have to not ",
-                            "truncate eventually but saying 'No' at first may ",
-                            "waste a lot of time.",
+                            "Attempting to decide how to split more than 50 ",
+                            "words into 2 names, which is unlikely to be ",
+                            "worth the time it will take.  This is probably ",
+                            "happening because you have not had chances to ",
+                            "delete text which is obviously irrelevant.\n\n",
+                            "You may have to not truncate eventually but",
+                            "saying 'No' at first may waste a lot of time.",
                         )
                     ),
                     title="Calculating Names",

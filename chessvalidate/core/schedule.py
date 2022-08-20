@@ -406,11 +406,11 @@ class Schedule:
                                 (
                                     '"',
                                     text,
-                                    '"must be like "rounds 10" to specify the ',
-                                    "number of rounds of matches.  If a round is ",
-                                    "given for a match it must be between 1 and ",
-                                    "the number.  The matches should be given in ",
-                                    "a fixture list.",
+                                    '"must be like "rounds 10" to specify ',
+                                    "the number of rounds of matches.  If a ",
+                                    "round is given for a match it must be ",
+                                    "between 1 and the number.  The matches ",
+                                    "should be given in a fixture list.",
                                 )
                             ),
                         )
@@ -448,11 +448,12 @@ class Schedule:
                                 (
                                     '"',
                                     text,
-                                    '" must be like "generate 2" to specify the ',
-                                    "number of times the teams play each other.  ",
-                                    "The team names are reversed in odd and even ",
-                                    "numbered matches assuming this may mean home ",
-                                    "and away.  The generated list of matches ",
+                                    '" must be like "generate 2" to specify ',
+                                    "the number of times the teams play ",
+                                    "each other.  The team names are ",
+                                    "reversed in odd and even numbered ",
+                                    "matches assuming this may mean home and ",
+                                    "away.  The generated list of matches ",
                                     "does not give dates or rounds for the ",
                                     "matches.",
                                 )
@@ -560,6 +561,7 @@ class Schedule:
             rtn, match = get_match(text, tagger)
             if match:
                 team1, team2, date = match
+                del date
                 teams = dict()
                 for mname in self.es_matches[self._section]:
                     if (
@@ -580,7 +582,8 @@ class Schedule:
                         (
                             'Match "',
                             text,
-                            '" involves a team in an earlier match for round "',
+                            '" involves a team in an earlier match for ',
+                            'round "',
                             self._round,
                             '" in section "',
                             self._section,
@@ -611,12 +614,12 @@ class Schedule:
                             '" ',
                             "not recognised",
                             "\n\nAllowed section types are:\n\t",
-                            "allplayall\t\tall play all table for individuals\n\t",
-                            "league\t\ta list of matches in rounds\n\t",
-                            "swiss\t\tswiss tournament table for individuals\n\t",
-                            "individual\t\ta list of games between individuals\n\t",
-                            "\n\nAlso allowed at this point is the type of game ",
-                            "in following sections:\n\t",
+                            "allplayall\t\tall play all table for individuals",
+                            "\n\tleague\t\ta list of matches in rounds\n\t",
+                            "swiss\t\tswiss tournament table for individuals",
+                            "\n\tindividual\t\ta list of games between ",
+                            "individuals\n\t\n\nAlso allowed at this point ",
+                            "is the type of game in following sections:\n\t",
                             "rapidplay\t\t\n\t",
                             "normalplay\t\t(the default)",
                         )
@@ -797,7 +800,7 @@ class Schedule:
                             )  # dateok=True))
 
         def get_match(text, tagger):
-            """Create MatchFixture from text, return (state indicator, match)."""
+            """Create MatchFixture from text, return (next method, match)."""
             tp1, tp2 = split_text_and_pad(text, 1)
             tps = tp1.split()
             tp0 = tps[0].lower()
@@ -813,7 +816,7 @@ class Schedule:
             matchdate = mdate.parse_date(tp1)
             if (
                 matchdate < 3
-            ):  # not matchdate < -1 so leading digits can be part of team name.
+            ):  # not matchdate < -1 so leading digits can be in team name.
                 tdate = ""
                 team1 = tp1
             else:  # badly formatted dates treated as part of team name.
@@ -940,13 +943,11 @@ class Schedule:
         }
 
         self.textlines = textlines
-        state = None
         process = get_event_name
         for linestr, linetag in self.textlines:
             linestr = linestr.strip()
             if len(linestr) == 0:
                 continue
-            state = process
             process = process(linestr, linetag)
 
         # hack to spot empty schedule
@@ -960,7 +961,8 @@ class Schedule:
             )
 
     # Tagging not used yet so the argument is the text from error, not the key
-    # of the item in self._generated_schedule containing the text (or whatever).
-    def get_schedule_tag_and_text(self, text):  # key):
+    # of the item in self._generated_schedule containing the text.
+    @staticmethod
+    def get_schedule_tag_and_text(text):  # key):
         """Return tuple(tag, text for error)."""
         return ("gash", text)  # self._generated_schedule[key])

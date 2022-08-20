@@ -16,9 +16,8 @@ report results and have a subclass of ReportedSeason extract the data.
 
 import difflib
 import os
-import tkinter.messagebox
 import re
-import tkinter
+import tkinter.messagebox
 
 from emailextract.core.emailextractor import (
     COLLECTED,
@@ -104,9 +103,10 @@ class Season:
     Each file in a mailbox subdirectory must be identical to all smaller files
     in the same directory up to the length of the smaller file for the source
     data to be accepted.  The largest file in the directory must be identical
-    to the original data on the difference file up to the length of the original
-    data.  In other words a dump of the mailbox into the source directory must
-    include all emails that are in earlier dumps (and in the same order).
+    to the original data on the difference file up to the length of the
+    original data.  In other words a dump of the mailbox into the source
+    directory must include all emails that are in earlier dumps (and in the
+    same order).
 
     Text is extracted from all text/plain and application/pdf parts into the
     reports file, and extrcted from csv dumps of the 'ForGrader' sheet in all
@@ -326,8 +326,8 @@ class Season:
                         (
                             "Open event file or directory\n\n",
                             os.path.basename(exc.filename),
-                            "\n\nfailed.\n\nAny files in the directory which do ",
-                            "exist have been ignored.",
+                            "\n\nfailed.\n\nAny files in the directory which ",
+                            "do exist have been ignored.",
                         )
                     ),
                 )
@@ -392,8 +392,8 @@ class Season:
                     title="Open event results data",
                     message="".join(
                         (
-                            "Some files in extracted folder are not present in ",
-                            "email folder.",
+                            "Some files in extracted folder are not present ",
+                            "in email folder.",
                         )
                     ),
                 )
@@ -405,9 +405,9 @@ class Season:
                         title="Open event results data",
                         message="".join(
                             (
-                                "Emails dated after latest in extract are available.",
-                                "\n\nDo you wish to continue without including the ",
-                                "new emails?",
+                                "Emails dated after latest in extract are ",
+                                "available.\n\nDo you wish to continue ",
+                                "without including the new emails?",
                             )
                         ),
                     )
@@ -420,10 +420,10 @@ class Season:
                     title="Open event results data",
                     message="".join(
                         (
-                            "Emails not in the extract are available.  Some, maybe ",
-                            "all, are dated earlier than latest in extract.",
-                            "\n\nDo you wish to continue without including the ",
-                            "new emails?",
+                            "Emails not in the extract are available.  Some, ",
+                            "maybe all, are dated earlier than latest in ",
+                            "extract.\n\nDo you wish to continue without ",
+                            "including the new emails?",
                         )
                     ),
                 )
@@ -460,10 +460,10 @@ class Season:
                         "that just taken from file:\n\n",
                         emt_file,
                         "\n\nin the email folder.\n\nDeleting the extracted ",
-                        "file and repeating the extract process will clear the ",
-                        "problem assuming the email file contains the correct ",
-                        "data.  Any edits done to the extracted file will be ",
-                        "lost.",
+                        "file and repeating the extract process will clear ",
+                        "the problem assuming the email file contains the ",
+                        "correct data.  Any edits done to the extracted ",
+                        "file will be lost.",
                     )
                 )
                 if format_fault:
@@ -766,8 +766,8 @@ class _DifferenceText:
                     (
                         "Rename new file as\n\n",
                         os.path.join(self._folder, self._filename),
-                        "\n\n fails.\n\nRenaming other new files will continue ",
-                        "on dismissing this report.",
+                        "\n\n fails.\n\nRenaming other new files will ",
+                        "continue on dismissing this report.",
                     )
                 ),
             )

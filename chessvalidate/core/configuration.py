@@ -149,6 +149,7 @@ class Configuration:
         home = os.path.expanduser("~")
 
         # removeprefix not available until Python3.9
+        # pylint and black disagree with pycodestyle on spaces before ":".
         if path.startswith(home):
             return os.path.join("~", path[len(home) + 1 :])
         return path

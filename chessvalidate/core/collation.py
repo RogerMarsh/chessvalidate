@@ -77,9 +77,9 @@ class Collation(GameCollation):
             self.section_type[section] = reports.er_section[section]
             self.report_order.append(section)
         if self._league_found:
-            self.collate_matches(self.reports, self.schedule)
-            self.collate_unfinished_games(self.schedule)
-            self.collate_players(self.schedule)
+            self.collate_matches()
+            self.collate_unfinished_games()
+            self.collate_players()
         for section in fixtures.es_report_order:
             if section not in self.section_type:
                 self.section_type[section] = fixtures.es_section[section]
@@ -146,7 +146,8 @@ class Collation(GameCollation):
                                 (
                                     "Section ",
                                     section,
-                                    " has no information in schedule for name ",
+                                    " has no information in schedule ",
+                                    "for name ",
                                     player,
                                     " (PIN ",
                                     str(ppin),
@@ -165,7 +166,8 @@ class Collation(GameCollation):
                                 (
                                     "Section ",
                                     section,
-                                    ' has no information in schedule for name "',
+                                    " has no information in schedule ",
+                                    'for name "',
                                     player,
                                     " (PIN ",
                                     str(ppin),
@@ -262,7 +264,7 @@ class Collation(GameCollation):
                     result=game[5],
                     date=round_dates[game[0]],
                     homeplayerwhite=homeplayercolour.get(game[6]),
-                    homeplayer=homeplayer,  # should be the Player instance now.
+                    homeplayer=homeplayer,  # should be Player instance now.
                     awayplayer=awayplayer,
                 )
             )  # should be the Player instance now.
@@ -319,6 +321,7 @@ class Collation(GameCollation):
         self.set_games(section, sectiongames)
 
     def _collate_league(self, section):
+        del section
 
         # Set flag to call self.collate_matches and self.collate_players once
         # for this Generate call
@@ -502,7 +505,7 @@ class Collation(GameCollation):
     # The pdlcollation version is functionally identical, and almost identical
     # by character, differing only in one attribute name.
 
-    def collate_unfinished_games(self, schedule):
+    def collate_unfinished_games(self):
         """Collate games played but reported unfinished."""
 
         def nullstring(string):
@@ -643,7 +646,7 @@ class Collation(GameCollation):
     # been deleted: see comment at bottom of gameobjects.py
 
     # Changed to populate er_results from er_matchresults
-    def collate_matches(self, reports, schedule):
+    def collate_matches(self):
         """Collate results in matchrecords with expected results in schedule.
 
         Match score inconsistent with game scores is reported as an error when
@@ -659,6 +662,8 @@ class Collation(GameCollation):
         deemed errors.
 
         """
+        reports = self.reports
+        schedule = self.schedule
 
         def nullstring(string):
             if isinstance(string, str):
@@ -764,8 +769,8 @@ class Collation(GameCollation):
                         rep.append("Round")
                         rep.append(rnd)
                     rep.append("match:")
-                    self.reports.error.append((" ".join(rep), self.reports))
-                    self.reports.error.append(
+                    reports.error.append((" ".join(rep), self.reports))
+                    reports.error.append(
                         (
                             " ".join(
                                 (
@@ -783,12 +788,10 @@ class Collation(GameCollation):
                                     mrm.source,
                                 )
                             ),
-                            self.reports,
+                            reports,
                         )
                     )
-                    self.reports.error.append(
-                        ("   Error detail:", self.reports)
-                    )
+                    reports.error.append(("   Error detail:", reports))
                     problems = {
                         k: v
                         for k, v in match_problems.items()
@@ -797,7 +800,7 @@ class Collation(GameCollation):
                     if problems:
                         for k in problems:
                             match_problems.pop(k, None)
-                        self.reports.error.append(
+                        reports.error.append(
                             (
                                 " ".join(
                                     (
@@ -805,11 +808,11 @@ class Collation(GameCollation):
                                         ", ".join(sorted(problems)),
                                     )
                                 ),
-                                self.reports,
+                                reports,
                             )
                         )
                     for game, detail in match_problems.items():
-                        self.reports.error.append(
+                        reports.error.append(
                             (
                                 " ".join(
                                     (
@@ -822,15 +825,15 @@ class Collation(GameCollation):
                                         ", ".join(sorted(detail)),
                                     )
                                 ),
-                                self.reports,
+                                reports,
                             )
                         )
                     mrm.tagger.append_generated_report(
-                        self.reports.error, "   Most recent report:"
+                        reports.error, "   Most recent report:"
                     )
                     for game in mrm.games:
                         game.tagger.append_generated_report(
-                            self.reports.error,
+                            reports.error,
                             " ".join(
                                 (
                                     "      ",
@@ -844,11 +847,11 @@ class Collation(GameCollation):
                     for match in umsu[:-1]:
                         games = match.games
                         match.tagger.append_generated_report(
-                            self.reports.error, "   Earlier report:"
+                            reports.error, "   Earlier report:"
                         )
                         for game in games:
                             game.tagger.append_generated_report(
-                                self.reports.error,
+                                reports.error,
                                 " ".join(
                                     (
                                         "      ",
@@ -859,7 +862,7 @@ class Collation(GameCollation):
                                     )
                                 ),
                             )
-                    self.reports.error.append(("", self.reports))
+                    reports.error.append(("", reports))
 
         fnp = [
             (
@@ -876,7 +879,7 @@ class Collation(GameCollation):
         ]
         self.fixturesnotplayed = [f[-1] for f in sorted(fnp)]
 
-    def collate_players(self, schedule):
+    def collate_players(self):
         """Unify and complete player references used in games.
 
         For each unique player identity there is likely to be several Player
@@ -891,6 +894,7 @@ class Collation(GameCollation):
         Generate data for player reports.
 
         """
+        schedule = self.schedule
         players = dict()
         teamclub = dict()
         identities = dict()
@@ -1021,7 +1025,7 @@ class Collation(GameCollation):
             )
         ]
 
-    def get_players_by_club(self, separator=None):
+    def get_players_by_club(self):
         """Return dict(<club name>=[<player name>, ...], ...)."""
         players = dict()
         for club in self.clubplayers:
@@ -1051,7 +1055,7 @@ class Collation(GameCollation):
         matches.sort()
         return [m[-1] for m in matches]
 
-    def get_reports_by_player(self, separator=None):
+    def get_reports_by_player(self):
         """Return dict(<player name>=[(<team>, <match>), ...], ...)."""
         players = dict()
         for team in self.teamplayers:
