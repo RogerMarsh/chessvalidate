@@ -17,6 +17,7 @@ class EventDetails(header.Header):
     submission file.
 
     """
+
     _sequences = ()
     _allowed_inserts = {}
     _popup_menu_label_map = {}
@@ -56,5 +57,6 @@ class EventDetails(header.Header):
         return bool(
             conf.get_configuration_value(
                 ecfformat.core.constants.SHOW_VALUE_BOUNDARY
-            ) == ecfformat.core.constants.SHOW_VALUE_BOUNDARY_TRUE
+            )
+            == ecfformat.core.constants.SHOW_VALUE_BOUNDARY_TRUE
         )
