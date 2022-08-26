@@ -778,7 +778,7 @@ def _create_event_configuration_file(directory):
     with open(
         os.path.join(directory, constants.EVENT_CONF), "w", encoding="utf8"
     ) as config_file:
-        config_file.writelines(("#eventdetails", os.linesep))
+        config_file.write(constants.NEW_FILE_TEXT)
 
 
 def create_extract_and_event_configuration_files(file_path):

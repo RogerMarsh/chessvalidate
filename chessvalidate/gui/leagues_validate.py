@@ -286,7 +286,6 @@ class Leagues(threadqueue.AppSysThreadQueue):
     @staticmethod
     def set_error_file_on_close_source():
         """Set the error log after source file is closed."""
-        print("close")
         Leagues.set_error_file_name(None)
 
     def set_ecfdataimport_module(self, enginename):

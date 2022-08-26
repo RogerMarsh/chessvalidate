@@ -3,6 +3,7 @@
 # Licence: See LICENCE (BSD licence)
 
 """Constants used in ChessResultsReport application."""
+from ecfformat.core import constants
 
 # Chosen way of presenting game results in readable format.
 LOSS = "0-1"  # _loss = '0-1'
@@ -71,6 +72,20 @@ ECF_RESULT_D1 = "d1"
 
 # Event configuration file.
 EVENT_CONF = "event.conf"
+NEW_FILE_TEXT = "\n".join(
+    (
+        "".join((constants.FIELD_SEPARATOR, constants.NAME_EVENT_DETAILS)),
+        constants.NAME_EVENT_NAME.join(
+            (constants.FIELD_SEPARATOR, constants.NAME_VALUE_SEPARATOR)
+        ),
+        constants.NAME_EVENT_DATE.join(
+            (constants.FIELD_SEPARATOR, constants.NAME_VALUE_SEPARATOR)
+        ),
+        constants.NAME_FINAL_RESULT_DATE.join(
+            (constants.FIELD_SEPARATOR, constants.NAME_VALUE_SEPARATOR)
+        ),
+    )
+)
 
 # Most recently accessed database and configuation files for selecting and
 # extracting text from emails to documents.

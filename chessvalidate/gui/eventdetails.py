@@ -7,6 +7,7 @@ from ecfformat.gui import header
 import ecfformat.core.constants
 
 from ..core import configuration
+from ..core import constants
 
 
 class EventDetails(header.Header):
@@ -21,24 +22,10 @@ class EventDetails(header.Header):
     _sequences = ()
     _allowed_inserts = {}
     _popup_menu_label_map = {}
-    _NEW_FILE_TEXT = "\n".join(
-        (
-            "#EVENT DETAILS",
-            "#EVENT CODE=",
-            "#SUBMISSION INDEX=",
-            "#EVENT NAME=",
-            "#EVENT DATE=",
-            "#FINAL RESULT DATE=",
-            "#RESULTS OFFICER=",
-            "#RESULTS OFFICER ADDRESS=",
-            "#TREASURER=",
-            "#TREASURER ADDRESS=",
-        )
-    )
-    _NO_VALUE_TAGS = (
-        ecfformat.core.constants.EVENT_CODE,
-        ecfformat.core.constants.SUBMISSION_INDEX,
-    )
+    _NEW_FILE_TEXT = constants.NEW_FILE_TEXT
+    _NO_VALUE_TAGS = ()
+    _RSF_EXT = ".conf"
+    _RSF_PATTERN = "event" + _RSF_EXT
 
     def _set_field_delete_binding(self):
         """Suppress Alt-KeyPress-Delete binding in all circumstances.

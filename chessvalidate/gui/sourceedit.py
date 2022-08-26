@@ -63,7 +63,7 @@ class SourceEditError(Exception):
 class SourceEdit(panel.PlainPanel):
     """The Edit panel for raw results data."""
 
-    _btn_generate = "sourceedit_generta"
+    _btn_generate = "sourceedit_generate"
     _btn_closedata = "sourceedit_close"
     _btn_save = "sourceedit_save"
     _btn_toggle_compare = "sourceedit_toggle_compare"

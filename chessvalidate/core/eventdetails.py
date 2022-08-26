@@ -38,7 +38,7 @@ def get_event_details(folder):
     widget = tkinter.Text()
     with open(os.path.join(folder, EVENT_CONF)) as file_:
         text = file_.read()
-    HeaderContent(text, False).parse(widget)
+    HeaderContent(text, False, ()).parse(widget)
     event = get_text_at_value_after_name(constants.EVENT_NAME, widget)
     date = get_text_at_value_after_name(constants.EVENT_DATE, widget)
     final = get_text_at_value_after_name(constants.FINAL_RESULT_DATE, widget)
