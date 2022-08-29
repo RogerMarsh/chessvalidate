@@ -690,7 +690,7 @@ def _select_result_line(result_line_description, text):
                 source=source,
                 headers=headers,
             )
-        except:
+        except Exception:
             return EventData(
                 datatag=data_tag,
                 found=Found.TABLE_FORMAT,
@@ -2007,7 +2007,7 @@ def _translate(result_line_description, re_name, finditer_list_groupdict):
     if text:
         try:
             text = " ".join(text)
-        except:
+        except Exception:
             print(finditer_list_groupdict)
             raise
 

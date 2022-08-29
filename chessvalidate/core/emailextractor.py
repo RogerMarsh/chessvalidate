@@ -594,7 +594,7 @@ class ExtractText(emailextractor.ExtractText):
                 for col in column_identities:
                     int(col)
                 column_names = False
-            except:
+            except ValueError:
                 column_names = True
             if column_names:
                 reader = csv.DictReader(csvlines)

@@ -208,7 +208,7 @@ class Season:
             if os.path.isdir(os.path.join(self.folder, COLLECTED)):
                 try:
                     os.mkdir(os.path.join(self.folder, EXTRACTED))
-                except:
+                except FileExistsError:
                     pass
         fcount = len(
             [
@@ -728,7 +728,7 @@ class _DifferenceText:
                             ),
                         )
                     )
-        except:
+        except Exception:
             pass
         return "Unknown sender and date"
 
@@ -759,7 +759,7 @@ class _DifferenceText:
                 os.path.join(self._folder, "".join((self._filename, "new"))),
                 os.path.join(self._folder, self._filename),
             )
-        except:
+        except Exception:
             tkinter.messagebox.showinfo(
                 title="Save event results data",
                 message="".join(

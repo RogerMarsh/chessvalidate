@@ -484,7 +484,7 @@ def get_names_from_joined_names(joined_names, attrnames, truncate):
             consistent.add(nset[nameone])
             consistent.add(nset[nametwo])
             splitnames[k] = nset
-        except:
+        except Exception:
             gvalue.guess_names_from_known_names(allnames)
             guesses[k] = {
                 nameone: gvalue.namepairs[-1][0],

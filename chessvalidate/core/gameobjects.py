@@ -514,11 +514,11 @@ class MatchReport(Section):
                     points += i
         try:
             homepoints = float(self.homescore)
-        except:
+        except ValueError:
             homepoints = 0
         try:
             awaypoints = float(self.awayscore)
-        except:
+        except ValueError:
             awaypoints = 0
         if self.default and len(ufg) == 0:
             consistent = True
