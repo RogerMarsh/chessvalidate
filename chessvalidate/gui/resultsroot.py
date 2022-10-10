@@ -8,6 +8,7 @@ import tkinter
 import tkinter.messagebox
 import tkinter.filedialog
 
+from solentware_misc.gui.bindings import Bindings
 from solentware_misc.gui.exceptionhandler import ExceptionHandler
 from solentware_misc.gui import fontchooser
 
@@ -24,7 +25,7 @@ from . import eventdetails
 ExceptionHandler.set_application_name(APPLICATION_NAME)
 
 
-class Results(ExceptionHandler):
+class Results(Bindings):
     """Results application."""
 
     def __init__(self, title, gui_module, width, height):
@@ -36,6 +37,7 @@ class Results(ExceptionHandler):
         height - initial height of application window in pixels
 
         """
+        super().__init__()
         self.root = tkinter.Tk()
         self.root.wm_title(title)
 
