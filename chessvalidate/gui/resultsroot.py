@@ -49,9 +49,7 @@ class Results(Bindings):
 
         self.app_module = gui_module(
             master=self.root,
-            background="cyan",
-            width=width,
-            height=height,
+            cnf=dict(background="cyan", width=width, height=height),
             # database_class=self._database_class,
             # datasourceset_class=self._datasourceset_class,
             menubar=menubar,
