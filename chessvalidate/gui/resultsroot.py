@@ -14,7 +14,7 @@ from solentware_misc.gui import fontchooser
 
 from emailstore.gui import help_ as emailstore_help
 
-from emailextract.gui import help as emailextract_help
+from emailextract.gui import help_ as emailextract_help
 
 from .. import APPLICATION_NAME
 from . import help_
