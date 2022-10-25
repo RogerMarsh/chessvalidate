@@ -421,7 +421,9 @@ class SourceEdit(panel.PlainPanel):
         if self.editedtext is None:
             self.editedtext = self._make_textedit_tab()
             self.bind(
-                self.editedtext, "<ButtonPress-3>", function=self.editedtext_popup
+                self.editedtext,
+                "<ButtonPress-3>",
+                function=self.editedtext_popup,
             )
             self._populate_editedtext()
         if self.schedulectrl is None:
@@ -429,14 +431,18 @@ class SourceEdit(panel.PlainPanel):
                 master=self.generatedpane
             )
             self.bind(
-                self.schedulectrl, "<ButtonPress-3>", function=self.schedule_popup
+                self.schedulectrl,
+                "<ButtonPress-3>",
+                function=self.schedule_popup,
             )
         if self.resultsctrl is None:
             self.resultsctrl = textreadonly.make_text_readonly(
                 master=self.generatedpane
             )
             self.bind(
-                self.resultsctrl, "<ButtonPress-3>", function=self.results_popup
+                self.resultsctrl,
+                "<ButtonPress-3>",
+                function=self.results_popup,
             )
         self.editpane.add(self.editedtext)
         self.generatedpane.add(self.schedulectrl)
