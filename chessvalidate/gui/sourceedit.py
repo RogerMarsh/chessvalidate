@@ -420,23 +420,23 @@ class SourceEdit(panel.PlainPanel):
             )
         if self.editedtext is None:
             self.editedtext = self._make_textedit_tab()
-            self.editedtext.bind(
-                "<ButtonPress-3>", self.try_event(self.editedtext_popup)
+            self.bind(
+                self.editedtext, "<ButtonPress-3>", function=self.editedtext_popup
             )
             self._populate_editedtext()
         if self.schedulectrl is None:
             self.schedulectrl = textreadonly.make_text_readonly(
                 master=self.generatedpane
             )
-            self.schedulectrl.bind(
-                "<ButtonPress-3>", self.try_event(self.schedule_popup)
+            self.bind(
+                self.schedulectrl, "<ButtonPress-3>", function=self.schedule_popup
             )
         if self.resultsctrl is None:
             self.resultsctrl = textreadonly.make_text_readonly(
                 master=self.generatedpane
             )
-            self.resultsctrl.bind(
-                "<ButtonPress-3>", self.try_event(self.results_popup)
+            self.bind(
+                self.resultsctrl, "<ButtonPress-3>", function=self.results_popup
             )
         self.editpane.add(self.editedtext)
         self.generatedpane.add(self.schedulectrl)
@@ -647,10 +647,10 @@ class SourceEdit(panel.PlainPanel):
 
         widget.event_add("<<Clear>>", "<BackSpace>")
         widget.event_add("<<Clear>>", "<Delete>")
-        widget.bind("<<Clear>>", clear)
-        widget.bind("<KeyPress>", key)
-        widget.bind("<Control-x>", lambda e: "break")
-        widget.bind("<Control-c>", clip)
+        self.bind(widget, "<<Clear>>", function=clear)
+        self.bind(widget, "<KeyPress>", function=key)
+        self.bind(widget, "<Control-x>", function=lambda e: "break")
+        self.bind(widget, "<Control-c>", function=clip)
 
         # An explicit binding is needed on Microsoft Windows XP, and other
         # versions I assume, for the paste part of copy-and-paste to do the
@@ -666,7 +666,7 @@ class SourceEdit(panel.PlainPanel):
             )
             return "break"
 
-        widget.bind("<Control-v>", paste)
+        self.bind(widget, "<Control-v>", function=paste)
 
         return widget
 

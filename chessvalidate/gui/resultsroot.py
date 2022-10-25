@@ -8,8 +8,9 @@ import tkinter
 import tkinter.messagebox
 import tkinter.filedialog
 
-from solentware_misc.gui.bindings import Bindings
-from solentware_misc.gui.exceptionhandler import ExceptionHandler
+from solentware_bind.gui.bindings import Bindings
+from solentware_bind.gui.exceptionhandler import ExceptionHandler
+
 from solentware_misc.gui import fontchooser
 
 from emailstore.gui import help_ as emailstore_help
