@@ -963,7 +963,7 @@ class SourceEdit(panel.PlainPanel):
                     data.collation.section_type[section],
                     self._section_type_unknown,
                 )
-                if not isinstance(process, collections.Callable):
+                if not isinstance(process, collections.abc.Callable):
                     process = self._report_not_implemented
                 process(section, data)
                 if process is sectiontypes["league"]:

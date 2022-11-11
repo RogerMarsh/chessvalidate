@@ -71,7 +71,7 @@ class Collation(GameCollation):
             process = sectiontypes.get(
                 reports.er_section[section], self._section_type_unknown
             )
-            if not isinstance(process, collections.Callable):
+            if not isinstance(process, collections.abc.Callable):
                 process = self._collate_not_implemented
             process(section)
             self.section_type[section] = reports.er_section[section]
