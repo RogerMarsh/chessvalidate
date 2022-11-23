@@ -28,12 +28,6 @@ class Leagues(threadqueue.AppSysThreadQueue):
     _state_dbclosed = "leagues_validate_state_dbclosed"
     _state_dataopen = "leagues_validate_state_dataopen"
 
-    # These might be better off in the leagues_database edition of Leagues
-    # because the information will be on the database, and not available to
-    # it's superclasses.
-    show_master_list_grading_codes = False
-    show_grading_list_grading_codes = False
-
     def __init__(self, menubar=None, **kargs):
         """Extend and define the results database results frame."""
         super().__init__(**kargs)
