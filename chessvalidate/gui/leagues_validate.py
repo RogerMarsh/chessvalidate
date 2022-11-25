@@ -11,11 +11,11 @@ import os
 
 from solentware_misc.gui import threadqueue
 
+from ..core import configuration
+from ..core import constants
 from ..core.season import Season
 from . import sourceedit
 from .. import ERROR_LOG
-from ..core import configuration
-from ..core import constants
 
 
 class Leagues(threadqueue.AppSysThreadQueue):
@@ -34,7 +34,6 @@ class Leagues(threadqueue.AppSysThreadQueue):
 
         self.results_folder = None  # folder shown in SourceOpen.folder
         self.results_data = None  # Season held in SourceOpen.data
-        self.results_folder_generic = None  # folder shown in SourceOpen.folder
         self.menubar = menubar
         self._resultsdbkargs = kargs
 
@@ -182,7 +181,6 @@ class Leagues(threadqueue.AppSysThreadQueue):
         open_season = self._results_open(Season)
         if open_season:
             self.set_error_file()
-            self.results_folder_generic = self.results_folder
             self.set_results_edit_context()
             return True
         return None
@@ -263,10 +261,6 @@ class Leagues(threadqueue.AppSysThreadQueue):
                 )
                 return True
         return None
-
-    def _set_folder_generic(self):
-        """Copy open folder name to self.results_folder_generic."""
-        self.results_folder_generic = self.results_folder
 
     def set_ecf_url_defaults(self):
         """Do nothing.
