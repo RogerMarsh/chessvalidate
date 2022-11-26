@@ -101,7 +101,7 @@ class SourceEdit(panel.PlainPanel):
         self.create_buttons()
         self.folder = tkinter.Label(
             master=self.get_widget(),
-            text=self.get_context().get_season_folder(),
+            text=self.get_context().results_folder,
         )
         self.folder.pack(side=tkinter.TOP, fill=tkinter.X)
         self.toppane = tkinter.PanedWindow(
@@ -305,7 +305,7 @@ class SourceEdit(panel.PlainPanel):
             message=" ".join(
                 (
                     "Save\n\n",
-                    self.get_context().get_season_folder(),
+                    self.get_context().results_folder,
                     "\n\nfolder containing results data",
                 )
             ),
@@ -328,7 +328,7 @@ class SourceEdit(panel.PlainPanel):
     def save_reports(self):
         """Show save data report file dialogue and return True if saved."""
         reports = os.path.join(
-            self.get_context().get_season_folder(), "Reports"
+            self.get_context().results_folder, "Reports"
         )
         if not tkinter.messagebox.askyesno(
             parent=self.get_widget(),

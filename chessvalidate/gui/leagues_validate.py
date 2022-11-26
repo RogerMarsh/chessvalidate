@@ -32,7 +32,7 @@ class Leagues(threadqueue.AppSysThreadQueue):
         """Extend and define the results database results frame."""
         super().__init__(**kargs)
 
-        self.results_folder = None  # folder shown in SourceOpen.folder
+        self._results_folder = None  # folder shown in SourceOpen.folder
         self.results_data = None  # Season held in SourceOpen.data
         self.menubar = menubar
         self._resultsdbkargs = kargs
@@ -47,6 +47,11 @@ class Leagues(threadqueue.AppSysThreadQueue):
             tab_state=self.define_tab_states(),
             switch_state=self.define_state_switch_table(),
         )
+
+    @property
+    def results_folder(self):
+        """Return path to folder containing open results data file."""
+        return self._results_folder
 
     def define_menus(self):
         """Define the application menus."""
@@ -153,10 +158,6 @@ class Leagues(threadqueue.AppSysThreadQueue):
         """Return the data input page."""
         return self
 
-    def get_season_folder(self):
-        """Return widget containing results data folder name."""
-        return self.results_folder
-
     def results_close(self):
         """Close results source document."""
         if self.results_data is None:
@@ -166,7 +167,7 @@ class Leagues(threadqueue.AppSysThreadQueue):
             message="".join(
                 (
                     "Close\n",
-                    self.results_folder,
+                    self._results_folder,
                     "\nfolder containing results data",
                 )
             ),
@@ -207,7 +208,7 @@ class Leagues(threadqueue.AppSysThreadQueue):
                 message="".join(
                     (
                         "Close the source documents in\n",
-                        self.results_folder,
+                        self._results_folder,
                         "\nfirst.",
                     )
                 ),
@@ -216,10 +217,10 @@ class Leagues(threadqueue.AppSysThreadQueue):
             return None
 
         conf = self.make_configuration_instance()
-        if self.results_folder is None:
+        if self._results_folder is None:
             initdir = conf.get_configuration_value(constants.RECENT_DOCUMENT)
         else:
-            initdir = self.results_folder
+            initdir = self._results_folder
         results_folder = tkinter.filedialog.askdirectory(
             parent=self.get_widget(),
             title=" ".join((title, "folder")),
@@ -254,7 +255,7 @@ class Leagues(threadqueue.AppSysThreadQueue):
                     return None
             if results_data.open_documents(self.get_widget()):
                 self.results_data = results_data
-                self.results_folder = results_folder
+                self._results_folder = results_folder
                 conf.set_configuration_value(
                     constants.RECENT_DOCUMENT,
                     conf.convert_home_directory_to_tilde(results_folder),
@@ -274,7 +275,7 @@ class Leagues(threadqueue.AppSysThreadQueue):
         """Set the error log for file being opened."""
         # Set the error file in folder of results source data
         Leagues.set_error_file_name(
-            os.path.join(self.results_folder, ERROR_LOG)
+            os.path.join(self._results_folder, ERROR_LOG)
         )
 
     @staticmethod
