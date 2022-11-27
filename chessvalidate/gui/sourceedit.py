@@ -327,9 +327,7 @@ class SourceEdit(panel.PlainPanel):
 
     def save_reports(self):
         """Show save data report file dialogue and return True if saved."""
-        reports = os.path.join(
-            self.get_context().results_folder, "Reports"
-        )
+        reports = os.path.join(self.get_context().results_folder, "Reports")
         if not tkinter.messagebox.askyesno(
             parent=self.get_widget(),
             message="".join(
