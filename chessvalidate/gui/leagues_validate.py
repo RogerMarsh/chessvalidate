@@ -81,8 +81,8 @@ class Leagues(threadqueue.AppSysThreadQueue):
                 "Edit event source files and generate Results database input."
             ),
             underline=-1,
-            tabclass=lambda **k: self.document_edit(**k),
-            destroy_actions=(sourceedit.SourceEdit._btn_closedata,),
+            tabclass=self.document_edit,
+            destroy_actions=(sourceedit.SourceEdit.btn_closedata,),
         )
 
     def define_tab_states(self):
@@ -100,13 +100,13 @@ class Leagues(threadqueue.AppSysThreadQueue):
                 self._state_dataopen,
                 self._tab_sourceedit,
             ],
-            (self._state_dataopen, sourceedit.SourceEdit._btn_closedata): [
+            (self._state_dataopen, sourceedit.SourceEdit.btn_closedata): [
                 self._state_dbclosed,
                 None,
             ],
         }
 
-    def close_season(self):
+    def close_event_edition_results(self):
         """Close results data source files."""
         self.results_data.close()
         self.results_data = None
@@ -173,25 +173,23 @@ class Leagues(threadqueue.AppSysThreadQueue):
             ),
             title="Close",
         ):
-            self.close_season()
-            self.switch_context(sourceedit.SourceEdit._btn_closedata)
+            self.close_event_edition_results()
+            self.switch_context(sourceedit.SourceEdit.btn_closedata)
             self.set_error_file_on_close_source()
 
     def results_open(self):
         """Open results source documents."""
-        open_season = self._results_open(Season)
+        open_season = self._results_open()
         if open_season:
             self.set_error_file()
             self.set_results_edit_context()
-            return True
-        return None
 
     def set_results_edit_context(self):
         """Display the results edit page and hide open database if any."""
         self.switch_context(self._menu_opendata)
 
-    def _results_open(self, eventseason, title=" "):
-        """Open results source documents."""
+    def _results_open(self, title=" "):
+        """Choose results folder and return True if documents are read."""
         title = "".join(("Open", title, "Documents"))
 
         if not self.is_state_switch_allowed(self._menu_opendata):
@@ -227,40 +225,50 @@ class Leagues(threadqueue.AppSysThreadQueue):
             initialdir=initdir,
         )
         if results_folder:
-            results_data = eventseason(results_folder)
-            if not os.path.exists(results_folder):
-                if not tkinter.messagebox.askyesno(
+            return self._read_results_documents(
+                title, results_folder, conf=conf
+            )
+        return None
+
+    def _read_results_documents(self, title, results_folder, conf=None):
+        """Read results documents from results folder: return True if ok."""
+        results_data = Season(results_folder)
+        if not os.path.exists(results_folder):
+            if not tkinter.messagebox.askyesno(
+                parent=self.get_widget(),
+                message="".join(
+                    (
+                        results_folder,
+                        "\ndoes not exist.",
+                        "\nConfirm that a folder is to be created ",
+                        "containing new empty documents.",
+                    )
+                ),
+                title=title,
+            ):
+                return None
+            try:
+                os.makedirs(results_folder)
+            except OSError:
+                tkinter.messagebox.showinfo(
                     parent=self.get_widget(),
-                    message="".join(
-                        (
-                            results_folder,
-                            "\ndoes not exist.",
-                            "\nConfirm that a folder is to be created ",
-                            "containing new empty documents.",
-                        )
+                    message=" ".join(
+                        (results_folder, "\ncould not be created.")
                     ),
                     title=title,
-                ):
-                    return None
-                try:
-                    os.makedirs(results_folder)
-                except OSError:
-                    tkinter.messagebox.showinfo(
-                        parent=self.get_widget(),
-                        message=" ".join(
-                            (results_folder, "\ncould not be created.")
-                        ),
-                        title=title,
-                    )
-                    return None
-            if results_data.open_documents(self.get_widget()):
-                self.results_data = results_data
-                self._results_folder = results_folder
+                )
+                return None
+        if results_data.open_documents(self.get_widget()):
+            self.results_data = results_data
+            if self._results_folder != results_folder:
+                if conf is None:
+                    conf = self.make_configuration_instance()
                 conf.set_configuration_value(
                     constants.RECENT_DOCUMENT,
                     conf.convert_home_directory_to_tilde(results_folder),
                 )
-                return True
+                self._results_folder = results_folder
+            return True
         return None
 
     def set_ecf_url_defaults(self):

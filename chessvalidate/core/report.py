@@ -182,7 +182,6 @@ class Report:
 
         def colour_none(board):
             del board
-            return None
 
         def white_on_all(board):
             del board

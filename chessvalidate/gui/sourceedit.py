@@ -64,7 +64,7 @@ class SourceEdit(panel.PlainPanel):
     """The Edit panel for raw results data."""
 
     _btn_generate = "sourceedit_generate"
-    _btn_closedata = "sourceedit_close"
+    btn_closedata = "sourceedit_close"
     _btn_save = "sourceedit_save"
     _btn_toggle_compare = "sourceedit_toggle_compare"
     _btn_toggle_generate = "sourceedit_toggle_generate"
@@ -85,7 +85,7 @@ class SourceEdit(panel.PlainPanel):
         "12": "Dec",
     }  # assumes dates held in ISO format
 
-    def __init__(self, parent=None, cnf=dict(), **kargs):
+    def __init__(self, parent=None, cnf=None, **kargs):
         """Extend and define results data input panel for results database."""
         super().__init__(parent=parent, cnf=cnf, **kargs)
         self.generated_schedule = []
@@ -186,7 +186,7 @@ class SourceEdit(panel.PlainPanel):
             command=self.on_report,
         )
         self.define_button(
-            self._btn_closedata,
+            self.btn_closedata,
             text="Close",
             tooltip="Close the folder containing data.",
             underline=0,
@@ -222,7 +222,7 @@ class SourceEdit(panel.PlainPanel):
         """Close the source document."""
         del event
         self.close_data_folder()
-        self.inhibit_context_switch(self._btn_closedata)
+        self.inhibit_context_switch(self.btn_closedata)
 
     def on_generate(self, event=None):
         """Generate a validation report."""
@@ -372,7 +372,7 @@ class SourceEdit(panel.PlainPanel):
         """Show buttons for actions allowed comparing input data versions."""
         self.hide_panel_buttons()
         self.show_panel_buttons(
-            (self._btn_toggle_generate, self._btn_closedata, self._btn_save)
+            (self._btn_toggle_generate, self.btn_closedata, self._btn_save)
         )
 
     def show_buttons_for_generate(self):
@@ -382,7 +382,7 @@ class SourceEdit(panel.PlainPanel):
             (
                 self._btn_generate,
                 self._btn_toggle_compare,
-                self._btn_closedata,
+                self.btn_closedata,
                 self._btn_save,
                 self._btn_report,
             )
@@ -395,7 +395,7 @@ class SourceEdit(panel.PlainPanel):
             (
                 self._btn_generate,
                 self._btn_toggle_compare,
-                self._btn_closedata,
+                self.btn_closedata,
                 self._btn_save,
                 self._btn_report,
             )
