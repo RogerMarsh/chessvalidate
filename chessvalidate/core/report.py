@@ -20,6 +20,7 @@ from .gameobjects import (
 from . import constants
 from .gameresults import resultmap
 from .eventparser import PLAYED_ON
+from . import reportbase
 
 cross_table_row = re.compile(
     "".join((r"(?P<pin>\d*)\.?", r"(?P<row>(?:\s+[wb]?[-+=~])* *\Z)"))
@@ -112,14 +113,14 @@ board_colour = {
 board_colour_reverse = {True: False, False: True, None: None}
 
 
-class Report:
+class Report(reportbase.ReportBase):
     """Results extracted from event report file containing one event."""
 
     def __init__(self):
         """Initialise results report attributes for events."""
         super().__init__()
-        self.textlines = None
-        self.error = []
+        # self.textlines = None
+        # self.error = []
         self.er_source = ""
         self.er_results = dict()
         self.er_matchresults = []
@@ -133,6 +134,16 @@ class Report:
         self.er_players = dict()
         self.er_swiss_table = dict()
         self.er_team_number = dict()
+        self._colourrule = None
+        self._played_on = None
+        # self._section = None  # latest section name found by get_section
+        self._date = None  # date in "date" line (get_section sets to None)
+        # self._round = None  #round in "round" line (get_section sets to None)
+        self._match = None  # latest match name found by get_matches
+        self._games = None  # board dictionary for games in self._match
+        self._match_homeplayers = None
+        self._match_awayplayers = None
+        self._playerlimit = None
 
     # set_match changed to populate er_matchresults in the way sl_report added
     # SLArticle.er_matchresults to SLReportWeekly.er_matchresults.  SLArticle
@@ -177,7 +188,7 @@ class Report:
                         for b in board.split(".")
                     )
                 ]
-            except Exception:
+            except (TypeError, IndexError):
                 return None
 
         def colour_none(board):
@@ -190,7 +201,7 @@ class Report:
         def white_on_odd(board):
             try:
                 return board_colour_reverse[black_on_odd(board)]
-            except Exception:
+            except (TypeError, IndexError):
                 return None
 
         def add_player_record(name, event, team, tagger):
@@ -1086,22 +1097,16 @@ class Report:
         self._colourrule = colour_none
         self._played_on = PlayedOnStatus.reports_not_played_on
         players = dict()
-        self._section = None  # latest section name found by get_section
-        self._date = None  # date in "date" line (get_section sets to None)
-        self._round = None  # round in "round" line (get_section sets to None)
-        self._match = None  # latest match name found by get_matches
-        self._games = None  # board dictionary for games in self._match
+        self._section = None
+        self._date = None
+        self._round = None
+        self._match = None
+        self._games = None
         self._match_homeplayers = None
         self._match_awayplayers = None
         self._playerlimit = None
 
-        process = get_event_name
-
-        for linestr, linetag in self.textlines:
-            linestr = linestr.strip()
-            if len(linestr) == 0:
-                continue
-            process = process(linestr, linetag)
+        self._process_textlines(get_event_name)
 
         # hack to spot empty results report
         # Try to get rid of it so self.append_generated_report is not needed.

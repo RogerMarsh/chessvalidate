@@ -110,7 +110,7 @@ class SourceEdit(panel.PlainPanel):
             orient=tkinter.HORIZONTAL,
         )
         self.toppane.pack(side=tkinter.TOP, expand=True, fill=tkinter.BOTH)
-        self.show_edits_and_generated()
+        self._show_edits_and_generated()
         self.editedtext.edit_modified(tkinter.FALSE)
 
     def close(self):
@@ -201,7 +201,7 @@ class SourceEdit(panel.PlainPanel):
     def get_schedule(self, data):
         """Extract event schedule and prepare report of errors."""
         data.extract_schedule()
-        fixdata = data._fixtures
+        fixdata = data.fixture_schedule
         genfix = self.generated_schedule
         del genfix[:]
         if len(fixdata.error):
@@ -227,14 +227,14 @@ class SourceEdit(panel.PlainPanel):
     def on_generate(self, event=None):
         """Generate a validation report."""
         del event
-        if self.generate_event_report():
+        if self._generate_event_report():
             self.show_buttons_for_update()
             self.create_buttons()
 
     def on_report(self, event=None):
         """Save validation report."""
         del event
-        self.save_reports()
+        self._save_reports()
 
     def on_save(self, event=None):
         """Save source document."""
@@ -244,16 +244,16 @@ class SourceEdit(panel.PlainPanel):
     def on_toggle_compare(self, event=None):
         """Display original source document next to edited source document."""
         del event
-        self.show_buttons_for_compare()
+        self._show_buttons_for_compare()
         self.create_buttons()
-        self.show_originals_and_edits()
+        self._show_originals_and_edits()
 
     def on_toggle_generate(self, event=None):
         """Display edited source document next to validation report widgets."""
         del event
         self.show_buttons_for_generate()
         self.create_buttons()
-        self.show_edits_and_generated()
+        self._show_edits_and_generated()
 
     def save_data_folder(self):
         """Show save data input file dialogue and return True if saved."""
@@ -276,7 +276,7 @@ class SourceEdit(panel.PlainPanel):
         # before updating edited_text from widget.
         # Perhaps this should be done earlier?
         etof = entry_text.edited_text_on_file
-        self.copy_data_from_widget()
+        self._copy_data_from_widget()
 
         modified = entry_text.edited_text != etof
         if not modified:
@@ -325,7 +325,7 @@ class SourceEdit(panel.PlainPanel):
             )
         return
 
-    def save_reports(self):
+    def _save_reports(self):
         """Show save data report file dialogue and return True if saved."""
         reports = os.path.join(self.get_context().results_folder, "Reports")
         if not tkinter.messagebox.askyesno(
@@ -339,7 +339,7 @@ class SourceEdit(panel.PlainPanel):
         if not os.path.isdir(reports):
             try:
                 os.mkdir(reports)
-            except Exception:
+            except (TypeError, PermissionError):
                 tkinter.messagebox.showinfo(
                     parent=self.get_widget(),
                     message="".join(
@@ -368,7 +368,7 @@ class SourceEdit(panel.PlainPanel):
         )
         return None
 
-    def show_buttons_for_compare(self):
+    def _show_buttons_for_compare(self):
         """Show buttons for actions allowed comparing input data versions."""
         self.hide_panel_buttons()
         self.show_panel_buttons(
@@ -401,7 +401,7 @@ class SourceEdit(panel.PlainPanel):
             )
         )
 
-    def show_edits_and_generated(self):
+    def _show_edits_and_generated(self):
         """Display widgets showing current data and generated reports."""
         self._hide_panes()
         if self.editpane is None:
@@ -421,7 +421,7 @@ class SourceEdit(panel.PlainPanel):
             self.bind(
                 self.editedtext,
                 "<ButtonPress-3>",
-                function=self.editedtext_popup,
+                function=self._editedtext_popup,
             )
             self._populate_editedtext()
         if self.schedulectrl is None:
@@ -431,7 +431,7 @@ class SourceEdit(panel.PlainPanel):
             self.bind(
                 self.schedulectrl,
                 "<ButtonPress-3>",
-                function=self.schedule_popup,
+                function=self._schedule_popup,
             )
         if self.resultsctrl is None:
             self.resultsctrl = textreadonly.make_text_readonly(
@@ -440,7 +440,7 @@ class SourceEdit(panel.PlainPanel):
             self.bind(
                 self.resultsctrl,
                 "<ButtonPress-3>",
-                function=self.results_popup,
+                function=self._results_popup,
             )
         self.editpane.add(self.editedtext)
         self.generatedpane.add(self.schedulectrl)
@@ -463,7 +463,7 @@ class SourceEdit(panel.PlainPanel):
         # self.resultsctrl.insert(tkinter.END,
         #                        '\n'.join(self.generated_results))
 
-    def show_originals_and_edits(self):
+    def _show_originals_and_edits(self):
         """Display widgets comparing database and edited versions of data."""
         self._hide_panes()
         if self.editpane is None:
@@ -753,7 +753,7 @@ class SourceEdit(panel.PlainPanel):
                 worig, str(i), difference_text, difference_text.original_text
             )
 
-    def copy_data_from_widget(self):
+    def _copy_data_from_widget(self):
         """Copy current widget data to season's event data attributes."""
         wedit = self.editedtext
         results_data = self.get_context().results_data
@@ -771,7 +771,7 @@ class SourceEdit(panel.PlainPanel):
             wedit.index(start) + " +1 char", wedit.index(end) + " -1 char"
         )
 
-    def results_popup(self, event=None):
+    def _results_popup(self, event=None):
         """Scroll edited document to selected text in result report."""
         wedit = self.editedtext
         wresults = self.resultsctrl
@@ -785,7 +785,7 @@ class SourceEdit(panel.PlainPanel):
                     wedit.see(tredit[0])
                     return
 
-    def schedule_popup(self, event=None):
+    def _schedule_popup(self, event=None):
         """Scroll edited document to selected text in schedule report."""
         wedit = self.editedtext
         wschedule = self.schedulectrl
@@ -799,7 +799,7 @@ class SourceEdit(panel.PlainPanel):
                     wedit.see(tredit[0])
                     return
 
-    def editedtext_popup(self, event=None):
+    def _editedtext_popup(self, event=None):
         """Scroll source document to selected text in edited document."""
         worig = self.originaltext
         wedit = self.editedtext
@@ -814,7 +814,7 @@ class SourceEdit(panel.PlainPanel):
                         worig.see(trorig[0])
                         return
 
-    def generate_event_report(self):
+    def _generate_event_report(self):
         """Generate report on data input and return True if data is ok.
 
         Data can be ok and still be wrong.  ok means merely that the data
@@ -829,7 +829,7 @@ class SourceEdit(panel.PlainPanel):
             "fixturelist": lambda s, d: None,  # matches from fixture list
             "individual": self._report_individual,  # games between players
         }
-        self.copy_data_from_widget()
+        self._copy_data_from_widget()
         data = self.get_context().results_data
         try:
             data.extract_event()
@@ -874,7 +874,7 @@ class SourceEdit(panel.PlainPanel):
                 title="Extract Schedule Error",
             )
             return False
-        self.report_fixtures(data)
+        self._report_fixtures(data)
 
         # Remove the 'try' wrapping once the problem is fixed.
         # The KeyError might be fixable but the AttributeError is a genuine
@@ -931,7 +931,7 @@ class SourceEdit(panel.PlainPanel):
 
         if (
             len(data.collation.reports.error) == 0
-            and len(data._fixtures.error) == 0
+            and len(data.fixture_schedule.error) == 0
         ):
 
             schedule = data.collation.schedule
@@ -954,7 +954,7 @@ class SourceEdit(panel.PlainPanel):
             report = data.collation.reports
             genres = self.generated_results
             genres.append((report.er_name, None))
-            self.report_players(data)
+            self._report_players(data)
             league_processed = False
             for section in data.collation.report_order:
                 process = sectiontypes.get(
@@ -1006,9 +1006,9 @@ class SourceEdit(panel.PlainPanel):
 
         return len(data.collation.reports.error) == 0
 
-    def report_fixtures(self, data):
+    def _report_fixtures(self, data):
         """Append fixtures to event schedule report."""
-        fixdata = data._fixtures
+        fixdata = data.fixture_schedule
         if len(fixdata.error):
             return
         genfix = self.generated_schedule
@@ -1059,7 +1059,7 @@ class SourceEdit(panel.PlainPanel):
                 tagger.append_generated_schedule(genfix, "".join(fixture))
             genfix.append(("", None))
 
-    def report_fixtures_played_status(self, data):
+    def _report_fixtures_played_status(self, data):
         """Append list of unreported fixtures to results report."""
         if len(data.collation.reports.error):
             return
@@ -1095,7 +1095,7 @@ class SourceEdit(panel.PlainPanel):
             )
         genres.append(("", None))
 
-    def report_matches(self, data):
+    def _report_matches(self, data):
         """Append list of reported fixtures to results report."""
         resdata = data.collation
         if len(resdata.reports.error):
@@ -1156,7 +1156,7 @@ class SourceEdit(panel.PlainPanel):
                 )
             genres.append(("", None))
 
-    def report_matches_by_source(self, data):
+    def _report_matches_by_source(self, data):
         """Override, append list of fixtures by source to results report.
 
         Source may be a file name or some kind of heading within the file.  The
@@ -1167,7 +1167,7 @@ class SourceEdit(panel.PlainPanel):
         # The PDLEdit and SLEdit references are long since deleted, but they
         # are why code is as is here.
         # PDLEdit should have had some tests on source attribute according to
-        # docstring for report_matches_by_source.
+        # docstring for _report_matches_by_source.
 
         # Only SLEdit had this check.
         if len(data.collation.reports.error):
@@ -1203,7 +1203,7 @@ class SourceEdit(panel.PlainPanel):
                             genres,
                             "".join(("   match reported early at ", today)),
                         )
-            except Exception:
+            except (TypeError, AttributeError):
                 pass
 
             if not consistent:
@@ -1268,7 +1268,7 @@ class SourceEdit(panel.PlainPanel):
                 )
         genres.append(("", None))
 
-    def report_non_fixtures_played(self, data):
+    def _report_non_fixtures_played(self, data):
         """Append list of results additional to fixtures to results report."""
         if len(data.collation.reports.error):
             return
@@ -1292,7 +1292,7 @@ class SourceEdit(panel.PlainPanel):
             )
         genres.append(("", None))
 
-    def report_players(self, data):
+    def _report_players(self, data):
         """Append list of players sorted by affiliation to schedule report."""
         if len(data.collation.reports.error):
             return
@@ -1366,7 +1366,7 @@ class SourceEdit(panel.PlainPanel):
         """Return player identity for schedule report."""
         return player.get_short_identity()
 
-    def report_player_matches(self, data):
+    def _report_player_matches(self, data):
         """Append list of fixtures for each player to results report."""
         if len(data.collation.reports.error):
             return
@@ -1456,7 +1456,7 @@ class SourceEdit(panel.PlainPanel):
             genres.append(("", None))
         return
 
-    def report_unfinished_games(self, data):
+    def _report_unfinished_games(self, data):
         """Append list of unfinished reported games to results report."""
         if len(data.collation.reports.error):
             return
@@ -1622,13 +1622,13 @@ class SourceEdit(panel.PlainPanel):
     def _report_league(self, section, data):
         """Generate results report for matches in a league."""
         del section
-        self.report_matches_by_source(data)
-        self.report_fixtures_played_status(data)
-        self.report_non_fixtures_played(data)
-        self.report_unfinished_games(data)
-        self.report_matches(data)
+        self._report_matches_by_source(data)
+        self._report_fixtures_played_status(data)
+        self._report_non_fixtures_played(data)
+        self._report_unfinished_games(data)
+        self._report_matches(data)
         self.report_players_by_club(data)
-        self.report_player_matches(data)
+        self._report_player_matches(data)
 
     @staticmethod
     def _report_not_implemented(section, data):

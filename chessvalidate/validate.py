@@ -32,9 +32,11 @@ if __name__ == "__main__":
                     )
                 ),
             )
-        except BaseException:
+        except tkinter.TclError:
             pass
-        raise SystemExit("Unable to import start application utilities")
+        raise SystemExit(
+            "Unable to import start application utilities"
+        ) from error
     try:
         from .gui.resultsroot import Results
         from .gui.leagues_validate import Leagues
@@ -42,7 +44,9 @@ if __name__ == "__main__":
         start_application_exception(
             error, appname=APPLICATION_NAME, action="import"
         )
-        raise SystemExit(" import ".join(("Unable to", APPLICATION_NAME)))
+        raise SystemExit(
+            " import ".join(("Unable to", APPLICATION_NAME))
+        ) from error
     try:
         app = Results(
             title=APPLICATION_NAME, gui_module=Leagues, width=400, height=200
@@ -51,7 +55,9 @@ if __name__ == "__main__":
         start_application_exception(
             error, appname=APPLICATION_NAME, action="initialise"
         )
-        raise SystemExit(" initialise ".join(("Unable to", APPLICATION_NAME)))
+        raise SystemExit(
+            " initialise ".join(("Unable to", APPLICATION_NAME))
+        ) from error
     try:
         app.root.mainloop()
     except SystemExit:
@@ -65,3 +71,8 @@ if __name__ == "__main__":
             title=APPLICATION_NAME,
             appname=APPLICATION_NAME,
         )
+        raise SystemExit(
+            " reporting exception in ".join(
+                ("Exception while", APPLICATION_NAME)
+            )
+        ) from error

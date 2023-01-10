@@ -22,6 +22,7 @@ class Configuration(configuration.Configuration):
     _DEFAULT_ITEM_VAULES = (
         (constants.RECENT_EMAIL_SELECTION, "~"),
         (constants.RECENT_EMAIL_EXTRACTION, "~"),
+        (constants.RECENT_CSV_DOWNLOAD, "~"),
         (constants.RECENT_DOCUMENT, "~"),
         (ecfformat.core.constants.RECENT_RESULTS_FORMAT_FILE, "~"),
         (

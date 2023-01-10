@@ -51,6 +51,10 @@ class EventContext:
         # Event data by category in receipt order
         self._allplayall = _EventItems()
         self._swiss = _EventItems()
+        # This _fixtures attribute does not seem to be caught up in the
+        # confusion between fixtures and _fixtures attributes in season
+        # module, which led to _fixtures being renamed fixture_schedule
+        # elsewhere in response to pylint protected-acces report.
         self._fixtures = _EventItems()
         self._results = _EventItems()
         self._players = _EventItems()
@@ -343,16 +347,16 @@ class EventContext:
     def _exception(self, eventdata):
         """Wrap print trace functions on exceptions when fixing problems."""
         # self._players
-        # self._print(eventdata)
+        # self.print_(eventdata)
 
     @staticmethod
-    def _print(eventdata):
+    def print_(eventdata):
         """Wrap print eventdata method used when fixing problems.
 
         Otherwise not used.
 
         """
-        eventdata._print()
+        eventdata.print_()
 
     def _add_key(self):
         """Add self._competition_name for processing by all report styles."""
@@ -471,11 +475,9 @@ def get_names_from_joined_names(joined_names, attrnames, truncate):
     allnames = homename.intersection(awayname)
     for k, gvalue in nameset.items():
         gvalue.namepairs = tuple(
-            [
-                (h, a)
-                for h, a in gvalue.namepairs
-                if h in allnames and a in allnames
-            ]
+            (h, a)
+            for h, a in gvalue.namepairs
+            if h in allnames and a in allnames
         )
         try:
             nset = {}
@@ -484,7 +486,7 @@ def get_names_from_joined_names(joined_names, attrnames, truncate):
             consistent.add(nset[nameone])
             consistent.add(nset[nametwo])
             splitnames[k] = nset
-        except Exception:
+        except (AttributeError, IndexError, KeyError):
             gvalue.guess_names_from_known_names(allnames)
             guesses[k] = {
                 nameone: gvalue.namepairs[-1][0],

@@ -23,7 +23,7 @@ from emailextract.core import emailextractor
 TEXTENTRY = "textentry"
 
 # Schedule files may be spreadsheet, csv, or txt files.
-# The column names can be provided in the following conf file entries
+# The column names can be provided in the following conf file entries.
 _SCHED_DATE = "sched_date"
 _SCHED_DAY = "sched_day"
 _SCHED_SECTION = "sched_section"
@@ -56,6 +56,16 @@ SCHEDULE_TABLE = (
 # The win bonus in points for grading is a constant: the concept of winning 2-0
 # rather than 1-0 is not used.
 # _REPORT_DAY must not be present if _REPORT_DATE is not present.
+# Spreadsheet and csv files might include various player code columns;
+# typically containing the ECF reference data relevant to the player.
+# These values are ignored in emailextractor: except perhaps for checking the
+# format is numeric digits with optional either leading or trailing alpha
+# characters (ECF rating, membership number, or code, are seen in reports)
+# and including in the player name.
+# Spreadsheet and csv files might include club name and, or, club code
+# columns; typically containing the ECF reference data relevant to the team.
+# The club and club code values are ignored in emailextractor except perhaps
+# for checking it's the same for all mentions of a team name.
 _REPORT_DATE = "report_date"
 _REPORT_DAY = "report_day"
 _REPORT_SECTION = "report_section"
@@ -71,6 +81,23 @@ _REPORT_DATA_COLUMNS = "report_data_columns"
 _REPORT_AWAY_TEAM_SCORE = "report_away_team_score"
 _REPORT_HOME_TEAM_SCORE = "report_home_team_score"
 _REPORT_EVENT = "report_event"
+REPORT_HOME_PLAYER_CODE = "report_home_player_code"
+REPORT_AWAY_PLAYER_CODE = "report_away_player_code"
+REPORT_HOME_CLUB = "report_home_club"
+REPORT_AWAY_CLUB = "report_away_club"
+REPORT_HOME_CLUB_CODE = "report_home_club_code"
+REPORT_AWAY_CLUB_CODE = "report_away_club_code"
+
+# Some columns may not be provided: these items define default values or
+# actions which cannot be assumed.
+# _REPORT_MISSING_EVENT can use the event name from event.conf file.
+# _REPORT_AWAY_TEAM_SCORE and _REPORT_HOME_TEAM_SCORE have obvious defaults.
+# _REPORT_DAY, _REPORT_BOARD and _REPORT_ROUND are optional, so the default
+# is null.
+REPORT_MISSING_COLOUR = "report_missing_colour"
+REPORT_HOME_WIN = "report_home_win"
+REPORT_AWAY_WIN = "report_away_win"
+REPORT_DRAW = "report_draw"
 
 # The column names are arranged in order in the table definition such that the
 # common cases have a unique signature in terms of digit and alpha items.
@@ -103,15 +130,15 @@ TEXT_FROM_ROWS = "text_from_rows"
 TABLE_DELIMITER = "\t"
 
 # Identify a spreadsheet sheet name or csv file name to be included in the
-# extracted data.  Schedule and report names are listed separately
-_SCHEDULE_CSV_DATA_NAME = "sched_csv_data_name"
-_REPORT_CSV_DATA_NAME = "report_csv_data_name"
+# extracted data.  Schedule and report names are listed separately.
+SCHEDULE_CSV_DATA_NAME = "sched_csv_data_name"
+REPORT_CSV_DATA_NAME = "report_csv_data_name"
 
-# Name the rules to transform input lines for inclusion in difference file
+# Name the rules to transform input lines for inclusion in difference file.
 # Added to guide transformation of game per row csv files to fit report style.
 # Absence means no transformation.
-_REPLACE = "replace"
-_PARTIAL_REPLACE = "partial_replace"
+REPLACE = "replace"
+PARTIAL_REPLACE = "partial_replace"
 
 # The regular expressions which look for relevant items in the extracted text.
 # By default items are expected in a newline separated format.
@@ -193,10 +220,9 @@ class EmailExtractor(emailextractor.EmailExtractor):
     def __init__(
         self,
         folder,
-        configuration=None,
         parser=None,
         extractemail=None,
-        parent=None,
+        **kwargs,
     ):
         """Define the email extraction rules from configuration.
 
@@ -210,10 +236,113 @@ class EmailExtractor(emailextractor.EmailExtractor):
             extractemail = ExtractEmail
         super().__init__(
             folder,
-            configuration=configuration,
             parser=parser,
             extractemail=extractemail,
+            **kwargs,
         )
+
+    def _get_report_item_description(self, name):
+        """Return name description or None if not set."""
+        table = self.criteria.get(REPORT_CSV_DATA_NAME)
+        if table is None:
+            return (name, None)
+        return (name, table[-1][-1].get(name))
+
+    @property
+    def home_player_colour(self):
+        """Return home player colour description or None if not set."""
+        return self._get_report_item_description(_REPORT_HOME_PLAYER_COLOUR)
+
+    @property
+    def section(self):
+        """Return section description or None if not set."""
+        return self._get_report_item_description(_REPORT_SECTION)
+
+    @property
+    def day(self):
+        """Return day description or None if not set."""
+        return self._get_report_item_description(_REPORT_DAY)
+
+    @property
+    def date(self):
+        """Return date description or None if not set."""
+        return self._get_report_item_description(_REPORT_DATE)
+
+    @property
+    def round(self):
+        """Return round description or None if not set."""
+        return self._get_report_item_description(_REPORT_ROUND)
+
+    @property
+    def home_team(self):
+        """Return home team description or None if not set."""
+        return self._get_report_item_description(_REPORT_HOME_TEAM)
+
+    @property
+    def home_team_score(self):
+        """Return home team score description or None if not set."""
+        return self._get_report_item_description(_REPORT_HOME_TEAM_SCORE)
+
+    @property
+    def home_player(self):
+        """Return home player description or None if not set."""
+        return self._get_report_item_description(_REPORT_HOME_PLAYER)
+
+    @property
+    def result(self):
+        """Return result description or None if not set."""
+        return self._get_report_item_description(_REPORT_RESULT)
+
+    @property
+    def away_team(self):
+        """Return away team description or None if not set."""
+        return self._get_report_item_description(_REPORT_AWAY_TEAM)
+
+    @property
+    def away_team_score(self):
+        """Return away team score description or None if not set."""
+        return self._get_report_item_description(_REPORT_AWAY_TEAM_SCORE)
+
+    @property
+    def away_player(self):
+        """Return away player description or None if not set."""
+        return self._get_report_item_description(_REPORT_AWAY_PLAYER)
+
+    @property
+    def board(self):
+        """Return round description or None if not set."""
+        return self._get_report_item_description(_REPORT_BOARD)
+
+    @property
+    def event(self):
+        """Return round description or None if not set."""
+        return self._get_report_item_description(_REPORT_EVENT)
+
+    @property
+    def missing_colour_rule(self):
+        """Return missing colour rule or None if not set.
+
+        Typically 'home player black on odd' for example.  Define value
+        in configuration file to fit caller's requirement.  It is default
+        rule for cases where self.home_player_colour returns None.
+
+        """
+        return self.criteria.get(REPORT_MISSING_COLOUR)
+
+    @property
+    def home_win(self):
+        """Return value representing home player win."""
+        return self.criteria.get(REPORT_HOME_WIN)
+
+    @property
+    def away_win(self):
+        """Return value representing home player win."""
+        return self.criteria.get(REPORT_AWAY_WIN)
+
+    @property
+    def draw(self):
+        """Return value representing draw."""
+        return self.criteria.get(REPORT_DRAW)
 
 
 class Parser(emailextractor.Parser):
@@ -225,71 +354,81 @@ class Parser(emailextractor.Parser):
         self.keyword_rules.update(
             {
                 TEXTENTRY: self.assign_value,
-                _SCHED_DATE: self.csv_schedule_columns,
-                _SCHED_DAY: self.csv_schedule_columns,
-                _SCHED_SECTION: self.csv_schedule_columns,
-                _SCHED_HOME_TEAM: self.csv_schedule_columns,
-                _SCHED_AWAY_TEAM: self.csv_schedule_columns,
-                _SCHED_DATA_COLUMNS: self.csv_schedule_columns,
-                _REPORT_DATE: self.csv_report_columns,
-                _REPORT_DAY: self.csv_report_columns,
-                _REPORT_SECTION: self.csv_report_columns,
-                _REPORT_HOME_TEAM: self.csv_report_columns,
-                _REPORT_AWAY_TEAM: self.csv_report_columns,
-                _REPORT_HOME_TEAM_SCORE: self.csv_report_columns,
-                _REPORT_AWAY_TEAM_SCORE: self.csv_report_columns,
-                _REPORT_HOME_PLAYER: self.csv_report_columns,
-                _REPORT_AWAY_PLAYER: self.csv_report_columns,
-                _REPORT_RESULT: self.csv_report_columns,
-                _REPORT_BOARD: self.csv_report_columns,
-                _REPORT_ROUND: self.csv_report_columns,
-                _REPORT_HOME_PLAYER_COLOUR: self.csv_report_columns,
-                _REPORT_EVENT: self.csv_report_columns,
-                _REPORT_DATA_COLUMNS: self.csv_report_columns,
-                _SCHEDULE_CSV_DATA_NAME: self.csv_data_name,
-                _REPORT_CSV_DATA_NAME: self.csv_data_name,
-                _REPLACE: self.csv_value_replace,
-                _PARTIAL_REPLACE: self.csv_value_partial_replace,
+                _SCHED_DATE: self._csv_schedule_columns,
+                _SCHED_DAY: self._csv_schedule_columns,
+                _SCHED_SECTION: self._csv_schedule_columns,
+                _SCHED_HOME_TEAM: self._csv_schedule_columns,
+                _SCHED_AWAY_TEAM: self._csv_schedule_columns,
+                _SCHED_DATA_COLUMNS: self._csv_schedule_columns,
+                _REPORT_DATE: self._csv_report_columns,
+                _REPORT_DAY: self._csv_report_columns,
+                _REPORT_SECTION: self._csv_report_columns,
+                _REPORT_HOME_TEAM: self._csv_report_columns,
+                _REPORT_AWAY_TEAM: self._csv_report_columns,
+                _REPORT_HOME_TEAM_SCORE: self._csv_report_columns,
+                _REPORT_AWAY_TEAM_SCORE: self._csv_report_columns,
+                _REPORT_HOME_PLAYER: self._csv_report_columns,
+                _REPORT_AWAY_PLAYER: self._csv_report_columns,
+                _REPORT_RESULT: self._csv_report_columns,
+                _REPORT_BOARD: self._csv_report_columns,
+                _REPORT_ROUND: self._csv_report_columns,
+                _REPORT_HOME_PLAYER_COLOUR: self._csv_report_columns,
+                _REPORT_EVENT: self._csv_report_columns,
+                _REPORT_DATA_COLUMNS: self._csv_report_columns,
+                REPORT_HOME_PLAYER_CODE: self._csv_report_columns,
+                REPORT_AWAY_PLAYER_CODE: self._csv_report_columns,
+                REPORT_HOME_CLUB: self._csv_report_columns,
+                REPORT_AWAY_CLUB: self._csv_report_columns,
+                REPORT_HOME_CLUB_CODE: self._csv_report_columns,
+                REPORT_AWAY_CLUB_CODE: self._csv_report_columns,
+                REPORT_MISSING_COLOUR: self.assign_value,
+                REPORT_HOME_WIN: self.assign_value,
+                REPORT_AWAY_WIN: self.assign_value,
+                REPORT_DRAW: self.assign_value,
+                SCHEDULE_CSV_DATA_NAME: self._csv_data_name,
+                REPORT_CSV_DATA_NAME: self._csv_data_name,
+                REPLACE: self._csv_value_replace,
+                PARTIAL_REPLACE: self._csv_value_partial_replace,
                 TEXT_FROM_ROWS: self.add_value_to_set,
-                RESULTS_PREFIX: self.add_event_re,
-                SECTION_PREFIX: self.add_re,
-                SECTION_BODY: self.add_re,
-                MATCH_BODY: self.add_match_format_re,
-                TEAMS_BODY: self.add_match_item_re,
-                GAMES_BODY: self.add_match_item_re,
-                FINISHED: self.add_match_item_re,
-                UNFINISHED: self.add_match_item_re,
-                DEFAULT: self.add_match_item_re,
-                MATCH_DEFAULT: self.add_match_item_re,
-                MATCH_DATE_BODY: self.add_match_item_re,
-                PLAYED_ON_BODY: self.add_played_on_format_re,
-                TEAMS_PLAYED_ON_BODY: self.add_played_on_item_re,
-                GAMES_PLAYED_ON_BODY: self.add_played_on_item_re,
-                FINISHED_PLAYED_ON: self.add_played_on_item_re,
-                UNFINISHED_PLAYED_ON: self.add_played_on_item_re,
-                MATCH_DATE_PLAYED_ON_BODY: self.add_played_on_item_re,
-                SCHEDULE_BODY: self.add_fixture_format_re,
-                FIXTURE_BODY: self.add_fixture_item_re,
-                KEEP_WORD_SPLITTERS: self.assign_event_value,
-                SECTION_NAME: self.add_section_name,
+                RESULTS_PREFIX: self._add_event_re,
+                SECTION_PREFIX: self._add_re,
+                SECTION_BODY: self._add_re,
+                MATCH_BODY: self._add_match_format_re,
+                TEAMS_BODY: self._add_match_item_re,
+                GAMES_BODY: self._add_match_item_re,
+                FINISHED: self._add_match_item_re,
+                UNFINISHED: self._add_match_item_re,
+                DEFAULT: self._add_match_item_re,
+                MATCH_DEFAULT: self._add_match_item_re,
+                MATCH_DATE_BODY: self._add_match_item_re,
+                PLAYED_ON_BODY: self._add_played_on_format_re,
+                TEAMS_PLAYED_ON_BODY: self._add_played_on_item_re,
+                GAMES_PLAYED_ON_BODY: self._add_played_on_item_re,
+                FINISHED_PLAYED_ON: self._add_played_on_item_re,
+                UNFINISHED_PLAYED_ON: self._add_played_on_item_re,
+                MATCH_DATE_PLAYED_ON_BODY: self._add_played_on_item_re,
+                SCHEDULE_BODY: self._add_fixture_format_re,
+                FIXTURE_BODY: self._add_fixture_item_re,
+                KEEP_WORD_SPLITTERS: self._assign_event_value,
+                SECTION_NAME: self._add_section_name,
                 COMPETITION: self.add_value_to_set,
-                SOURCE: self.add_re,
-                DROP_FORWARDED_MARKERS: self.assign_event_value,
-                TEAM_NAME: self.add_value_to_lookup,
+                SOURCE: self._add_re,
+                DROP_FORWARDED_MARKERS: self._assign_event_value,
+                TEAM_NAME: self._add_value_to_lookup,
                 AUTHORIZATION_DELAY: self.assign_value,
             }
         )
         self.context_keys = {
-            _REPLACE: [None, None, None],
+            REPLACE: [None, None, None],
         }
 
     @staticmethod
-    def re_from_value(val):
+    def _re_from_value(val):
         """Process elements for various keyword methods."""
         return re.compile(val, flags=re.IGNORECASE | re.DOTALL)
 
     @staticmethod
-    def add_value_to_lookup(val, args, args_key):
+    def _add_value_to_lookup(val, args, args_key):
         """Process TEAM_NAME keyword."""
         val, rep = val.split(sep=val[0], maxsplit=2)[1:]
         if args_key not in args:
@@ -297,7 +436,7 @@ class Parser(emailextractor.Parser):
         args[args_key][val] = rep
 
     @staticmethod
-    def add_value_to_lookup_set(val, args, args_key):
+    def _add_value_to_lookup_set(val, args, args_key):
         """Process lookup set values. (Not used currently)."""
         val, rep = val.split(sep=val[0], maxsplit=2)[1:]
         if args_key not in args:
@@ -305,7 +444,7 @@ class Parser(emailextractor.Parser):
         args[args_key].setdefault(val, set()).add(rep)
 
     @staticmethod
-    def add_defaulted_value_to_lookup(val, args, args_key):
+    def _add_defaulted_value_to_lookup(val, args, args_key):
         """Process COMPETITION keyword. (Commented alternative)."""
         val = val.split(sep=val[0], maxsplit=2)[1:]
         if args_key not in args:
@@ -313,18 +452,18 @@ class Parser(emailextractor.Parser):
         args[args_key][val[0]] = val[-1]
 
     @staticmethod
-    def csv_data_name(val, args, args_key):
+    def _csv_data_name(val, args, args_key):
         """Process the keywords listed below.
 
-        _SCHEDULE_CSV_DATA_NAME
-        _REPORT_CSV_DATA_NAME
+        SCHEDULE_CSV_DATA_NAME
+        REPORT_CSV_DATA_NAME
 
         """
         elements = val.split(sep=" ")
         csv_name = elements.pop(0)
         args.setdefault(args_key, []).append((csv_name, elements, {}))
 
-    def csv_columns(self, key, val, args, args_key):
+    def _csv_columns(self, key, val, args, args_key):
         """Perform detail for csv_..._columns methods."""
         elements = EmailExtractor.replace_value_columns.split(val)
         sep = [""]
@@ -339,11 +478,11 @@ class Parser(emailextractor.Parser):
             {e: sep[i] for i, e in enumerate(elements)},
             {e: {} for e in elements},
         )
-        self.context_keys[_REPLACE][0] = key
-        self.context_keys[_REPLACE][1] = args_key
-        self.context_keys[_REPLACE][2] = val
+        self.context_keys[REPLACE][0] = key
+        self.context_keys[REPLACE][1] = args_key
+        self.context_keys[REPLACE][2] = val
 
-    def csv_schedule_columns(self, val, *a):
+    def _csv_schedule_columns(self, val, *a):
         """Process the keywords listed below.
 
         _SCHED_DATE
@@ -354,9 +493,9 @@ class Parser(emailextractor.Parser):
         _SCHED_DATA_COLUMNS
 
         """
-        self.csv_columns(_SCHEDULE_CSV_DATA_NAME, val, *a)
+        self._csv_columns(SCHEDULE_CSV_DATA_NAME, val, *a)
 
-    def csv_report_columns(self, val, *a):
+    def _csv_report_columns(self, val, *a):
         """Process the keywords listed below.
 
         _REPORT_DATE
@@ -376,44 +515,44 @@ class Parser(emailextractor.Parser):
         _REPORT_DATA_COLUMNS
 
         """
-        self.csv_columns(_REPORT_CSV_DATA_NAME, val, *a)
+        self._csv_columns(REPORT_CSV_DATA_NAME, val, *a)
 
-    def csv_value_partial_replace(self, val, args, args_key):
-        """Process _PARTIAL_REPLACE keyword."""
+    def _csv_value_partial_replace(self, val, args, args_key):
+        """Process PARTIAL_REPLACE keyword."""
         del args_key
         pvc, val, rep = val.split(sep=val[0], maxsplit=3)[1:]
-        cdn, dti, i = self.context_keys[_REPLACE]
+        cdn, dti, i = self.context_keys[REPLACE]
         if pvc not in EmailExtractor.replace_value_columns.split(i):
             raise EmailExtractorError(" ".join((pvc, "is not included in", i)))
         args[cdn][-1][-1][dti][-1][pvc][val] = rep
 
-    def csv_value_replace(self, val, args, args_key):
-        """Process _REPLACE keyword."""
+    def _csv_value_replace(self, val, args, args_key):
+        """Process REPLACE keyword."""
         del args_key
         val, rep = val.split(sep=val[0], maxsplit=2)[1:]
-        cdn, dti, i = self.context_keys[_REPLACE]
+        cdn, dti, i = self.context_keys[REPLACE]
         args[cdn][-1][-1][dti][-1][i][val] = rep
 
-    def add_event_re(self, val, args, args_key):
+    def _add_event_re(self, val, args, args_key):
         """Process RESULTS_PREFIX keyword."""
         if args_key not in args:
             args[args_key] = list()
         args[args_key].append(
             {
-                args_key: self.re_from_value(val),
-                SECTION_PREFIX: self.re_from_value(""),
-                SECTION_BODY: self.re_from_value(""),
+                args_key: self._re_from_value(val),
+                SECTION_PREFIX: self._re_from_value(""),
+                SECTION_BODY: self._re_from_value(""),
                 MATCH_FORMATS: [],
                 PLAYED_ON_FORMATS: [],
                 FIXTURE_FORMATS: [],
                 KEEP_WORD_SPLITTERS: DEFAULT_KEEP_WORD_SPLITTERS,
                 SECTION_NAME: {},
-                SOURCE: self.re_from_value(""),
+                SOURCE: self._re_from_value(""),
                 DROP_FORWARDED_MARKERS: "",
             },
         )
 
-    def add_re(self, val, args, args_key):
+    def _add_re(self, val, args, args_key):
         """Process the keywords listed below.
 
         SECTION_PREFIX
@@ -421,31 +560,31 @@ class Parser(emailextractor.Parser):
         SOURCE
 
         """
-        args[RESULTS_PREFIX][-1][args_key] = self.re_from_value(val)
+        args[RESULTS_PREFIX][-1][args_key] = self._re_from_value(val)
 
-    def add_format_re(self, fin, val, args, args_key):
+    def _add_format_re(self, fin, val, args, args_key):
         """Perform detail for ..._format_re methods."""
         args[RESULTS_PREFIX][-1][fin].append(
-            {args_key: self.re_from_value(val)}
+            {args_key: self._re_from_value(val)}
         )
 
-    def add_match_format_re(self, *a):
+    def _add_match_format_re(self, *a):
         """Process MATCH_BODY keyword."""
-        self.add_format_re(MATCH_FORMATS, *a)
+        self._add_format_re(MATCH_FORMATS, *a)
 
-    def add_played_on_format_re(self, *a):
+    def _add_played_on_format_re(self, *a):
         """Process PLAYED_ON_BODY keyword."""
-        self.add_format_re(PLAYED_ON_FORMATS, *a)
+        self._add_format_re(PLAYED_ON_FORMATS, *a)
 
-    def add_fixture_format_re(self, *a):
+    def _add_fixture_format_re(self, *a):
         """Process SCHEDULE_BODY keyword."""
-        self.add_format_re(FIXTURE_FORMATS, *a)
+        self._add_format_re(FIXTURE_FORMATS, *a)
 
-    def add_item_re(self, fin, val, args, args_key):
+    def _add_item_re(self, fin, val, args, args_key):
         """Perform detail for ..._item_re methods."""
-        args[RESULTS_PREFIX][-1][fin][-1][args_key] = self.re_from_value(val)
+        args[RESULTS_PREFIX][-1][fin][-1][args_key] = self._re_from_value(val)
 
-    def add_match_item_re(self, *a):
+    def _add_match_item_re(self, *a):
         """Process the keywords listed below.
 
         TEAMS_BODY
@@ -457,9 +596,9 @@ class Parser(emailextractor.Parser):
         MATCH_DATE_BODY
 
         """
-        self.add_item_re(MATCH_FORMATS, *a)
+        self._add_item_re(MATCH_FORMATS, *a)
 
-    def add_played_on_item_re(self, *a):
+    def _add_played_on_item_re(self, *a):
         """Process the keywords listed below.
 
         TEAMS_PLAYED_ON_BODY
@@ -469,27 +608,27 @@ class Parser(emailextractor.Parser):
         MATCH_DATE_PLAYED_ON_BODY
 
         """
-        self.add_item_re(PLAYED_ON_FORMATS, *a)
+        self._add_item_re(PLAYED_ON_FORMATS, *a)
 
-    def add_fixture_item_re(self, *a):
+    def _add_fixture_item_re(self, *a):
         """Process FIXTURE_BODY keyword."""
-        self.add_item_re(FIXTURE_FORMATS, *a)
+        self._add_item_re(FIXTURE_FORMATS, *a)
 
     @staticmethod
-    def assign_event_value(val, args, args_key):
+    def _assign_event_value(val, args, args_key):
         """Process KEEP_WORD_SPLITTERS and DROP_FORWARDED_MARKERS keywords."""
         args[RESULTS_PREFIX][-1][args_key] = val
 
     @staticmethod
-    def add_format_replace(fin, val, args, args_key):
+    def _add_format_replace(fin, val, args, args_key):
         """Set value lookup for <fin> keyword."""
         del args_key
         val, rep = val.split(sep=val[0], maxsplit=2)[1:]
         args[RESULTS_PREFIX][-1][fin][val] = rep
 
-    def add_section_name(self, *a):
+    def _add_section_name(self, *a):
         """Process SECTION_NAME keyword."""
-        self.add_format_replace(SECTION_NAME, *a)
+        self._add_format_replace(SECTION_NAME, *a)
 
 
 class ExtractEmail(emailextractor.ExtractEmail):
@@ -501,37 +640,37 @@ class ExtractEmail(emailextractor.ExtractEmail):
         sched_csv_data_name=None,
         report_csv_data_name=None,
         text_from_rows=None,
-        **soak
+        **soak,
     ):
-        """Define the email extraction rules from configuration.
+        """Extend with attributes for collecting chess results.
 
-        mailstore - the directory containing the email files
-        earliestdate - emails before this date are ignored
-        mostrecentdate - emails after this date are ignored
-        emailsender - iterable of from addressees to select emails
-        eventdirectory - directory to contain the event's data
-        ignore - iterable of email filenames to be ignored
-        schedule - difference file for event schedule
-        reports - difference file for event result reports
+        These are sched_csv_data_name, report_csv_data_name, and
+        text_from_rows.
+
+        extracttext argument default is ExtractText.
+
+        extracttext and **soak arguments are passed to superclass.
 
         """
         if extracttext is None:
             extracttext = ExtractText
         super().__init__(extracttext=extracttext, **soak)
         if sched_csv_data_name is None:
-            self._sched_csv_data_name = []
+            self.sched_csv_data_name = []
         else:
-            self._sched_csv_data_name = sched_csv_data_name
+            self.sched_csv_data_name = sched_csv_data_name
         if report_csv_data_name is None:
-            self._report_csv_data_name = []
+            self.report_csv_data_name = []
         else:
-            self._report_csv_data_name = report_csv_data_name
+            self.report_csv_data_name = report_csv_data_name
         if text_from_rows is None:
-            self._text_from_rows = frozenset()
+            self.text_from_rows = frozenset()
         else:
-            self._text_from_rows = text_from_rows
+            self.text_from_rows = text_from_rows
         # Selectors data will probably be somewhere in sched_csv_data_name or
         # report_csv_data_name, following the example of translations.
+        # Not used at present.  Intended for selecting rows for a particular
+        # event whene several events in same CSV file or spreadsheet.
         self._selectors = {}
 
 
@@ -541,8 +680,8 @@ class ExtractText(emailextractor.ExtractText):
     def get_spreadsheet_text(self, *a):
         """Return (sheetname, text) matching schedule and report data names."""
         ems = self._emailstore
-        fsn = set(n[0] for n in ems._sched_csv_data_name).union(
-            [n[0] for n in ems._report_csv_data_name]
+        fsn = set(n[0] for n in ems.sched_csv_data_name).union(
+            [n[0] for n in ems.report_csv_data_name]
         )
         return [t for t in super().get_spreadsheet_text(*a) if t[0] in fsn]
 
@@ -557,19 +696,19 @@ class ExtractText(emailextractor.ExtractText):
 
         """
         ems = self._emailstore
-        schedule_sheets = {s[0] for s in ems._sched_csv_data_name}
-        report_sheets = {s[0] for s in ems._report_csv_data_name}
+        schedule_sheets = {s[0] for s in ems.sched_csv_data_name}
+        report_sheets = {s[0] for s in ems.report_csv_data_name}
         csvlines = text.readlines()
         all_text = []
-        for cdn in ems._sched_csv_data_name + ems._report_csv_data_name:
+        for cdn in ems.sched_csv_data_name + ems.report_csv_data_name:
             if cdn[0] != sheet and sheet is not None:
                 continue
 
             # I think "not in" version was intended to turn the tabular code
             # off until the "batch of future code" cited at end of build_event
             # in EventParser class is ready.
-            # tabular = cdn[0] not in ems._text_from_rows
-            tabular = cdn[0] in ems._text_from_rows
+            # tabular = cdn[0] not in ems.text_from_rows
+            tabular = cdn[0] in ems.text_from_rows
 
             if not tabular:
                 delimiter = TABLE_DELIMITER

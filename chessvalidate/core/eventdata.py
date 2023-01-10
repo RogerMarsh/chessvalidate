@@ -179,18 +179,9 @@ class EventData:
         """
         return (self.datatag, self._generated_schedule[key])
 
-    def _print(self):
+    def print_(self):
         """Print trace when fixing problems."""
-        try:
-            print(self.__dict__)
-        except Exception:
-            print("\n>>>>>>>>")
-            for k, value in self.__dict__.items():
-                try:
-                    print(repr(k), repr(value))
-                except Exception:
-                    print(repr(k), "not printable")
-            print("<<<<<<<<\n")
+        print(self.__dict__)
 
     def is_match_defaulted(self):
         """Return True if match defaulted."""
@@ -233,15 +224,15 @@ class TableEventData(EventData):
         self.context = context
         result_date = self.result_date
         if TableEventData.gdate.parse_date(result_date) == len(result_date):
-            self._date_played = TableEventData.gdate.iso_format_date()
+            self.date_played = TableEventData.gdate.iso_format_date()
         else:
-            self._date_played = ""
+            self.date_played = ""
 
     def __eq__(self, other):
         """Return True if self equals other."""
         if self.competition != other.competition:
             return False
-        if self._date_played != other._date_played:
+        if self.date_played != other.date_played:
             return False
         if self.competition_round != other.competition_round:
             return False
@@ -257,7 +248,7 @@ class TableEventData(EventData):
         """Return True if self less than other."""
         if self.competition < other.competition:
             return True
-        if self._date_played < other._date_played:
+        if self.date_played < other.date_played:
             return True
 
         # Adopt numeric string convention

@@ -22,12 +22,16 @@ from . import help_
 from . import configure
 from . import selectemail
 from . import eventdetails
+from . import csvdownload
 
 ExceptionHandler.set_application_name(APPLICATION_NAME)
 
 
 class Results(Bindings):
     """Results application."""
+
+    # Just the event name and dates by default.
+    _EVENT_DETAILS = "Event Name"
 
     def __init__(self, title, gui_module, width, height):
         """Create the Results application.
@@ -59,6 +63,13 @@ class Results(Bindings):
         # subclasses of Leagues have done their results menu item additions
         del self.app_module.menu_results
 
+        menu0.add_separator()
+        menu0.add_command(
+            label=self._EVENT_DETAILS,
+            underline=6,
+            command=self.try_command(self.configure_event_details, menu0),
+        )
+        menu0.add_separator()
         menu0.add_command(
             label="Email selection",
             underline=0,
@@ -71,10 +82,11 @@ class Results(Bindings):
                 self.configure_extract_text_from_emails, menu0
             ),
         )
+        menu0.add_separator()
         menu0.add_command(
-            label="Event Details",
-            underline=6,
-            command=self.try_command(self.configure_event_details, menu0),
+            label="Download",
+            underline=2,
+            command=self.try_command(self.configure_download_results, menu0),
         )
         menu0.add_separator()
         menu0.add_command(
@@ -82,6 +94,7 @@ class Results(Bindings):
             underline=0,
             command=self.try_command(self.app_module.database_quit, menu0),
         )
+        menu0.add_separator()
 
         self.make_tools_menu(menubar)
         self.make_help_menu(menubar)
@@ -225,5 +238,15 @@ class Results(Bindings):
             use_toplevel=True,
             application_name="".join(
                 (self.get_application_name(), " (event details)")
+            ),
+        )
+
+    def configure_download_results(self):
+        """Set parameters that control results download and extraction."""
+        csvdownload.CSVDownload(
+            master=self.root,
+            use_toplevel=True,
+            application_name="".join(
+                (self.get_application_name(), " (download)")
             ),
         )

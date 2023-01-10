@@ -126,12 +126,20 @@ class Season:
         self.fixturesfile = None
         self.results = None
         self.resultsfile = None
-        self._fixtures = None
+        # _fistures attribute renamed fixture_schedule to resolve pylint
+        # protected-access report.  Cannot rename as fixtures because that
+        # is already taken (but not used see chessresult's takeonseason
+        # module too).
+        self.fixture_schedule = None
         self._collation = None
         self._event_parser = None
         self._difference_text = None
         self._entry_text = None
         self._event_extraction_rules = None
+        self._event_competitions = None
+        self._event_team_name_lookup = None
+        self._event_competitions = None
+        self._event_data = None
 
     def get_results_from_file(self):
         """Override, create Collation object from text files.
@@ -146,7 +154,7 @@ class Season:
             self.get_schedule_from_file()
             results = Report()
             results.build_results(self._event_data.get_results_text())
-            self._collation = Collation(results, self._fixtures)
+            self._collation = Collation(results, self.fixture_schedule)
 
     def open_documents(self, parent):
         """Override, extract data from text files and return True if ok."""
@@ -243,15 +251,12 @@ class Season:
                 ),
             )
             empty_text = ["\n"]
-            ofile = open(
+            with open(
                 os.path.join(self.folder, emc.criteria[TEXTENTRY]),
                 mode="x",
                 encoding="utf8",
-            )
-            try:
+            ) as ofile:
                 ofile.writelines(difflib.ndiff(empty_text, empty_text))
-            finally:
-                ofile.close()
         fcount = len(
             [
                 f
@@ -280,7 +285,8 @@ class Season:
         # works the old way to support the takenonseason module.
         fpath = os.path.join(self.folder, emc.criteria[TEXTENTRY])
         try:
-            ofile = open(fpath, mode="r", encoding="utf8")
+            with open(fpath, mode="r", encoding="utf8") as ofile:
+                entry_text = _DifferenceText(fpath, ofile.readlines())
         except FileNotFoundError as exc:
             tkinter.messagebox.showinfo(
                 parent=parent,
@@ -295,10 +301,6 @@ class Season:
                 ),
             )
             return None
-        try:
-            entry_text = _DifferenceText(fpath, ofile.readlines())
-        finally:
-            ofile.close()
 
         email_text = []
         email_headers = {}
@@ -317,7 +319,13 @@ class Season:
         for fname in sorted(os.listdir(folder)):
             fpath = os.path.join(folder, fname)
             try:
-                ofile = open(fpath, mode="r", encoding="utf8")
+                with open(fpath, mode="r", encoding="utf8") as ofile:
+                    diff_text.append(
+                        _DifferenceText(
+                            fpath, ofile.readlines(), headers=email_headers
+                        )
+                    )
+                    extracted_text.append((fname, diff_text[-1].original_text))
             except FileNotFoundError as exc:
                 tkinter.messagebox.showinfo(
                     parent=parent,
@@ -332,15 +340,6 @@ class Season:
                     ),
                 )
                 return None
-            try:
-                diff_text.append(
-                    _DifferenceText(
-                        fpath, ofile.readlines(), headers=email_headers
-                    )
-                )
-                extracted_text.append((fname, diff_text[-1].original_text))
-            finally:
-                ofile.close()
 
         # Extract text from all emails to make initial difference text if none
         # already exist.
@@ -500,9 +499,11 @@ class Season:
         # but the version of edited text currently on file will be displayed
         # first of all and used to detect substantive edits.
         entry_text.clear_original_text()
+        # pylint reports useless-statement: probable misuse of property.
         entry_text.edited_text_on_file
         for dte in diff_text:
             dte.clear_original_text()
+            # pylint reports useless-statement: probable misuse of property.
             dte.edited_text_on_file
 
         # Make the list of difference files and their source data available via
@@ -516,7 +517,7 @@ class Season:
 
     def extract_event(self):
         """Extend, specify Schedule as class used to process newfixtures."""
-        difflistcopy = [dt for dt in self._difference_text]
+        difflistcopy = self._difference_text.copy()
         difflistcopy.insert(0, self._entry_text)
 
         # The old code allowed for different classes for varying formats.
@@ -563,13 +564,15 @@ class Season:
         getfixtures - the Schedule class or a subclass
 
         """
-        if self._fixtures is None:
-            self._fixtures = Schedule()
-            self._fixtures.build_schedule(self._event_data.get_schedule_text())
+        if self.fixture_schedule is None:
+            self.fixture_schedule = Schedule()
+            self.fixture_schedule.build_schedule(
+                self._event_data.get_schedule_text()
+            )
 
     def extract_schedule(self):
         """Override, specify Schedule as class used to process newfixtures."""
-        self._fixtures = None
+        self.fixture_schedule = None
         self.get_schedule_from_file()
 
     def extract_results(self):
@@ -594,7 +597,7 @@ class Season:
         self.fixturesfile = None
         self.results = None
         self.resultsfile = None
-        self._fixtures = None
+        self.fixture_schedule = None
         self._collation = None
 
     # Copied from PDLSeason and SLSeason
@@ -631,6 +634,11 @@ class _DifferenceText:
     def __lt__(self, other):
         """Return True if self.filename < other.filename."""
         return self._filename < other._filename
+
+    @property
+    def filename(self):
+        """Return filenaame."""
+        return self._filename
 
     @property
     def filename_header(self):
@@ -728,7 +736,7 @@ class _DifferenceText:
                             ),
                         )
                     )
-        except Exception:
+        except (TypeError, IndexError, AttributeError):
             pass
         return "Unknown sender and date"
 
@@ -759,7 +767,7 @@ class _DifferenceText:
                 os.path.join(self._folder, "".join((self._filename, "new"))),
                 os.path.join(self._folder, self._filename),
             )
-        except Exception:
+        except OSError:
             tkinter.messagebox.showinfo(
                 title="Save event results data",
                 message="".join(

@@ -583,7 +583,7 @@ class AdaptEventContext(EventContext):
                         (row.nameone, row.score, row.nametwo, row.colour)
                     )
                     game[1].add(row.competition_round)
-                    game[2].add(row._date_played)
+                    game[2].add(row.date_played)
 
                     # Keep the original data.
                     game[3].append(row)
@@ -606,6 +606,10 @@ class AdaptEventContext(EventContext):
                             if len(i) != 1:
                                 errors.append(((ckey, mkey, bkey), i))
                         for i in game[-1]:
+                            if rowmatchscore and i not in rowmatchscore:
+                                errors.append(
+                                    ((ckey, mkey, bkey), rowmatchscore)
+                                )
                             rowmatchscore.add(i)
                         for i in game[0]:
                             for j, k in enumerate(
@@ -618,7 +622,6 @@ class AdaptEventContext(EventContext):
                         totalscore = [
                             t * len(rowmatchscore) for t in totalscore
                         ]
-                        errors.append(((ckey, mkey, bkey), rowmatchscore))
                     if rowmatchscore == NOMATCHSCORE or len(rowmatchscore) > 1:
 
                         # move match score from game details to match details.
@@ -701,7 +704,7 @@ class AdaptEventContext(EventContext):
                             datatag=game.datatag,
                             found=Found.RESULT_NAMES,
                             context=game.context,
-                            result_date=game._date_played,
+                            result_date=game.date_played,
                             source=emailsource,
                             headers=game.headers,
                             nameone=game.nameone,
@@ -724,12 +727,7 @@ class AdaptEventContext(EventContext):
         """Print lines in text.  Intended for tracing bugs."""
         print("\n")
         for line in text:
-            try:
-                print(line)
-            except Exception:
-                print("\n>>>>>>>>")
-                print("".join([c if ord(c) < 128 else "@@" for c in line]))
-                print("<<<<<<<<\n")
+            print(repr(line))
 
     @staticmethod
     def _set_source(eventdata, source, text):

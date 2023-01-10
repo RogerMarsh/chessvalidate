@@ -298,22 +298,13 @@ class Collation(GameCollation):
                     or player.startdate is None
                     or player.enddate is None
                 ):
-                    player.event = self.schedule.es_name
-                    player.startdate = self.schedule.es_startdate
-                    player.enddate = self.schedule.es_enddate
-                    player.section = self.schedule._section
+                    self.schedule.add_event_to_player(player)
 
                     # The default pin=None is surely fine but False is what pin
                     # becomes in earlier versions and it does not happen here
                     # unless set so.
                     player.pin = False
 
-                    player.__dict__["_identity"] = (
-                        player.name,
-                        player.event,
-                        player.startdate,
-                        player.enddate,
-                    )
             if game.date is None:
                 game.date = self.schedule.es_startdate
             self.set_player(game.homeplayer)
@@ -540,10 +531,12 @@ class Collation(GameCollation):
                 ugsu = unique_game[ugkey][key]
                 mrg = ugsu[-1]
                 game_problems = {}
+                inconsistent_report = None
                 for prevreport in ugsu[:-1]:
                     problems = set()
                     if mrg.is_inconsistent(prevreport, problems):
                         game_problems.setdefault(mrg, set()).update(problems)
+                        inconsistent_report = prevreport
 
                 if not game_problems:
                     self.gamesxref[mrg] = None
@@ -610,24 +603,25 @@ class Collation(GameCollation):
                             )
                         ),
                     )
-                    prevreport.tagger.append_generated_report(
-                        self.reports.error, "   Earlier report:"
-                    )
-                    prevreport.tagger.append_generated_report(
-                        self.reports.error,
-                        " ".join(
-                            (
-                                "      ",
-                                nullstring(prevreport.hometeam),
-                                "-",
-                                nullstring(prevreport.awayteam),
-                                "  ",
-                                nullstring(prevreport.homeplayer),
-                                prevreport.get_print_result()[0],
-                                nullstring(prevreport.awayplayer),
-                            )
-                        ),
-                    )
+                    if inconsistent_report is not None:
+                        inconsistent_report.tagger.append_generated_report(
+                            self.reports.error, "   Earlier report:"
+                        )
+                        inconsistent_report.tagger.append_generated_report(
+                            self.reports.error,
+                            " ".join(
+                                (
+                                    "      ",
+                                    nullstring(inconsistent_report.hometeam),
+                                    "-",
+                                    nullstring(inconsistent_report.awayteam),
+                                    "  ",
+                                    nullstring(inconsistent_report.homeplayer),
+                                    inconsistent_report.get_print_result()[0],
+                                    nullstring(inconsistent_report.awayplayer),
+                                )
+                            ),
+                        )
                     self.reports.error.append(("", self.reports))
 
     # get_finished_games copied from slcollation.
@@ -944,13 +938,7 @@ class Collation(GameCollation):
             player.enddate = schedule.es_enddate
             player.club = teamclub[player.club]
             player.affiliation = player.club
-            player.__dict__["_identity"] = (
-                player.name,
-                player.event,
-                player.startdate,
-                player.enddate,
-                player.club,
-            )
+            player.set_player_identity_club()
             self.set_player(player)
 
         # Generate data for player reports.
@@ -1143,7 +1131,15 @@ class Collation(GameCollation):
 
 
 class _MatchAuthorization:
-    """Authorization status of match based on time since receipt."""
+    """Authorization status of match based on time since receipt.
+
+    Relevant to match reports received by email where multiple reports
+    are possible.  In particular the two match captains might be expected
+    to submit independent reports.
+
+    Not relevant to results downloaded from a database associated with a
+    website.
+    """
 
     _authorization_time = mktime(gmtime())
 
@@ -1160,6 +1156,11 @@ class _MatchAuthorization:
             _match.hometeam != match.hometeam
             or _match.awayteam != match.awayteam
         ):
+            return
+        # Assume 'headers is None' implies a valid non-email source where
+        # multiple sources are not required nor at least advisable.
+        if headers is None:
+            self._dates_ok = True
             return
         if headers.authorization_delay is None:
             self._dates_ok = True

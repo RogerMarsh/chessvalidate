@@ -26,15 +26,6 @@ from .gameresults import (
 )
 from . import constants
 
-# May need displayresulttag constant from slcollation too.
-# Probably add this to gameresults.resultmap.
-_GAME_RESULT = {
-    ("1", "0"): constants.HWIN,
-    ("0", "1"): constants.AWIN,
-    ("0.5", "0.5"): constants.DRAW,
-    (None, None): constants.TOBEREPORTED,
-}
-
 _GRADE_ONLY_TAG = {
     True: "grading only",
 }
@@ -157,11 +148,6 @@ class Game:
         return id(self)
 
     @staticmethod
-    def game_result(result):
-        """Return value representing game result such as 'h' for '1-0'."""
-        return resultmap.get(result, constants.NOTARESULT)
-
-    @staticmethod
     def game_result_exists(result):
         """Return True if game result is allowed."""
         return result in resultmap
@@ -203,7 +189,8 @@ class Game:
                 state = True
         return state
 
-    def get_game_board_and_round(self):
+    @staticmethod
+    def get_game_board_and_round():
         """Return tuple of ""s for game details in tabular format."""
         return ("",) * 2
 
@@ -270,10 +257,11 @@ class UnfinishedGame(MatchGame):
 
     # A merge of pdlcollation.UnfinishedGame and slcollation.SLMatchGame is
     # used.  The PDL version has the right superclass but the game_result
-    # method is broken.
+    # method is broken.  (And much later removed because it is not used.)
     # The gameresult constant is copied from slcollation to an upper case name.
     # UnfinishedGame in slcollation is not a subclass of SLMatchGame to leave
     # out the gradingonly attribute, but that attribute has been added to Game.
+    # (Also removed when game_result method removed.)
 
     attributes = {
         "source": None,
@@ -283,11 +271,6 @@ class UnfinishedGame(MatchGame):
         "awayteam": None,
     }
     attributes.update(MatchGame.attributes)
-
-    @staticmethod
-    def game_result(homeplayerscore, awayplayerscore):
-        """Override, return value representing result such as 'h' for '1-0'."""
-        return _GAME_RESULT.get((homeplayerscore, awayplayerscore), "")
 
     def is_inconsistent(self, other, problems):
         """Extend to compare PDL attributes. Return True if inconsistent."""
@@ -464,7 +447,8 @@ class Section:
         """Return True if id(self) < id(other)."""
         return id(self) < id(other)
 
-    def get_team_details(self):
+    @staticmethod
+    def get_team_details():
         """Return tuple of ""s for team details in tabular format."""
         return ("",) * 6
 
@@ -570,30 +554,13 @@ class Player:
         self.__dict__.update(self.attributes)
         self.__dict__.update(kargs)
         if self.club:
-            self.__dict__["_identity"] = (
-                self.name,
-                self.event,
-                self.startdate,
-                self.enddate,
-                self.club,
-            )
+            self.set_player_identity_club()
+            # Comment this line to avoid pylint unused-variable report.
             affiliation = self.club  # Should this be "self.affiliation ="?
         elif self.section:
-            self.__dict__["_identity"] = (
-                self.name,
-                self.event,
-                self.startdate,
-                self.enddate,
-                self.section,
-                self.pin,
-            )
+            self.set_player_identity_section()
         else:
-            self.__dict__["_identity"] = (
-                self.name,
-                self.event,
-                self.startdate,
-                self.enddate,
-            )
+            self.set_player_identity()
 
     def __eq__(self, other):
         """Return True if self[a] == other[a] for a in Player.attributes."""
@@ -803,6 +770,36 @@ class Player:
         """
         return " ".join(
             self.reported_codes if self.reported_codes is not None else ""
+        )
+
+    def set_player_identity(self):
+        """Set player identity where club or section is not relevant."""
+        self.__dict__["_identity"] = (
+            self.name,
+            self.event,
+            self.startdate,
+            self.enddate,
+        )
+
+    def set_player_identity_club(self):
+        """Set player identity where club is relevant."""
+        self.__dict__["_identity"] = (
+            self.name,
+            self.event,
+            self.startdate,
+            self.enddate,
+            self.club,
+        )
+
+    def set_player_identity_section(self):
+        """Set player identity where section is relevant."""
+        self.__dict__["_identity"] = (
+            self.name,
+            self.event,
+            self.startdate,
+            self.enddate,
+            self.section,
+            self.pin,
         )
 
 

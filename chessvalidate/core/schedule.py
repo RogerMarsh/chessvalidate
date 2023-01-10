@@ -7,13 +7,14 @@
 from solentware_misc.core import utilities
 
 from .gameobjects import MatchFixture, Player, split_codes_from_name
+from . import reportbase
 
 
 class ScheduleError(Exception):
     """Exception class for schedule module."""
 
 
-class Schedule:
+class Schedule(reportbase.ReportBase):
     """Schedule extracted from event schedule file containing one event.
 
     Support a free text format for leagues and events for individuals.
@@ -25,8 +26,8 @@ class Schedule:
     def __init__(self):
         """Extend, initialise schedule data items."""
         super().__init__()
-        self.textlines = None
-        self.error = []
+        # self.textlines = None
+        # self.error = []
         self.es_startdate = None
         self.es_enddate = None
         self.es_rapidplay = dict()
@@ -37,7 +38,7 @@ class Schedule:
         self.es_fixtures = []
         self.es_summary = dict()
         self.rapidplay = False
-        self._section = None  # latest section name found by get_section
+        # self._section = None  # latest section name found by get_section
         self.error_repeat = False
         self.es_section = dict()
         self.es_report_order = []
@@ -46,7 +47,7 @@ class Schedule:
         self.es_players = dict()  # keys are (name, pin) eg pin on swiss table
         self.es_pins = dict()  # map pin to name for es_players lookup
         self._maximum_round = None
-        self._round = None
+        # self._round = None
 
     def add_league_section(self):
         """Initialise data structures for league format."""
@@ -123,6 +124,17 @@ class Schedule:
                     sta[key] = {name: team, key: team, team: team}
                 if name not in sta[key]:
                     sta[key][name] = team
+
+    # Adapted from collation.Collation._collate_individual() because of the
+    # reference to _section attribute.
+    # pylint protected-access report prompted action.
+    def add_event_to_player(self, player):
+        """Copy event identity to player."""
+        player.event = self.es_name
+        player.startdate = self.es_startdate
+        player.enddate = self.es_enddate
+        player.section = self._section
+        player.set_player_identity()
 
     def build_schedule(self, textlines):
         """Populate the event schedule from textlines."""
@@ -943,12 +955,7 @@ class Schedule:
         }
 
         self.textlines = textlines
-        process = get_event_name
-        for linestr, linetag in self.textlines:
-            linestr = linestr.strip()
-            if len(linestr) == 0:
-                continue
-            process = process(linestr, linetag)
+        self._process_textlines(get_event_name)
 
         # hack to spot empty schedule
         # Try to get rid of it so self.append_generated_schedule is not needed.

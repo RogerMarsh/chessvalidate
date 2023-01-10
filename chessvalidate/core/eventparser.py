@@ -399,7 +399,7 @@ class EventParser:
                             raise_re_error(SOURCE, text)
                         raise
                 else:
-                    source = difference_item._filename
+                    source = difference_item.filename
                 result_line_description = (
                     selected_text,
                     difference_item.data_tag,
@@ -573,7 +573,7 @@ class EventParser:
                     selected_text,
                     difference_item.data_tag,
                     re_competition,
-                    difference_item._filename,
+                    difference_item.filename,
                     competition_lookup,
                     difference_item.headers,
                 )
@@ -690,7 +690,7 @@ def _select_result_line(result_line_description, text):
                 source=source,
                 headers=headers,
             )
-        except Exception:
+        except (AttributeError, KeyError, IndexError):
             return EventData(
                 datatag=data_tag,
                 found=Found.TABLE_FORMAT,
@@ -836,7 +836,7 @@ def _select_result_line(result_line_description, text):
                         str(exc),
                     )
                 )
-            )
+            ) from exc
         raise
 
     # A swiss tournament table report is assumed to have more than one round
@@ -1077,7 +1077,10 @@ def _select_result_line(result_line_description, text):
                     voiditem = [v.lower() for v in vsrc].index(void)
                     if voiditem == 0 and vsrcwina[1] not in numbers:
                         ed_kargs["score"] = Score.bad_score
-                    elif voiditem == len(vsrc) and vsrcwinh[-2] not in numbers:
+                    elif (
+                        voiditem + 1 == len(vsrc)
+                        and vsrcwinh[-2] not in numbers
+                    ):
                         ed_kargs["score"] = Score.bad_score
                     elif (
                         vsrcwina[voiditem + 1] not in numbers
@@ -1824,7 +1827,7 @@ def _select_result_line(result_line_description, text):
 
             # Text is the event name if it is followed by line with two dates
             # and event date has not already been set.
-            if context._event_startdate or context._event_enddate:
+            if context.event_start_date or context.event_end_date:
                 return EventData(
                     datatag=data_tag,
                     found=Found.NOT_COMPETITION_ONLY,
@@ -2024,7 +2027,7 @@ def _lookup_competition(competition_lookup, key):
     """Raise EventParserError exception if lookup fails KeyError."""
     try:
         return competition_lookup[key]
-    except KeyError:
+    except KeyError as error:
         raise EventParserError(
             "".join(
                 (
@@ -2034,7 +2037,7 @@ def _lookup_competition(competition_lookup, key):
                     "file.",
                 )
             )
-        )
+        ) from error
 
 
 def raise_re_error(name, text):

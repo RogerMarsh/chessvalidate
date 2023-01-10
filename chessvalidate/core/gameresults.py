@@ -32,7 +32,7 @@ displayresult = {
     constants.ABYE: "bye+",
     constants.HBYEHALF: "bye=",
     constants.ABYEHALF: "bye=",
-    constants._VOID: "void",
+    constants.VOID_GAME: "void",
     constants.DRAWDEFAULT: "drawdef",
     constants.DEFAULTED: "defaulted",
 }
@@ -53,7 +53,7 @@ resultmap = {
     "1-0": constants.HWIN,
     "0-1": constants.AWIN,
     "draw": constants.DRAW,
-    "void": constants._VOID,
+    "void": constants.VOID_GAME,
     "tbr": constants.TOBEREPORTED,
     "": constants.TOBEREPORTED,
     None: constants.TOBEREPORTED,
@@ -90,7 +90,7 @@ match_score_difference = {
     constants.HBYEHALF: 0.5,
     constants.ABYEHALF: -0.5,
     constants.TOBEREPORTED: 0,
-    constants._VOID: 0,
+    constants.VOID_GAME: 0,
     constants.NOTARESULT: 0,
 }
 
@@ -108,7 +108,7 @@ match_score_total = {
     constants.HBYEHALF: 0.5,
     constants.ABYEHALF: 0.5,
     constants.TOBEREPORTED: 0,
-    constants._VOID: 0,
+    constants.VOID_GAME: 0,
     constants.NOTARESULT: 0,
 }
 
