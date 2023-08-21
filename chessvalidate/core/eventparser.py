@@ -707,6 +707,11 @@ def _select_result_line(result_line_description, text):
     split_text = RE_SWISS.split(text)
     swiss = [s for s in split_text if len(s.strip())]
     if len(split_text) > 1 and len(swiss):
+
+        # Remove Vega pairing row noise.
+        if swiss[-1].strip().startswith("|"):
+            del swiss[-1]
+
         if len(swiss) > 1:
             return EventData(
                 datatag=data_tag,
@@ -730,6 +735,11 @@ def _select_result_line(result_line_description, text):
                 headers=headers,
             )
         tssw = RE_PIN.split(swiss[0])
+
+        # Remove Vega pairing row noise.
+        if len(tssw) > 2 and tssw[-1].strip().endswith("|"):
+            del tssw[-1]
+
         if len(tssw) != 2:
             return EventData(
                 datatag=data_tag,
@@ -737,6 +747,12 @@ def _select_result_line(result_line_description, text):
                 raw=text,
                 headers=headers,
             )
+
+        # Remove Vega pairing row noise.
+        trimname = tssw[-1].rstrip()
+        if trimname.endswith("|"):
+            tssw[-1] = trimname.rstrip("|")
+
         if len([s for s in tssw if len(s.strip())]) != 1:
             return EventData(
                 datatag=data_tag,

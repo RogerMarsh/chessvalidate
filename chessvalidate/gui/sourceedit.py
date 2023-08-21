@@ -874,6 +874,26 @@ class SourceEdit(panel.PlainPanel):
                 title="Extract Schedule Error",
             )
             return False
+        except:
+            tkinter.messagebox.showinfo(
+                parent=self.get_widget(),
+                message="".join(
+                    (
+                        "An exception has occured and will be reported on ",
+                        "dismissing this dialogue.\n\nPlease consider the ",
+                        "possibility text in one of the emails has been ",
+                        "misinterpreted as unexpected information about ",
+                        "a result, rather than being ignored.\n\nWords like ",
+                        "'default' and 'draw', or a sprinkling of numbers ",
+                        "like '1', '12' and '2', are likely culprits ",
+                        "because they have a place in identifying results.",
+                        "\n\nThe possibility is a consequence of not being ",
+                        "too fussy about how results are presented.",
+                    )
+                ),
+                title="Generate",
+            )
+            raise
         self._report_fixtures(data)
 
         # Remove the 'try' wrapping once the problem is fixed.
@@ -1705,7 +1725,7 @@ class SourceEdit(panel.PlainPanel):
                         " ".join(
                             (
                                 "All rounds are deemed played on the event",
-                                "start datebecause no round dates are",
+                                "start date because no round dates are",
                                 "specified.",
                             )
                         ),
