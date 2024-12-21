@@ -143,7 +143,7 @@ class EventData:
                     score.append(float(text))
                 except ValueError:
                     return False
-        return sum([float(text) for text in score]) != 1
+        return sum(float(text) for text in score) != 1
 
     def is_match_and_game_result(self):
         """Return True if self represents a tabular result."""

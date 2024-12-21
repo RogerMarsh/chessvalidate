@@ -184,11 +184,12 @@ class Season:
                     title="Open event results data",
                 )
 
-        emc = EmailExtractor(
-            self.folder,
-            configuration=open(config, "r", encoding="utf8").read(),
-            parent=parent,
-        )
+        with open(config, "r", encoding="utf8") as configfile:
+            emc = EmailExtractor(
+                self.folder,
+                configuration=configfile.read(),
+                parent=parent,
+            )
         if not emc.parse():
             tkinter.messagebox.showinfo(
                 parent=parent,
@@ -500,10 +501,12 @@ class Season:
         # first of all and used to detect substantive edits.
         entry_text.clear_original_text()
         # pylint reports useless-statement: probable misuse of property.
+        # pylint now reports pointless-statement instead.
         entry_text.edited_text_on_file
         for dte in diff_text:
             dte.clear_original_text()
             # pylint reports useless-statement: probable misuse of property.
+            # pylint now reports pointless-statement instead.
             dte.edited_text_on_file
 
         # Make the list of difference files and their source data available via
@@ -512,7 +515,7 @@ class Season:
         self._entry_text = entry_text
         self._event_extraction_rules = emc.criteria.get(RESULTS_PREFIX, ())
         self._event_competitions = emc.criteria.get(COMPETITION, set())
-        self._event_team_name_lookup = emc.criteria.get(TEAM_NAME, dict())
+        self._event_team_name_lookup = emc.criteria.get(TEAM_NAME, {})
         return True
 
     def extract_event(self):
@@ -897,7 +900,7 @@ def upgrade_configuration_files(file_path):
         return True
     if "conf" not in names:
         return False
-    keymap = dict(mailbox=COLLECTED, extracts=EXTRACTED)
+    keymap = {"mailbox": COLLECTED, "extracts": EXTRACTED}
     with open(
         os.path.join(directory, "conf"), encoding="utf8"
     ) as old_config_file:

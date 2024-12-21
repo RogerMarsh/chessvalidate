@@ -10,7 +10,7 @@ line-length = 79
 
 [project]
 name = "chessvalidate"
-version = "2.0.3"
+version = "2.0.4"
 authors = [
   { name="Roger Marsh", email="roger.marsh@solentware.co.uk" },
 ]
@@ -30,9 +30,9 @@ classifiers = [
 license = {file = "LICENCE"}
 readme = "README"
 dependencies = [
-    "ecfformat==1.0.4",
-    "emailextract==0.7.11",
-    "emailstore==1.5.5",
+    "ecfformat==1.0.5",
+    "emailextract==0.7.12",
+    "emailstore==1.5.6",
     "solentware-misc==1.7",
 ]
 

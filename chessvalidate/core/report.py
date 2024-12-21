@@ -122,18 +122,18 @@ class Report(reportbase.ReportBase):
         # self.textlines = None
         # self.error = []
         self.er_source = ""
-        self.er_results = dict()
+        self.er_results = {}
         self.er_matchresults = []
         self.er_unfinishedgames = []
         self.error_repeat = False
-        self.er_section = dict()
+        self.er_section = {}
         self.er_report_order = []
         self.er_name = None
-        self.er_rounds = dict()
-        self.er_pins = dict()
-        self.er_players = dict()
-        self.er_swiss_table = dict()
-        self.er_team_number = dict()
+        self.er_rounds = {}
+        self.er_pins = {}
+        self.er_players = {}
+        self.er_swiss_table = {}
+        self.er_team_number = {}
         self._colourrule = None
         self._played_on = None
         # self._section = None  # latest section name found by get_section
@@ -158,7 +158,7 @@ class Report(reportbase.ReportBase):
     def set_match_result(self, result):
         """Add match result entry to report data structures."""
         if result.competition not in self.er_results:
-            self.er_results[result.competition] = dict()
+            self.er_results[result.competition] = {}
         self.er_results[result.competition][
             (
                 result.hometeam,
@@ -180,11 +180,11 @@ class Report(reportbase.ReportBase):
             try:
                 return board_colour[
                     tuple(
-                        False
-                        if b[-1] in "13579"
-                        else True
-                        if b[-1] in "02468"
-                        else None
+                        (
+                            False
+                            if b[-1] in "13579"
+                            else True if b[-1] in "02468" else None
+                        )
                         for b in board.split(".")
                     )
                 ]
@@ -371,12 +371,12 @@ class Report(reportbase.ReportBase):
                             ),
                         )
                 card.append(
-                    dict(
-                        tagger=tagger,
-                        colour=colour,
-                        score=score,
-                        nominal_round=nominal_round,
-                    )
+                    {
+                        "tagger": tagger,
+                        "colour": colour,
+                        "score": score,
+                        "nominal_round": nominal_round,
+                    }
                 )
             cross_table[pin] = card
             return True
@@ -764,7 +764,7 @@ class Report(reportbase.ReportBase):
                 source = ""  # or the tag name for the extracted data
             self._match = (hometeam, awayteam, matchdate, matchround, source)
 
-            self._games = dict()
+            self._games = {}
             if self._played_on is PlayedOnStatus.seek_played_on_report:
                 self._played_on = PlayedOnStatus.game_report_played_on
             else:
@@ -785,8 +785,8 @@ class Report(reportbase.ReportBase):
                         games=[],
                     )
                 )
-                self._match_homeplayers = dict()
-                self._match_awayplayers = dict()
+                self._match_homeplayers = {}
+                self._match_awayplayers = {}
             return True
 
         def get_matches(text, tagger):
@@ -998,13 +998,13 @@ class Report(reportbase.ReportBase):
                 else:
                     result = opposite_score[opposite_score[score]]
                 card.append(
-                    dict(
-                        tagger=tagger,
-                        notplayed=strm.group("notplayed"),
-                        colour=colour,
-                        opponent=opponent_pin,
-                        score=result,
-                    )
+                    {
+                        "tagger": tagger,
+                        "notplayed": strm.group("notplayed"),
+                        "colour": colour,
+                        "opponent": opponent_pin,
+                        "score": result,
+                    }
                 )
             swiss_table[pin] = card
             return True
@@ -1036,24 +1036,24 @@ class Report(reportbase.ReportBase):
             return get_swiss_pairing_cards
 
         def add_allplayall_section():
-            self.er_pins[self._section] = dict()
-            self.er_swiss_table.setdefault(self._section, dict())
+            self.er_pins[self._section] = {}
+            self.er_swiss_table.setdefault(self._section, {})
 
         def add_individual_section():
-            self.er_players.setdefault(self._section, dict())
+            self.er_players.setdefault(self._section, {})
             self.er_results.setdefault(
                 self._section, Section(competition=self._section, games=[])
             )
 
         def add_fixturelist_section():
-            self.er_results.setdefault(self._section, dict())
+            self.er_results.setdefault(self._section, {})
             self._round = None
             self._date = None
             self._playerlimit = 1
 
         def add_swiss_section():
-            self.er_pins.setdefault(self._section, dict())
-            self.er_swiss_table.setdefault(self._section, dict())
+            self.er_pins.setdefault(self._section, {})
+            self.er_swiss_table.setdefault(self._section, {})
 
         def set_game_processing_rule(text):
             if text == PLAYED_ON:
@@ -1096,7 +1096,7 @@ class Report(reportbase.ReportBase):
         self.textlines = textlines
         self._colourrule = colour_none
         self._played_on = PlayedOnStatus.reports_not_played_on
-        players = dict()
+        players = {}
         self._section = None
         self._date = None
         self._round = None

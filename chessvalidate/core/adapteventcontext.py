@@ -101,7 +101,7 @@ class AdaptEventContext(EventContext):
                 except ValueError:
                     return result.score
                 score.append(text)
-        if sum([float(text) for text in score]) == 1:
+        if sum(float(text) for text in score) == 1:
             score = "-".join(score)
             if score == "0.5-0.5":
                 return "draw"

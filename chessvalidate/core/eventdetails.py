@@ -36,7 +36,7 @@ def get_text_at_value_after_name(name, widget):
 def get_event_details(folder):
     """Return event name, start date, and end date, from event details."""
     widget = tkinter.Text()
-    with open(os.path.join(folder, EVENT_CONF)) as file_:
+    with open(os.path.join(folder, EVENT_CONF), encoding="utf8") as file_:
         text = file_.read()
     HeaderContent(text, False, ()).parse(widget)
     event = get_text_at_value_after_name(constants.EVENT_NAME, widget)

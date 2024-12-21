@@ -30,22 +30,22 @@ class Schedule(reportbase.ReportBase):
         # self.error = []
         self.es_startdate = None
         self.es_enddate = None
-        self.es_rapidplay = dict()
-        self.es_teams = dict()
-        self.es_team_alias = dict()
-        self.es_team_number = dict()
-        self.es_matches = dict()  # fixtures by section
+        self.es_rapidplay = {}
+        self.es_teams = {}
+        self.es_team_alias = {}
+        self.es_team_number = {}
+        self.es_matches = {}  # fixtures by section
         self.es_fixtures = []
-        self.es_summary = dict()
+        self.es_summary = {}
         self.rapidplay = False
         # self._section = None  # latest section name found by get_section
         self.error_repeat = False
-        self.es_section = dict()
+        self.es_section = {}
         self.es_report_order = []
         self.es_name = None
-        self.es_round_dates = dict()
-        self.es_players = dict()  # keys are (name, pin) eg pin on swiss table
-        self.es_pins = dict()  # map pin to name for es_players lookup
+        self.es_round_dates = {}
+        self.es_players = {}  # keys are (name, pin) eg pin on swiss table
+        self.es_pins = {}  # map pin to name for es_players lookup
         self._maximum_round = None
         # self._round = None
 
@@ -55,14 +55,12 @@ class Schedule(reportbase.ReportBase):
 
     def _set_league_section(self):
         """Initialise data structures for league format."""
-        self.es_teams.setdefault(self._section, dict())
-        self.es_team_number.setdefault(self._section, dict())
-        self.es_team_alias.setdefault(self._section, dict())
-        self.es_matches.setdefault(self._section, dict())
+        self.es_teams.setdefault(self._section, {})
+        self.es_team_number.setdefault(self._section, {})
+        self.es_team_alias.setdefault(self._section, {})
+        self.es_matches.setdefault(self._section, {})
         self.es_rapidplay.setdefault(self._section, self.rapidplay)
-        self.es_summary.setdefault(
-            self._section, dict(matches=0, teams=dict())
-        )
+        self.es_summary.setdefault(self._section, {"matches": 0, "teams": {}})
 
     @staticmethod
     def default_club_for_team(team):
@@ -94,16 +92,17 @@ class Schedule(reportbase.ReportBase):
         self.es_summary[comp]["matches"] += 1
         for team in (fixture.hometeam, fixture.awayteam):
             if team not in estc:
-                estc[team] = dict(
-                    club=self.default_club_for_team(team), section=comp
-                )
+                estc[team] = {
+                    "club": self.default_club_for_team(team),
+                    "section": comp,
+                }
             if team not in essct:
-                essct[team] = dict(
-                    homematches=0,
-                    awaymatches=0,
-                    name=team,
-                    division=comp,
-                )
+                essct[team] = {
+                    "homematches": 0,
+                    "awaymatches": 0,
+                    "name": team,
+                    "division": comp,
+                }
             if team == fixture.hometeam:
                 essct[team]["homematches"] += 1
             else:
@@ -378,12 +377,12 @@ class Schedule(reportbase.ReportBase):
                 return get_league_teams
             if len(club) == 0:
                 club = self.default_club_for_team(team)
-            self.es_teams[self._section][team] = dict(
-                club=club,
-                # homematches=0, count appearances in self.es_matches?
-                # awaymatches=0,
-                section=self._section,
-            )
+            self.es_teams[self._section][team] = {
+                "club": club,
+                # "homematches": 0, count appearances in self.es_matches?
+                # "awaymatches": 0,
+                "section": self._section,
+            }
             self.es_team_number[self._section][team] = (
                 len(self.es_team_number[self._section]) + 1
             )
@@ -574,7 +573,7 @@ class Schedule(reportbase.ReportBase):
             if match:
                 team1, team2, date = match
                 del date
-                teams = dict()
+                teams = {}
                 for mname in self.es_matches[self._section]:
                     if (
                         self._round
@@ -584,9 +583,9 @@ class Schedule(reportbase.ReportBase):
                         teams[mname[1]] = None
                 if team1 not in teams:
                     if team2 not in teams:
-                        self.es_matches[self._section][
-                            match
-                        ] = self.es_fixtures[-1]
+                        self.es_matches[self._section][match] = (
+                            self.es_fixtures[-1]
+                        )
                         return get_matches_by_round
                 tagger.append_generated_schedule(
                     self.error,
@@ -758,22 +757,22 @@ class Schedule(reportbase.ReportBase):
 
         def add_allplayall_section():
             """Initialise data structures for all-play-all format."""
-            self.es_pins.setdefault(self._section, dict())
-            self.es_players.setdefault(self._section, dict())
+            self.es_pins.setdefault(self._section, {})
+            self.es_players.setdefault(self._section, {})
             self.es_rapidplay.setdefault(self._section, self.rapidplay)
-            self.es_round_dates.setdefault(self._section, dict())
+            self.es_round_dates.setdefault(self._section, {})
 
         def add_individual_section():
             """Initialise data structures for individual game format."""
-            self.es_players.setdefault(self._section, dict())
+            self.es_players.setdefault(self._section, {})
             self.es_rapidplay.setdefault(self._section, self.rapidplay)
 
         def add_swiss_section():
             """Initialise data structures for swiss wall-chart format."""
-            self.es_players.setdefault(self._section, dict())
-            self.es_pins.setdefault(self._section, dict())
+            self.es_players.setdefault(self._section, {})
+            self.es_pins.setdefault(self._section, {})
             self.es_rapidplay.setdefault(self._section, self.rapidplay)
-            self.es_round_dates.setdefault(self._section, dict())
+            self.es_round_dates.setdefault(self._section, {})
 
         def split_text_and_pad(text, count, separator=None):
             """Return tuple of text split maximum count times by separator."""
@@ -898,6 +897,9 @@ class Schedule(reportbase.ReportBase):
             if date_checker.parse_date(pdate) == -1:
                 dateok = False
                 tagger.append_generated_schedule(self.error, text)
+                # pylint C0209 consider-using-f-string.  Not used at
+                # Python 3.10 due to Idle colouring.
+                # See github.com/python/cpython/issues/73473.
                 date = "%08d" % 0
             elif len(day) > 1 and date_checker.date.strftime("%A").startswith(
                 day.title()

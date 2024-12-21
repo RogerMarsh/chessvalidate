@@ -286,8 +286,7 @@ class Leagues(threadqueue.AppSysThreadQueue):
             os.path.join(self._results_folder, ERROR_LOG)
         )
 
-    @staticmethod
-    def set_error_file_on_close_source():
+    def set_error_file_on_close_source(self):
         """Set the error log after source file is closed."""
         Leagues.set_error_file_name(None)
 

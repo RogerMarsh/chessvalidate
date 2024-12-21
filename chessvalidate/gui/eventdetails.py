@@ -16,7 +16,6 @@ class EventDetails(header.Header):
     Header can be used 'as-is' but conventions such as field name styles
     and file storage options assume the target is always an ECF result
     submission file.
-
     """
 
     _sequences = ()
@@ -32,14 +31,15 @@ class EventDetails(header.Header):
 
         This customisation of Header presents an immutable form where only
         the values entered can be changed.
-
         """
 
-    def _make_configuration(self):
+    @staticmethod
+    def _make_configuration():
         """Return a configuration.Configuration instance."""
         return configuration.Configuration()
 
-    def _show_value_boundary(self, conf):
+    @staticmethod
+    def _show_value_boundary(conf):
         """Return True if configuration file SHOW_VALUE_BOUNDARY is true."""
         return bool(
             conf.get_configuration_value(

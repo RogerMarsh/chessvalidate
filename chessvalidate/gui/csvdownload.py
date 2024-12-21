@@ -287,7 +287,7 @@ class CSVDownload(configfile.ConfigFile, Bindings):
                 ),
             )
             return
-        with open(config_file, "w") as file:
+        with open(config_file, "w", encoding="utf8") as file:
             file.write(
                 self.configctrl.get("1.0", " ".join((tkinter.END, "-1 chars")))
             )

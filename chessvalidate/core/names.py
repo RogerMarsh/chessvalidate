@@ -103,7 +103,8 @@ class Names:
             words = string.split()
             starts_with = " ".join(words[: (1 + len(words)) // 2])
 
-            # pylint and black disagree with pycodestyle on spaces before ":".
+            # pycodestyle E203 whitespace before ':'.
+            # black formatting insists on the space.
             ends_with = " ".join(words[(1 + len(words)) // 2 :])
 
         self.namepairs = ((starts_with, ends_with),)

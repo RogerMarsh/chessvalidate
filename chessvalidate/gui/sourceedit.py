@@ -515,7 +515,11 @@ class SourceEdit(panel.PlainPanel):
         """Return Text.edit_modified(). Work around see Python issue 961805."""
         # return self.editedtext.edit_modified()
         return self.editedtext.winfo_toplevel().tk.call(
-            "eval", "%s edit modified" % self.editedtext
+            # pylint C0209 consider-using-f-string.  Not used at Python 3.10
+            # due to Idle colouring.
+            # See github.com/python/cpython/issues/73473.
+            "eval",
+            "%s edit modified" % self.editedtext,
         )
 
     def _make_textedit_tab(self):
@@ -874,6 +878,8 @@ class SourceEdit(panel.PlainPanel):
                 title="Extract Schedule Error",
             )
             return False
+        # pycodestyle E722 do not use bare 'except'.
+        # pylint accepts this because of the following 'raise' statement.
         except:
             tkinter.messagebox.showinfo(
                 parent=self.get_widget(),
@@ -1074,8 +1080,7 @@ class SourceEdit(panel.PlainPanel):
                     )
                 )
             fixtures.sort()
-            for fixture, count, tagger in fixtures:
-                del count
+            for fixture, _, tagger in fixtures:
                 tagger.append_generated_schedule(genfix, "".join(fixture))
             genfix.append(("", None))
 

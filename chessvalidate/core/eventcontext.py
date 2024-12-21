@@ -380,11 +380,10 @@ class EventContext:
         search, the return is True or False depending on user choice.
 
         """
-        for k, value in self._fixtures.items():
+        for k, fixtures in self._fixtures.items():
             team_names, truncate = get_names_from_joined_names(
-                value, ("teams", "teamone", "teamtwo"), truncate
+                fixtures, ("teams", "teamone", "teamtwo"), truncate
             )
-            fixtures = self._fixtures[k]
             for nkey, nvalue in team_names.items():
                 if "teams" in fixtures[nkey].__dict__:
                     fixtures[nkey].__dict__.update(nvalue)
@@ -411,11 +410,10 @@ class EventContext:
         search, the return is True or False depending on user choice.
 
         """
-        for k, value in self._results.items():
+        for results in self._results.values():
             player_names, truncate = get_names_from_joined_names(
-                value, ("names", "nameone", "nametwo"), truncate
+                results, ("names", "nameone", "nametwo"), truncate
             )
-            results = self._results[k]
             for nkey, nvalue in player_names.items():
                 if "names" in results[nkey].__dict__:
                     results[nkey].__dict__.update(nvalue)
@@ -444,7 +442,7 @@ def get_names_from_joined_names(joined_names, attrnames, truncate):
     for item, eventdata in enumerate(joined_names):
         edict = eventdata.__dict__
         concat = [edict[n].split() for n in attrnames if n in edict]
-        if sum([len(c) for c in concat]) > 50:
+        if sum(len(c) for c in concat) > 50:
             if truncate is None:
                 truncate = tkinter.messagebox.askyesno(
                     message="".join(

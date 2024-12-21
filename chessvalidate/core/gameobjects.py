@@ -189,8 +189,7 @@ class Game:
                 state = True
         return state
 
-    @staticmethod
-    def get_game_board_and_round():
+    def get_game_board_and_round(self):
         """Return tuple of ""s for game details in tabular format."""
         return ("",) * 2
 
@@ -447,8 +446,7 @@ class Section:
         """Return True if id(self) < id(other)."""
         return id(self) < id(other)
 
-    @staticmethod
-    def get_team_details():
+    def get_team_details(self):
         """Return tuple of ""s for team details in tabular format."""
         return ("",) * 6
 
@@ -556,7 +554,7 @@ class Player:
         if self.club:
             self.set_player_identity_club()
             # Comment this line to avoid pylint unused-variable report.
-            affiliation = self.club  # Should this be "self.affiliation ="?
+            # affiliation = self.club  # Should this be "self.affiliation ="?
         elif self.section:
             self.set_player_identity_section()
         else:
@@ -745,8 +743,8 @@ class Player:
         del problems
         # state = False
         for attribute in Player.attributes:
-            if self.__dict__[attribute] != other.__getattr__(attribute):
-                if other.__getattr__(attribute):
+            if self.__dict__[attribute] != other.__dict__.get("attribute"):
+                if other.__dict__.get("attribute"):
 
                     # Listing attribute names as problems may be too much.
                     # problems.add(attribute)
@@ -811,8 +809,8 @@ class GameCollation:
     def __init__(self):
         """Define game and player dictionaries and error report list."""
         super().__init__()
-        self.games = dict()
-        self.players = dict()
+        self.games = {}
+        self.players = {}
 
     def set_games(self, key, gamelist):
         """Note gamelist in games dictionary under key."""

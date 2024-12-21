@@ -425,9 +425,11 @@ class EventParser:
                     )
                     rri = "".join(
                         [
-                            s
-                            if s.isalnum() or s.isnumeric() or s in kws
-                            else " "
+                            (
+                                s
+                                if s.isalnum() or s.isnumeric() or s in kws
+                                else " "
+                            )
                             for s in rri
                             if len(s)
                         ]
@@ -522,9 +524,11 @@ class EventParser:
                                     # Find the text containing game, or played
                                     # on game, results for each match report.
                                     vditems = [
-                                        t.strip()
-                                        if isinstance(t, str)
-                                        else " ".join(t).strip()
+                                        (
+                                            t.strip()
+                                            if isinstance(t, str)
+                                            else " ".join(t).strip()
+                                        )
                                         for t in emf[gbn].findall(kdi)
                                     ]
                                     # tracer for fixing regular expressions
@@ -905,15 +909,15 @@ def _select_result_line(result_line_description, text):
                 headers=headers,
             )
         start_date, end_date = RE_DATE.findall(text)
-        ed_kargs = dict(
-            datatag=data_tag,
-            found=Found.EVENT_AND_DATES,
-            context=context,
-            startdate=start_date,
-            enddate=end_date,
-            source=source,
-            headers=headers,
-        )
+        ed_kargs = {
+            "datatag": data_tag,
+            "found": Found.EVENT_AND_DATES,
+            "context": context,
+            "startdate": start_date,
+            "enddate": end_date,
+            "source": source,
+            "headers": headers,
+        }
         if len(tsd):
             ed_kargs["eventname"] = tsd[0]
         return EventData(**ed_kargs)
@@ -970,13 +974,13 @@ def _select_result_line(result_line_description, text):
             if len(n)
         ]
         board = ""
-        ed_kargs = dict(
-            datatag=data_tag,
-            context=context,
-            result_date=date,
-            source=source,
-            headers=headers,
-        )
+        ed_kargs = {
+            "datatag": data_tag,
+            "context": context,
+            "result_date": date,
+            "source": source,
+            "headers": headers,
+        }
         if played_on:
             ed_kargs["played_on"] = PLAYED_ON
         if competition:
@@ -1411,13 +1415,13 @@ def _select_result_line(result_line_description, text):
         # print(repr(text.replace('\xbd', '?')),
         #      names,
         #      [n.replace('\xbd', '?') for n in numbers]) # tracer
-        ed_kargs = dict(
-            datatag=data_tag,
-            context=context,
-            result_date=date,
-            source=source,
-            headers=headers,
-        )
+        ed_kargs = {
+            "datatag": data_tag,
+            "context": context,
+            "result_date": date,
+            "source": source,
+            "headers": headers,
+        }
         if played_on:
             ed_kargs["played_on"] = PLAYED_ON
         if competition:
@@ -1571,13 +1575,13 @@ def _select_result_line(result_line_description, text):
                 raw=text,
                 headers=headers,
             )
-        ed_kargs = dict(
-            datatag=data_tag,
-            context=context,
-            result_date=date,
-            source=source,
-            headers=headers,
-        )
+        ed_kargs = {
+            "datatag": data_tag,
+            "context": context,
+            "result_date": date,
+            "source": source,
+            "headers": headers,
+        }
         if played_on:
             ed_kargs["played_on"] = PLAYED_ON
         if competition:
@@ -1634,13 +1638,13 @@ def _select_result_line(result_line_description, text):
             nbnames.append(" ".join(non_board_numbers).strip())
         names = [n for n in nbnames if len(n)]
         nbnames = " ".join(names)
-        ed_kargs = dict(
-            datatag=data_tag,
-            context=context,
-            result_date=date,
-            source=source,
-            headers=headers,
-        )
+        ed_kargs = {
+            "datatag": data_tag,
+            "context": context,
+            "result_date": date,
+            "source": source,
+            "headers": headers,
+        }
         if played_on:
             ed_kargs["played_on"] = PLAYED_ON
         if competition:

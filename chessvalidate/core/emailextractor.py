@@ -432,7 +432,7 @@ class Parser(emailextractor.Parser):
         """Process TEAM_NAME keyword."""
         val, rep = val.split(sep=val[0], maxsplit=2)[1:]
         if args_key not in args:
-            args[args_key] = dict()
+            args[args_key] = {}
         args[args_key][val] = rep
 
     @staticmethod
@@ -440,7 +440,7 @@ class Parser(emailextractor.Parser):
         """Process lookup set values. (Not used currently)."""
         val, rep = val.split(sep=val[0], maxsplit=2)[1:]
         if args_key not in args:
-            args[args_key] = dict()
+            args[args_key] = {}
         args[args_key].setdefault(val, set()).add(rep)
 
     @staticmethod
@@ -448,7 +448,7 @@ class Parser(emailextractor.Parser):
         """Process COMPETITION keyword. (Commented alternative)."""
         val = val.split(sep=val[0], maxsplit=2)[1:]
         if args_key not in args:
-            args[args_key] = dict()
+            args[args_key] = {}
         args[args_key][val[0]] = val[-1]
 
     @staticmethod
@@ -536,7 +536,7 @@ class Parser(emailextractor.Parser):
     def _add_event_re(self, val, args, args_key):
         """Process RESULTS_PREFIX keyword."""
         if args_key not in args:
-            args[args_key] = list()
+            args[args_key] = []
         args[args_key].append(
             {
                 args_key: self._re_from_value(val),
