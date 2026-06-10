@@ -10,6 +10,7 @@ file must contain regular expressions to drive the extraction from non-default
 data formats.
 
 """
+
 from solentware_misc.core import utilities
 
 from .eventcontext import EventContext

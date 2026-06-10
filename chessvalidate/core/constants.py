@@ -3,6 +3,7 @@
 # Licence: See LICENCE (BSD licence)
 
 """Constants used in ChessResultsReport application."""
+
 from ecfformat.core import constants
 
 # Chosen way of presenting game results in readable format.

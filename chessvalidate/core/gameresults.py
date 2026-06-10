@@ -3,6 +3,7 @@
 # Licence: See LICENCE (BSD licence)
 
 """Lookup tables used in the results of games."""
+
 from . import constants
 
 # ECF score identifiers.

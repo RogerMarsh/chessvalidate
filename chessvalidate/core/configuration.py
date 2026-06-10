@@ -8,6 +8,7 @@ The initial values are taken from file named in self._CONFIGURATION in the
 user's home directory if the file exists.
 
 """
+
 from solentware_misc.core import configuration
 
 import ecfformat.core.constants

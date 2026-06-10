@@ -8,6 +8,7 @@ The methods are shared by the Configure, CSVDownload, and SelectEmail
 classes.
 
 """
+
 import os
 import tkinter
 

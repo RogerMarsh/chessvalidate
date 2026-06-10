@@ -3,6 +3,7 @@
 # Licence: See LICENCE (BSD licence)
 
 """Extract information from event configuration file."""
+
 import os
 import tkinter
 

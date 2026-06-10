@@ -13,6 +13,7 @@ Game result data is collected by type: all play all, swiss, fixtures,
 results, players, round dates, and tabular.
 
 """
+
 import tkinter.messagebox
 
 from . import names

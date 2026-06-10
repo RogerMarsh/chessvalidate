@@ -3,6 +3,7 @@
 # Licence: See LICENCE (BSD licence)
 
 """Email selection filter User Interface for Validate Results application."""
+
 from emailstore.gui import select
 
 from ..core import configuration

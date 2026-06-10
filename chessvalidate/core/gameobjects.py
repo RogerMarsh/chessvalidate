@@ -11,6 +11,7 @@ correct that MatchReport is not a subclass of MatchFixture despite the
 similarity of the class definitions.
 
 """
+
 import re
 from collections import namedtuple
 

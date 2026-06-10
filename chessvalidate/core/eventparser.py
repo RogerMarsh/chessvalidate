@@ -3,6 +3,7 @@
 # Licence: See LICENCE (BSD licence)
 
 """Event parser class."""
+
 import re
 
 from .emailextractor import (

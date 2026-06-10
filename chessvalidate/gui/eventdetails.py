@@ -3,6 +3,7 @@
 # Licence: See LICENCE (BSD licence)
 
 """Set and modify event details."""
+
 from ecfformat.gui import header
 import ecfformat.core.constants
 

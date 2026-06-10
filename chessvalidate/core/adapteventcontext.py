@@ -3,6 +3,7 @@
 # Licence: See LICENCE (BSD licence)
 
 """Convert EventData items to style used by Report and Schedule classes."""
+
 import tkinter.messagebox
 from datetime import date
 

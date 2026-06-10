@@ -3,6 +3,7 @@
 # Licence: See LICENCE (BSD licence)
 
 """Generate a report comparing results with schedule."""
+
 import re
 
 from solentware_misc.core import utilities
